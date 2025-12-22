@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Layout, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Layout, Sparkles, Loader2, Check, ChevronRight, ChevronLeft, Info } from 'lucide-react';
 import { templates } from '../data/templates';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
@@ -10,15 +10,35 @@ export const TemplateSelectorPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string>('blank');
   const [isCreating, setIsCreating] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (evt: WheelEvent) => {
+      // If horizontal scroll is already present (trackpad), let it happen naturally
+      // otherwise translate vertical scroll to horizontal
+      if (evt.deltaY !== 0) {
+         evt.preventDefault();
+         container.scrollLeft += evt.deltaY;
+      }
+    };
+
+    // Passive: false is required to use preventDefault
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const handleCreate = async () => {
     if (!user) return;
     setIsCreating(true);
     
     try {
-      // Create flow in Firestore (or mock)
       const flow = await flowService.createFlowFromTemplate(user.uid, selectedId);
-      // Navigate to editor with the new ID
       navigate(`/flow/${flow.id}`);
     } catch (error) {
       console.error("Failed to create flow", error);
@@ -26,84 +46,172 @@ export const TemplateSelectorPage: React.FC = () => {
     }
   };
 
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const cardWidth = 340; // Card width + gap approximate
+      const scrollAmount = direction === 'right' ? cardWidth : -cardWidth;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-950 flex flex-col text-white overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-4">
+      <div className="px-8 py-6 flex items-center justify-between z-20">
+        <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+        >
+            <div className="p-2 rounded-full border border-slate-800 bg-slate-900 group-hover:bg-slate-800 transition-colors">
+                <ArrowLeft size={18} />
+            </div>
+            <span className="text-sm font-medium">Back to Dashboard</span>
+        </button>
+        
+        <div className="flex items-center gap-2">
+             <span className="text-xs font-mono text-slate-600">MESHWORK STUDIO</span>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col justify-center relative">
+        <div className="text-center mb-12 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4 tracking-tight">
+                Initialize Architecture
+            </h1>
+            <p className="text-slate-400 max-w-xl mx-auto text-lg">
+                Select a foundation for your distributed system. Start blank or leverage industry-standard patterns.
+            </p>
+        </div>
+
+        {/* Carousel Area */}
+        <div className="relative w-full">
+            {/* Scroll Buttons */}
             <button 
-                onClick={() => navigate('/')}
-                className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"
+                onClick={() => scroll('left')}
+                className="absolute left-8 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 backdrop-blur-sm transition-all hidden md:flex"
             >
-                <ArrowLeft size={20} />
+                <ChevronLeft size={24} />
             </button>
-            <h1 className="text-xl font-bold text-slate-900 font-heading">Start New Mesh</h1>
-        </div>
-      </div>
+            <button 
+                onClick={() => scroll('right')}
+                className="absolute right-8 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 backdrop-blur-sm transition-all hidden md:flex"
+            >
+                <ChevronRight size={24} />
+            </button>
 
-      <div className="flex-1 overflow-y-auto p-8 pb-32">
-        <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-                <h2 className="text-3xl font-bold text-slate-900 mb-3 font-heading">Choose a starting point</h2>
-                <p className="text-slate-500 max-w-lg mx-auto">
-                    Start from a blank canvas or jumpstart your architecture with one of our industry-standard templates.
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                {templates.map((template) => (
-                    <div 
-                        key={template.id}
-                        onClick={() => setSelectedId(template.id)}
-                        className={`
-                            relative group cursor-pointer rounded-2xl border-2 transition-all duration-200 overflow-hidden bg-white
-                            ${selectedId === template.id 
-                                ? 'border-blue-600 shadow-xl shadow-blue-900/10 ring-2 ring-blue-600/20' 
-                                : 'border-slate-200 hover:border-blue-400 hover:shadow-lg'}
-                        `}
-                    >
-                        {/* Thumbnail Area */}
-                        <div className={`h-32 ${template.thumbnailColor} flex items-center justify-center border-b border-slate-100`}>
-                            {template.id === 'blank' ? (
-                                <Layout size={48} className="text-slate-300 group-hover:text-blue-400 transition-colors" />
-                            ) : (
-                                <Sparkles size={48} className="text-slate-300 group-hover:text-blue-400 transition-colors" />
-                            )}
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="p-5">
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-slate-900">{template.name}</h3>
-                                {selectedId === template.id && (
-                                    <CheckCircle2 size={20} className="text-blue-600" />
-                                )}
+            {/* Scroll Container */}
+            <div 
+                ref={scrollContainerRef}
+                className="flex gap-8 overflow-x-auto snap-x snap-mandatory px-8 md:px-[calc(50vw-180px)] pb-12 pt-4 no-scrollbar items-center"
+            >
+                {templates.map((template) => {
+                    const isSelected = selectedId === template.id;
+                    
+                    return (
+                        <div 
+                            key={template.id}
+                            onClick={() => setSelectedId(template.id)}
+                            className={`
+                                relative flex-shrink-0 w-[340px] h-[450px] rounded-3xl snap-center cursor-pointer transition-all duration-500 ease-out group
+                                flex flex-col overflow-hidden border
+                                ${isSelected 
+                                    ? 'scale-100 border-white shadow-[0_0_50px_rgba(255,255,255,0.1)] bg-slate-900 z-10' 
+                                    : 'scale-90 opacity-60 hover:opacity-100 border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:border-slate-600'}
+                            `}
+                        >
+                            {/* Visual Header */}
+                            <div className={`
+                                h-48 w-full flex items-center justify-center relative overflow-hidden transition-colors duration-500
+                                ${isSelected ? template.thumbnailColor.replace('bg-', 'bg-opacity-20 bg-') : 'bg-slate-950'}
+                            `}>
+                                {/* Abstract Geometric Pattern Background */}
+                                <div className="absolute inset-0 opacity-20" 
+                                    style={{ 
+                                        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', 
+                                        backgroundSize: '20px 20px' 
+                                    }} 
+                                />
+                                
+                                <div className={`
+                                    relative z-10 p-6 rounded-2xl bg-slate-950 shadow-2xl border border-slate-800 transition-transform duration-500 flex items-center justify-center
+                                    ${isSelected ? 'scale-110' : 'scale-100'}
+                                `}>
+                                    {template.id === 'blank' ? (
+                                        <Layout size={48} className={isSelected ? 'text-white' : 'text-slate-500'} />
+                                    ) : template.logo ? (
+                                        <img 
+                                            src={template.logo} 
+                                            alt={template.name} 
+                                            className={`w-12 h-12 object-contain transition-all duration-300 ${isSelected ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                                        />
+                                    ) : (
+                                        <Sparkles size={48} className={isSelected ? 'text-amber-400' : 'text-slate-500'} />
+                                    )}
+                                </div>
                             </div>
-                            <p className="text-sm text-slate-500 leading-relaxed">
-                                {template.description}
-                            </p>
+
+                            {/* Content Body */}
+                            <div className="flex-1 p-8 flex flex-col">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className={`text-xl font-bold font-heading ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                                        {template.name}
+                                    </h3>
+                                    {isSelected && (
+                                        <div className="bg-white text-black p-1 rounded-full animate-in zoom-in spin-in-90 duration-300">
+                                            <Check size={14} strokeWidth={4} />
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <p className="text-sm text-slate-500 leading-relaxed mb-6">
+                                    {template.description}
+                                </p>
+
+                                <div className="mt-auto pt-6 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-4 text-xs font-mono text-slate-600 uppercase tracking-widest">
+                                        <div className="flex items-center gap-1.5">
+                                            <Layout size={12} />
+                                            <span>{template.nodes.length} Nodes</span>
+                                        </div>
+                                        <div className="w-1 h-1 rounded-full bg-slate-800"></div>
+                                        <div>
+                                            {template.id === 'blank' ? 'Empty State' : 'Pre-configured'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
+                
+                {/* Spacer for right side scrolling balance */}
+                <div className="w-4 flex-shrink-0 md:hidden"></div>
             </div>
         </div>
       </div>
 
-      {/* Fixed Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 flex justify-center z-20 shadow-[-10px_0_20px_rgba(0,0,0,0.05)]">
+      {/* Footer Action */}
+      <div className="p-8 border-t border-slate-900 bg-slate-950 z-20 flex justify-center">
         <button
             onClick={handleCreate}
             disabled={isCreating}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+            className={`
+                relative overflow-hidden group flex items-center gap-3 px-10 py-4 rounded-full font-bold text-lg transition-all duration-300
+                ${isCreating 
+                    ? 'bg-slate-800 text-slate-400 cursor-wait' 
+                    : 'bg-white text-black hover:bg-slate-200 hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.2)]'}
+            `}
         >
             {isCreating ? (
                 <>
                     <Loader2 size={20} className="animate-spin" />
-                    Creating Workspace...
+                    <span>Constructing...</span>
                 </>
             ) : (
                 <>
-                    Create Mesh
+                    <span>Initialize Mesh</span>
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </>
             )}
         </button>

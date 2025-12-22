@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Rocket, Star, Wrench, Bug, Layers, Globe, ShieldCheck, Sparkles, Layout, Cloud, Database } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Wrench, Bug, Layers, Globe, ShieldCheck, Sparkles, Layout, Cloud, Database, Palette, MousePointer2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LogEntry = ({ version, date, type, children }: { version: string, date: string, type: 'major' | 'minor' | 'patch', children: React.ReactNode }) => (
@@ -51,6 +51,42 @@ export const DevLogsPage: React.FC = () => {
         </div>
 
         <div className="space-y-2">
+            <LogEntry version="v1.2.24-alpha" date="October 28, 2023" type="patch">
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+                        <Palette size={18} className="text-slate-800" />
+                        Aesthetic Overhaul
+                    </h3>
+                    <p className="text-slate-600 leading-relaxed">
+                        We've refined the application's visual language, moving to a sophisticated monochrome "Navy Black" theme and improving the project initialization flow.
+                    </p>
+                </div>
+                
+                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
+                    <Section title="Visual Refresh" icon={Layout} colorClass="text-slate-800">
+                        <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-800 mt-1.5 flex-shrink-0"></span>
+                            <span><strong>Monochrome Dashboard:</strong> Replaced generic blue accents with a high-contrast Slate/Zinc palette for a professional, technical look.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-800 mt-1.5 flex-shrink-0"></span>
+                            <span><strong>Template Carousel:</strong> Completely redesigned the "Start New Mesh" experience. It now features a horizontal, snap-scrolling carousel with dark-themed cards and high-fidelity previews.</span>
+                        </li>
+                    </Section>
+
+                    <Section title="UX Improvements" icon={MousePointer2} colorClass="text-slate-600">
+                         <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
+                            <span><strong>Action Consolidation:</strong> Removed redundant "Create Project" buttons from the header to declutter the interface and focus user attention on the primary grid actions.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
+                            <span><strong>Scrollbar Hiding:</strong> Implemented utility classes to hide scrollbars in the carousel for a cleaner, native-app feel while maintaining functionality.</span>
+                        </li>
+                    </Section>
+                </div>
+            </LogEntry>
+
             <LogEntry version="v1.2.2-alpha" date="October 27, 2023" type="patch">
                 <div className="mb-4">
                     <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">

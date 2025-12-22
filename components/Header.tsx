@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
           <input 
             type="text"
             placeholder="Search flows..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/10 focus:border-slate-400 transition-all text-slate-700 placeholder:text-slate-400"
           />
         </div>
       </div>
@@ -38,7 +38,7 @@ export const Header: React.FC = () => {
                 onClick={() => setShowNotifications(!showNotifications)}
                 className={`
                     p-2 rounded-full transition-colors relative
-                    ${showNotifications ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-100'}
+                    ${showNotifications ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}
                 `}
             >
                 <Bell size={20} />
@@ -52,11 +52,11 @@ export const Header: React.FC = () => {
                             <AlertTriangle size={20} />
                         </div>
                         <div>
-                            <h4 className="font-bold text-slate-900 text-sm mb-1">Alpha Preview (v1.2.2)</h4>
+                            <h4 className="font-bold text-slate-900 text-sm mb-1">Alpha Preview (v1.2.24)</h4>
                             <p className="text-xs text-slate-500 leading-relaxed">
                                 You are using an early alpha build. Features may change, and data persistence in Guest Mode is local-only.
                             </p>
-                            <div className="mt-3 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">
+                            <div className="mt-3 text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded inline-block">
                                 System Status: Stable
                             </div>
                         </div>
@@ -67,7 +67,7 @@ export const Header: React.FC = () => {
 
         <button 
           onClick={() => navigate('/dev-logs')}
-          className="p-2 text-slate-500 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-colors"
+          className="p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 rounded-full transition-colors"
           title="Developer Logs & Updates"
         >
           <HelpCircle size={20} />

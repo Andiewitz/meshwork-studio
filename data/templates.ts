@@ -1,4 +1,4 @@
-import { Node, Edge, MarkerType } from 'reactflow';
+import type { Node, Edge, MarkerType } from 'reactflow';
 import { FlowNodeData } from '../types';
 
 export interface Template {
@@ -8,6 +8,7 @@ export interface Template {
   nodes: Node<FlowNodeData>[];
   edges: Edge[];
   thumbnailColor: string;
+  logo?: string;
 }
 
 export const templates: Template[] = [
@@ -24,23 +25,24 @@ export const templates: Template[] = [
     name: 'Booking System (Airbnb)',
     description: 'SOA with Service Mesh, sharded MySQL, and heavy search indexing.',
     thumbnailColor: 'bg-rose-50',
+    logo: 'https://cdn.simpleicons.org/airbnb/FF5A5F',
     nodes: [
       // Frontend
       { id: 'client', type: 'client', position: { x: 0, y: 350 }, data: { label: 'Web / Mobile', clientType: 'phone' } },
       
       // Edge Layer
-      { id: 'cdn', type: 'middleware', position: { x: 200, y: 350 }, data: { label: 'CDN / Edge', middlewareType: 'cache', techName: 'Cloudflare' } },
+      { id: 'cdn', type: 'middleware', position: { x: 200, y: 350 }, data: { label: 'CDN / Edge', middlewareType: 'cache', techName: 'Cloudflare', techLogo: 'https://cdn.simpleicons.org/cloudflare/F38020' } },
       { id: 'lb', type: 'loadBalancer', position: { x: 400, y: 350 }, data: { label: 'Nginx LB' } },
       { id: 'gateway', type: 'middleware', position: { x: 600, y: 350 }, data: { label: 'API Gateway', middlewareType: 'gateway' } },
 
       // Service Mesh
-      { id: 'mesh', type: 'middleware', position: { x: 850, y: 150 }, data: { label: 'Envoy Mesh', middlewareType: 'mesh' } },
+      { id: 'mesh', type: 'middleware', position: { x: 850, y: 150 }, data: { label: 'Envoy Mesh', middlewareType: 'mesh', techLogo: 'https://cdn.simpleicons.org/envoy/111111' } },
 
       // Services
       // 1. Search (Read Heavy)
       { id: 'svc-search', type: 'service', position: { x: 900, y: 50 }, data: { label: 'Search Svc' } },
       { id: 'db-elastic', type: 'database', position: { x: 1150, y: 0 }, data: { label: 'Search Index', dbType: 'elasticsearch', dbName: 'Elasticsearch', dbCategory: 'search', dbLogo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/elasticsearch/elasticsearch-original.svg' } },
-      { id: 'cache-redis', type: 'middleware', position: { x: 1150, y: 120 }, data: { label: 'Result Cache', middlewareType: 'cache', techName: 'Redis' } },
+      { id: 'cache-redis', type: 'middleware', position: { x: 1150, y: 120 }, data: { label: 'Result Cache', middlewareType: 'cache', techName: 'Redis', techLogo: 'https://cdn.simpleicons.org/redis/DC382D' } },
 
       // 2. Core Booking (Transactional)
       { id: 'svc-homes', type: 'service', position: { x: 900, y: 350 }, data: { label: 'Homes Core' } },
@@ -86,6 +88,7 @@ export const templates: Template[] = [
     name: 'Video Streaming (Netflix)',
     description: 'Microservices architecture with Open Connect CDN, Zuul Gateway, and Cassandra.',
     thumbnailColor: 'bg-red-50',
+    logo: 'https://cdn.simpleicons.org/netflix/E50914',
     nodes: [
         // Client Side
         { id: 'client', type: 'client', position: { x: 0, y: 250 }, data: { label: 'Smart TV / Web', clientType: 'desktop' } },
@@ -104,7 +107,7 @@ export const templates: Template[] = [
         { id: 'svc-rec', type: 'service', position: { x: 700, y: 550 }, data: { label: 'Recommendations' } },
 
         // Data Layer (Cassandra & EVCache)
-        { id: 'cache-ev', type: 'middleware', position: { x: 950, y: 250 }, data: { label: 'EVCache', middlewareType: 'cache', techName: 'Memcached' } },
+        { id: 'cache-ev', type: 'middleware', position: { x: 950, y: 250 }, data: { label: 'EVCache', middlewareType: 'cache', techName: 'Memcached', techLogo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/memcached/memcached-original.svg' } },
         { id: 'db-cass', type: 'database', position: { x: 950, y: 400 }, data: { label: 'Cassandra', dbType: 'cassandra', dbName: 'Cassandra', dbCategory: 'nosql', dbLogo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apachecassandra/apachecassandra-original.svg' } },
         
         // Big Data / Spark
@@ -139,7 +142,9 @@ export const templates: Template[] = [
     name: 'Ride Sharing (Uber)',
     description: 'Real-time geospatial matching with consistent hashing and heavy write loads.',
     thumbnailColor: 'bg-slate-900',
+    logo: 'https://cdn.simpleicons.org/uber/FFFFFF',
     nodes: [
+        // Client Side
         { id: 'rider', type: 'client', position: { x: 0, y: 200 }, data: { label: 'Rider App', clientType: 'phone' } },
         { id: 'driver', type: 'client', position: { x: 0, y: 500 }, data: { label: 'Driver App', clientType: 'phone' } },
         

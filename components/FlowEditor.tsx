@@ -2,20 +2,22 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import ReactFlow, {
   Background,
   Controls,
-  Node,
-  Edge,
   addEdge,
-  Connection,
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
   BackgroundVariant,
   useReactFlow,
   Panel,
+  ConnectionMode,
+} from 'reactflow';
+import type {
+  Node,
+  Edge,
+  Connection,
   NodeTypes,
   ReactFlowInstance,
   NodeMouseHandler,
-  ConnectionMode,
   EdgeMouseHandler
 } from 'reactflow';
 import { ChevronLeft } from 'lucide-react';
@@ -546,7 +548,7 @@ const FlowEditorContent: React.FC = () => {
 
       {/* Prototype Version Label */}
       <div className="absolute top-5 right-6 z-40 pointer-events-none select-none opacity-60">
-        <span className="text-xs font-mono text-zinc-500">alpha v1.2.2</span>
+        <span className="text-xs font-mono text-zinc-500">alpha v1.2.24</span>
       </div>
 
       {/* Node Library Sidebar */}

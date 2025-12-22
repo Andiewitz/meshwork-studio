@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebaseService';
 import { FlowData } from '../types';
-import { Node, Edge } from 'reactflow';
+import type { Node, Edge } from 'reactflow';
 import { templates } from '../data/templates';
 
 const COLLECTION_NAME = 'flows';

@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             <span className="text-xl font-bold font-heading text-white tracking-tight leading-tight">
               Meshwork
             </span>
-            <span className="text-[10px] font-mono text-slate-500">alpha v1.2.2</span>
+            <span className="text-[10px] font-mono text-slate-500">alpha v1.2.24</span>
           </div>
         ) : (
           <div className="flex flex-col items-center w-full">
@@ -51,14 +51,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         </button>
       </div>
 
-      {/* Action Button */}
+      {/* Action Button - High Contrast White on Black */}
       <div className="p-4">
         <NavLink to="/flow/new" className={`
-            flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-lg p-2.5 transition-all shadow-lg shadow-blue-900/20
+            flex items-center justify-center gap-2 w-full bg-white hover:bg-slate-100 text-slate-950 rounded-lg p-2.5 transition-all shadow-lg shadow-slate-900/50
             ${!isOpen && 'px-0'}
         `}>
-          <Plus size={20} />
-          {isOpen && <span className="font-medium font-heading text-sm">New Mesh</span>}
+          <Plus size={20} className="stroke-[2.5]" />
+          {isOpen && <span className="font-bold font-heading text-sm">New Mesh</span>}
         </NavLink>
       </div>
 
@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) => `
               flex items-center px-3 py-3 rounded-lg transition-all duration-200 group relative
               ${isActive 
-                ? 'bg-slate-900 text-white shadow-sm' 
+                ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-800' 
                 : 'text-slate-400 hover:bg-slate-900/50 hover:text-white'}
             `}
           >
@@ -79,10 +79,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
               <>
                 <item.icon 
                   size={20} 
-                  className={`${isOpen ? "mr-3" : "mx-auto"} ${isActive ? 'text-blue-400' : ''}`} 
+                  className={`${isOpen ? "mr-3" : "mx-auto"} ${isActive ? 'text-white' : ''}`} 
                 />
                 
-                {isOpen && <span className="font-medium text-sm">{item.label}</span>}
+                {isOpen && <span className={`text-sm ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>}
                 
                 {!isOpen && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-slate-900 text-white text-xs rounded border border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
@@ -98,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       {/* User / Footer */}
       <div className="p-4 border-t border-slate-900 bg-slate-950">
         <div className={`flex items-center ${isOpen ? 'gap-3' : 'justify-center'}`}>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md border border-slate-800 overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center text-white font-bold text-xs shadow-md border border-slate-600 overflow-hidden">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
             ) : (

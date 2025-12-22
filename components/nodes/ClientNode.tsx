@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
+import { Handle, Position } from 'reactflow';
+import type { NodeProps } from 'reactflow';
 import { Smartphone, Laptop, Monitor } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
