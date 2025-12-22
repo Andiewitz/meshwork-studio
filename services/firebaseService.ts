@@ -1,6 +1,6 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 // Configuration handles both Vite (import.meta.env) and standard process.env if needed, 
 // though Vite requires VITE_ prefix for client exposure.
@@ -24,7 +24,7 @@ class FirebaseService {
   public googleProvider: GoogleAuthProvider;
 
   private constructor() {
-    if (!getApps().length) {
+    if (getApps().length === 0) {
       this.app = initializeApp(firebaseConfig);
     } else {
       this.app = getApps()[0];

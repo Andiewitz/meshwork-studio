@@ -33,6 +33,7 @@ import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSe
 import { EditNodeModal } from './modals/EditNodeModal';
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
+import { LoadingScreen } from './LoadingScreen';
 
 // Custom Distributed System Nodes
 import { ServerNode } from './nodes/ServerNode';
@@ -187,7 +188,7 @@ const FlowEditorContent: React.FC = () => {
 
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
-  // Handle Menu Actions
+  // Handle Menu Actions (Delete, Duplicate, etc.) - Code omitted for brevity as it's unchanged logic
   const handleMenuDelete = useCallback(() => {
     if (menu) {
       if (menu.type === 'edge') {
@@ -218,7 +219,7 @@ const FlowEditorContent: React.FC = () => {
           selected: true,
         };
         // Deselect original
-        setNodes((nds) => nds.map(n => ({...n, selected: false})).concat(newNode));
+        setNodes((nds) => [...nds.map(n => ({...n, selected: false})), newNode]);
       }
       setMenu(null);
     }
@@ -231,28 +232,24 @@ const FlowEditorContent: React.FC = () => {
     }
   }, [menu, setEdges]);
 
-  // Insert Junction Node Logic
   const handleSplitConnection = useCallback(() => {
       if (menu && menu.type === 'edge' && menu.data && menu.data.splitPosition) {
           const edgeId = menu.id;
           const { source, target, splitPosition } = menu.data;
           
-          // 1. Create Junction Node
           const junctionId = `junction-${Date.now()}`;
           const junctionNode: Node = {
               id: junctionId,
               type: 'junction',
               position: { 
-                  x: splitPosition.x - 8, // Center it (16px width)
+                  x: splitPosition.x - 8,
                   y: splitPosition.y - 8 
               },
               data: { label: '' }
           };
 
-          // 2. Remove old edge
           setEdges((eds) => eds.filter(e => e.id !== edgeId));
 
-          // 3. Add new nodes and 2 new edges
           setNodes((nds) => nds.concat(junctionNode));
           
           setTimeout(() => {
@@ -308,19 +305,12 @@ const FlowEditorContent: React.FC = () => {
     }
   }, [menu, nodes]);
 
-  // Handle Generic Edit Save
   const handleEditSave = (newLabel: string) => {
     if (editingNodeId) {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === editingNodeId) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                label: newLabel,
-              },
-            };
+            return { ...node, data: { ...node.data, label: newLabel } };
           }
           return node;
         })
@@ -328,72 +318,49 @@ const FlowEditorContent: React.FC = () => {
     }
   };
 
-  // Handle Client Save
   const handleClientSave = (label: string, type: string) => {
       if (configuringClientId) {
           setNodes((nds) => nds.map((node) => {
               if (node.id === configuringClientId) {
-                  return {
-                      ...node,
-                      data: {
-                          ...node.data,
-                          label,
-                          clientType: type
-                      }
-                  };
+                  return { ...node, data: { ...node.data, label, clientType: type } };
               }
               return node;
           }));
       }
   };
 
-  // Handle Cache Select
   const handleCacheSelect = (tech: CacheOption) => {
     if (configuringCacheId) {
         setNodes((nds) => nds.map((node) => {
             if (node.id === configuringCacheId) {
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        label: node.data.label === 'Cache / CDN' || node.data.label === 'New middleware' ? tech.name : node.data.label,
-                        techName: tech.name,
-                        techLogo: tech.logo
-                    }
-                };
+                return { ...node, data: { ...node.data, label: node.data.label === 'Cache / CDN' || node.data.label === 'New middleware' ? tech.name : node.data.label, techName: tech.name, techLogo: tech.logo } };
             }
             return node;
         }));
     }
   };
 
-  // Handle Node Double Click to Open Config
   const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
     if (node.type === 'database') {
       setConfiguringNodeId(node.id);
       setDbModalOpen(true);
     } else if (node.type === 'client') {
         setConfiguringClientId(node.id);
-        setConfiguringClientData({
-            label: node.data.label,
-            type: (node.data.clientType as string) || 'desktop'
-        });
+        setConfiguringClientData({ label: node.data.label, type: (node.data.clientType as string) || 'desktop' });
         setClientModalOpen(true);
     } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
         setConfiguringCacheId(node.id);
         setCacheModalOpen(true);
     } else if (node.type !== 'junction') {
-        // Allow double click edit for other nodes too (except junction)
         setEditingNodeId(node.id);
         setEditingLabel(node.data.label);
         setEditModalOpen(true);
     }
   }, []);
 
-  // Handle Edge Click for Definition
   const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
     if (activeTool === 'connect') {
-      event.stopPropagation(); // Prevent selection
+      event.stopPropagation();
       setEditingEdgeId(edge.id);
       setConnectionModalOpen(true);
     }
@@ -401,20 +368,9 @@ const FlowEditorContent: React.FC = () => {
 
   const handleDbSelect = (dbInfo: DatabaseOption) => {
     if (!configuringNodeId) return;
-
     setNodes((nds) => nds.map((node) => {
       if (node.id === configuringNodeId) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            dbType: dbInfo.id,
-            dbName: dbInfo.name,
-            dbCategory: dbInfo.category,
-            dbLogo: dbInfo.logo,
-            label: node.data.label === 'New database' ? dbInfo.name : node.data.label
-          }
-        };
+        return { ...node, data: { ...node.data, dbType: dbInfo.id, dbName: dbInfo.name, dbCategory: dbInfo.category, dbLogo: dbInfo.logo, label: node.data.label === 'New database' ? dbInfo.name : node.data.label } };
       }
       return node;
     }));
@@ -422,41 +378,14 @@ const FlowEditorContent: React.FC = () => {
 
   const handleConnectionSave = (protocol: ConnectionOption) => {
     if (!editingEdgeId) return;
-
     setEdges((eds) => eds.map((edge) => {
       if (edge.id === editingEdgeId) {
-        return {
-          ...edge,
-          label: protocol.id,
-          style: { 
-            ...edge.style, 
-            stroke: protocol.color,
-            strokeWidth: 2
-          },
-          labelStyle: { 
-            fill: '#9ca3af', // gray-400
-            fontSize: 11, 
-            fontWeight: 500,
-            fontFamily: 'monospace',
-            letterSpacing: '0.05em'
-          },
-          labelBgStyle: { 
-            fill: '#18181b', // zinc-900
-            fillOpacity: 0.9,
-            stroke: '#27272a', // zinc-800
-            strokeWidth: 1,
-          },
-          labelBgPadding: [6, 4],
-          labelBgBorderRadius: 6,
-          animated: protocol.id !== 'JDBC' && protocol.id !== 'TCP',
-          data: { ...edge.data, protocol: protocol.id }
-        };
+        return { ...edge, label: protocol.id, style: { ...edge.style, stroke: protocol.color, strokeWidth: 2 }, labelStyle: { fill: '#9ca3af', fontSize: 11, fontWeight: 500, fontFamily: 'monospace', letterSpacing: '0.05em' }, labelBgStyle: { fill: '#18181b', fillOpacity: 0.9, stroke: '#27272a', strokeWidth: 1 }, labelBgPadding: [6, 4], labelBgBorderRadius: 6, animated: protocol.id !== 'JDBC' && protocol.id !== 'TCP', data: { ...edge.data, protocol: protocol.id } };
       }
       return edge;
     }));
   };
 
-  // Drag and Drop Handlers
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -465,53 +394,28 @@ const FlowEditorContent: React.FC = () => {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-
       const type = event.dataTransfer.getData('application/reactflow');
       const mwType = event.dataTransfer.getData('application/middlewareType');
       const label = event.dataTransfer.getData('application/label');
 
-      if (typeof type === 'undefined' || !type || !reactFlowInstance) {
-        return;
-      }
+      if (typeof type === 'undefined' || !type || !reactFlowInstance) return;
 
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
+      const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
         type,
         position,
-        data: { 
-            label: label || `New ${type}`,
-            middlewareType: mwType || undefined,
-            clientType: type === 'client' ? 'desktop' : undefined 
-        },
+        data: { label: label || `New ${type}`, middlewareType: mwType || undefined, clientType: type === 'client' ? 'desktop' : undefined },
       };
 
       setNodes((nds) => nds.concat(newNode));
       
       if (type === 'database') {
-        setTimeout(() => {
-            setConfiguringNodeId(newNode.id);
-            setDbModalOpen(true);
-        }, 100);
+        setTimeout(() => { setConfiguringNodeId(newNode.id); setDbModalOpen(true); }, 100);
       } else if (type === 'client') {
-          setTimeout(() => {
-            setConfiguringClientId(newNode.id);
-            setConfiguringClientData({
-                label: newNode.data.label,
-                type: 'desktop'
-            });
-            setClientModalOpen(true);
-          }, 100);
+          setTimeout(() => { setConfiguringClientId(newNode.id); setConfiguringClientData({ label: newNode.data.label, type: 'desktop' }); setClientModalOpen(true); }, 100);
       } else if (type === 'middleware' && mwType === 'cache') {
-          // Optional: Auto open modal for new cache nodes
-          setTimeout(() => {
-              setConfiguringCacheId(newNode.id);
-              setCacheModalOpen(true);
-          }, 100);
+          setTimeout(() => { setConfiguringCacheId(newNode.id); setCacheModalOpen(true); }, 100);
       }
     },
     [reactFlowInstance, setNodes]
@@ -530,19 +434,10 @@ const FlowEditorContent: React.FC = () => {
         </button>
       </div>
 
-      {/* Loading State Overlay */}
+      {/* Loading State Overlay using shared component */}
       {isLoading && (
-        <div className="absolute inset-0 z-[60] bg-zinc-900 flex items-center justify-center animate-out fade-out duration-700">
-            <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                    <div className="w-12 h-12 rounded-full border-4 border-zinc-800"></div>
-                    <div className="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
-                </div>
-                <div className="flex flex-col items-center">
-                    <span className="text-white font-heading font-bold text-lg tracking-wide">Meshwork Studio</span>
-                    <span className="text-zinc-500 text-xs font-mono mt-1">Initializing Environment...</span>
-                </div>
-            </div>
+        <div className="absolute inset-0 z-[60] bg-zinc-900 animate-out fade-out duration-500 fill-mode-forwards pointer-events-none">
+             <LoadingScreen message="Initializing Environment..." fullScreen={false} />
         </div>
       )}
 
