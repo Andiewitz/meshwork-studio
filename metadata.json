@@ -1,0 +1,5 @@
+{
+  "name": "Meshwork Studio Scaffold",
+  "description": "A scalable React scaffold featuring React Flow and a Firebase service structure, styled with Tailwind CSS.",
+  "requestFramePermissions": []
+}
