@@ -29,7 +29,7 @@ export const TemplateSelectorPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-4">
             <button 
                 onClick={() => navigate('/')}
@@ -41,7 +41,7 @@ export const TemplateSelectorPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-8 pb-32">
         <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10">
                 <h2 className="text-3xl font-bold text-slate-900 mb-3 font-heading">Choose a starting point</h2>
@@ -86,26 +86,27 @@ export const TemplateSelectorPage: React.FC = () => {
                     </div>
                 ))}
             </div>
-
-            <div className="flex justify-center">
-                <button
-                    onClick={handleCreate}
-                    disabled={isCreating}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                    {isCreating ? (
-                        <>
-                            <Loader2 size={20} className="animate-spin" />
-                            Creating Workspace...
-                        </>
-                    ) : (
-                        <>
-                            Create Mesh
-                        </>
-                    )}
-                </button>
-            </div>
         </div>
+      </div>
+
+      {/* Fixed Action Footer */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-200 flex justify-center z-20 shadow-[-10px_0_20px_rgba(0,0,0,0.05)]">
+        <button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+        >
+            {isCreating ? (
+                <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Creating Workspace...
+                </>
+            ) : (
+                <>
+                    Create Mesh
+                </>
+            )}
+        </button>
       </div>
     </div>
   );

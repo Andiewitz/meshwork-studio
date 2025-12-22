@@ -60,14 +60,7 @@ export const Dashboard: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-900 font-heading">My Canvas</h1>
             <p className="text-slate-500 mt-1">Manage and edit your workflows.</p>
         </div>
-        
-        <Link 
-            to="/flow/new"
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg font-medium transition-colors shadow-lg shadow-slate-900/10"
-        >
-            <Plus size={18} />
-            Create New
-        </Link>
+        {/* Redundant button removed; leveraging the Grid Card for creation */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
