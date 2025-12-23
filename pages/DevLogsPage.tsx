@@ -2,7 +2,14 @@ import React from 'react';
 import { ArrowLeft, Rocket, Star, Wrench, Bug, Layers, Globe, ShieldCheck, Sparkles, Layout, Cloud, Database, Palette, MousePointer2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const LogEntry = ({ version, date, type, children }: { version: string, date: string, type: 'major' | 'minor' | 'patch', children: React.ReactNode }) => (
+interface LogEntryProps {
+  version: string;
+  date: string;
+  type: 'major' | 'minor' | 'patch';
+  children?: React.ReactNode;
+}
+
+const LogEntry: React.FC<LogEntryProps> = ({ version, date, type, children }) => (
   <div className="relative pl-8 pb-12 border-l border-slate-200 last:border-0 last:pb-0">
     <div className={`
         absolute left-[-9px] top-0 w-4 h-4 rounded-full border-2 
@@ -23,7 +30,14 @@ const LogEntry = ({ version, date, type, children }: { version: string, date: st
   </div>
 );
 
-const Section = ({ title, icon: Icon, colorClass, children }: { title: string, icon: any, colorClass: string, children: React.ReactNode }) => (
+interface SectionProps {
+  title: string;
+  icon: any;
+  colorClass: string;
+  children?: React.ReactNode;
+}
+
+const Section: React.FC<SectionProps> = ({ title, icon: Icon, colorClass, children }) => (
     <div className="mb-4 last:mb-0">
         <h4 className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wider mb-2 ${colorClass}`}>
             <Icon size={14} />
