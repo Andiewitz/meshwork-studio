@@ -427,10 +427,10 @@ const FlowEditorContent: React.FC = () => {
       <div className="absolute top-4 left-4 z-50">
         <button 
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-slate-300 hover:text-white rounded-lg backdrop-blur-sm transition-all border border-white/5 shadow-sm group"
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-900 text-slate-900 font-bold rounded-xl shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px] transition-all group"
         >
-          <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-          <span className="text-sm font-medium">Exit</span>
+          <ChevronLeft size={20} strokeWidth={3} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span className="text-sm">Exit</span>
         </button>
       </div>
 
@@ -442,8 +442,10 @@ const FlowEditorContent: React.FC = () => {
       )}
 
       {/* Prototype Version Label */}
-      <div className="absolute top-5 right-6 z-40 pointer-events-none select-none opacity-60">
-        <span className="text-xs font-mono text-zinc-500">alpha v1.2.24</span>
+      <div className="absolute top-5 right-6 z-40 pointer-events-none select-none">
+        <span className="px-3 py-1.5 bg-slate-900 text-white border border-slate-700 rounded-lg text-xs font-bold font-mono shadow-xl opacity-80">
+          alpha v1.2.24
+        </span>
       </div>
 
       {/* Node Library Sidebar */}

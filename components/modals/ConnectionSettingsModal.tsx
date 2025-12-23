@@ -37,14 +37,14 @@ export const ConnectionSettingsModal: React.FC<ConnectionSettingsModalProps> = (
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] flex flex-col animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-          <h2 className="text-lg font-bold text-white font-heading">Define Connection</h2>
+        <div className="flex items-center justify-between p-4 border-b-2 border-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 font-heading">Define Connection</h2>
           <button 
             onClick={onClose}
-            className="p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -63,23 +63,23 @@ export const ConnectionSettingsModal: React.FC<ConnectionSettingsModalProps> = (
                   onClose();
                 }}
                 className={`
-                  flex items-center gap-3 p-3 rounded-xl border transition-all text-left
+                  flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
                   ${isSelected 
-                    ? 'bg-blue-600/10 border-blue-500' 
-                    : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'}
+                    ? 'bg-slate-50 border-slate-900 shadow-[2px_2px_0_0_#0f172a] translate-x-1' 
+                    : 'bg-white border-slate-100 hover:border-slate-400 hover:bg-slate-50'}
                 `}
               >
                 <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${proto.color}20`, color: proto.color }}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border-2 border-transparent"
+                  style={{ backgroundColor: `${proto.color}15`, color: proto.color, borderColor: isSelected ? proto.color : 'transparent' }}
                 >
                   <Icon size={20} />
                 </div>
                 <div>
-                  <div className={`text-sm font-bold ${isSelected ? 'text-blue-400' : 'text-zinc-200'}`}>
+                  <div className={`text-sm font-bold ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>
                     {proto.label}
                   </div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="text-xs text-slate-400 font-medium">
                     {proto.description}
                   </div>
                 </div>

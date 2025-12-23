@@ -46,49 +46,49 @@ export const CacheSelectorModal: React.FC<CacheSelectorModalProps> = ({ isOpen, 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800">
+        <div className="flex items-center justify-between p-6 border-b-2 border-slate-900">
           <div>
-            <h2 className="text-xl font-bold text-white font-heading">Select Technology</h2>
-            <p className="text-zinc-400 text-sm mt-1">Choose a CDN, Edge network, or Caching layer.</p>
+            <h2 className="text-xl font-bold text-slate-900 font-heading">Select Technology</h2>
+            <p className="text-slate-500 text-sm mt-1">Choose a CDN, Edge network, or Caching layer.</p>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"><X size={20} /></button>
         </div>
 
-        <div className="p-4 border-b border-zinc-800 bg-zinc-950/50">
+        <div className="p-4 border-b-2 border-slate-100 bg-slate-50">
            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search Cloudflare, Redis, etc..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-700 text-white pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-zinc-600"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-slate-900 focus:shadow-[2px_2px_0_0_#0f172a] placeholder:text-slate-400 font-bold transition-all"
                   autoFocus
                 />
             </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 bg-zinc-950/30">
+        <div className="flex-1 overflow-y-auto p-4 bg-white">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {filteredTechs.map(tech => (
                     <button
                         key={tech.id}
                         onClick={() => { onSelect(tech); onClose(); }}
-                        className="flex items-center gap-3 p-3 bg-zinc-900 border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/5 rounded-xl transition-all group text-left"
+                        className="flex items-center gap-3 p-3 bg-white border-2 border-slate-100 hover:border-slate-900 hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5 rounded-xl transition-all group text-left"
                     >
-                        <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 p-2 border border-zinc-700/50 overflow-hidden">
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 p-2 border border-slate-200 overflow-hidden">
                             {tech.logo ? (
                                 <img src={tech.logo} alt={tech.name} className="w-full h-full object-contain" />
                             ) : (
-                                <Zap size={20} className="text-zinc-400 group-hover:text-amber-400" />
+                                <Zap size={20} className="text-slate-400 group-hover:text-slate-900" />
                             )}
                         </div>
                         <div>
-                            <div className="text-sm font-medium text-zinc-200 group-hover:text-white truncate">{tech.name}</div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{tech.category}</div>
+                            <div className="text-sm font-bold text-slate-700 group-hover:text-slate-900 truncate">{tech.name}</div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{tech.category}</div>
                         </div>
                     </button>
                 ))}

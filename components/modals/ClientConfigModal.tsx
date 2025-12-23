@@ -41,12 +41,12 @@ export const ClientConfigModal: React.FC<ClientConfigModalProps> = ({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] flex flex-col animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-          <h2 className="text-lg font-bold text-white font-heading">Configure Client</h2>
-          <button onClick={onClose} className="p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg"><X size={18} /></button>
+        <div className="flex items-center justify-between p-4 border-b-2 border-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 font-heading">Configure Client</h2>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-6">
@@ -61,36 +61,36 @@ export const ClientConfigModal: React.FC<ClientConfigModalProps> = ({
                         type="button"
                         onClick={() => setSelectedType(type.id)}
                         className={`
-                            flex flex-col items-center gap-3 p-4 rounded-xl border transition-all
+                            flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all
                             ${isSelected 
-                                ? 'bg-sky-600/10 border-sky-500 text-sky-400' 
-                                : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700'}
+                                ? 'bg-slate-50 border-slate-900 text-slate-900 shadow-[2px_2px_0_0_#0f172a] -translate-y-0.5' 
+                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600'}
                         `}
                      >
-                        <Icon size={32} />
-                        <span className="text-xs font-medium">{type.label}</span>
+                        <Icon size={32} strokeWidth={1.5} />
+                        <span className="text-xs font-bold">{type.label}</span>
                      </button>
                  )
              })}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
               Client Name
             </label>
             <input
                 type="text"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-700 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                className="w-full bg-white border-2 border-slate-200 text-slate-900 px-4 py-2.5 rounded-xl focus:outline-none focus:border-slate-900 focus:shadow-[2px_2px_0_0_#0f172a] font-bold transition-all"
                 placeholder="e.g. iOS App"
                 autoFocus
               />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-700 rounded-lg font-bold transition-all">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold transition-colors flex items-center justify-center gap-2 shadow-lg">
               <Check size={16} /> Save
             </button>
           </div>

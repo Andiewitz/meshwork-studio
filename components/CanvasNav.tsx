@@ -32,15 +32,15 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
   activeTool,
   setActiveTool
 }) => {
-  const btnClass = "p-2 rounded-lg transition-colors text-slate-600 hover:bg-blue-50 hover:text-blue-600";
-  const activeBtnClass = "p-2 rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/30 transition-colors";
+  const btnClass = "p-2 rounded-lg border-2 border-transparent transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-900";
+  const activeBtnClass = "p-2 rounded-lg bg-slate-900 text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#94a3b8] transition-all transform -translate-y-0.5";
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-1 p-2 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl shadow-slate-200/50">
+      <div className="flex items-center gap-1 p-2 rounded-2xl bg-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
         
         {/* Tools Section */}
-        <div className="flex items-center gap-1 pr-3 border-r border-slate-200">
+        <div className="flex items-center gap-1 pr-3 border-r-2 border-slate-100">
           <button 
             onClick={() => setActiveTool('select')}
             className={activeTool === 'select' ? activeBtnClass : btnClass} 
@@ -65,21 +65,23 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
         </div>
 
         {/* Add Nodes Button */}
-        <div className="flex items-center gap-1 px-3 border-r border-slate-200">
+        <div className="flex items-center gap-1 px-3 border-r-2 border-slate-100">
           <button 
             onClick={onToggleLibrary}
             className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all
-                ${isLibraryOpen ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
+                flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-sm transition-all border-2
+                ${isLibraryOpen 
+                    ? 'bg-indigo-600 text-white border-indigo-900 shadow-[2px_2px_0_0_#312e81] -translate-y-0.5' 
+                    : 'bg-white text-slate-900 border-slate-200 hover:border-slate-900 hover:shadow-[2px_2px_0_0_#cbd5e1] hover:-translate-y-0.5'}
             `}
           >
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={3} />
             <span>Add Node</span>
           </button>
         </div>
 
         {/* History Section */}
-        <div className="flex items-center gap-1 px-3 border-r border-slate-200">
+        <div className="flex items-center gap-1 px-3 border-r-2 border-slate-100">
           <button onClick={onUndo} className={btnClass}>
             <Undo size={18} />
           </button>
@@ -102,7 +104,7 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
       
       {/* Tooltip for Define Connection Mode */}
       {activeTool === 'connect' && (
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs px-3 py-1.5 rounded-full whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-white text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 shadow-lg">
           Click a line to define protocol
         </div>
       )}

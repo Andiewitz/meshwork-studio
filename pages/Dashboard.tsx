@@ -297,11 +297,11 @@ export const Dashboard: React.FC = () => {
                     <div 
                         key={flow.id} 
                         onClick={() => navigate(`/flow/${flow.id}`)}
-                        className="bg-white p-5 rounded-3xl border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[6px_6px_0_0_#0f172a] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-44 cursor-pointer relative"
+                        className="bg-white p-4 rounded-3xl border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[6px_6px_0_0_#0f172a] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-40 cursor-pointer relative"
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="p-3 bg-slate-900 text-white rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                <FileText size={20} />
+                        <div className="flex justify-between items-start mb-3">
+                            <div className="p-2.5 bg-slate-900 text-white rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                <FileText size={18} />
                             </div>
                             
                             {/* Context Menu Trigger */}
@@ -325,14 +325,14 @@ export const Dashboard: React.FC = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-slate-900 text-lg mb-1 truncate leading-tight group-hover:underline decoration-2 underline-offset-2 transition-all">
+                            <h4 className="font-bold text-slate-900 text-base mb-1 truncate leading-tight group-hover:underline decoration-2 underline-offset-2 transition-all">
                                 {flow.title}
                             </h4>
-                            <p className="text-xs text-slate-500 font-mono">ID: {flow.id.slice(0,8)}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">ID: {flow.id.slice(0,8)}</p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-4 pt-4 border-t-2 border-slate-100 group-hover:border-slate-200">
-                            <Clock size={14} />
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-3 pt-3 border-t-2 border-slate-100 group-hover:border-slate-200">
+                            <Clock size={12} />
                             <span>Edited {new Date(flow.updatedAt).toLocaleDateString()}</span>
                         </div>
                     </div>
