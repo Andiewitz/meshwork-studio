@@ -30,6 +30,16 @@ interface NodeItemProps {
 }
 
 const NodeItem = ({ type, label, icon: Icon, colorClass, middlewareType }: NodeItemProps) => {
+  // Extract color name to generate pastel background + contrasting border
+  // Input format expected: "text-color-shade" (e.g. text-sky-600)
+  const colorMatch = colorClass.match(/text-([a-z]+)-/);
+  const color = colorMatch ? colorMatch[1] : 'slate';
+  
+  // Dynamic classes for CDN Tailwind
+  // We use shade 100 for background and 300 for border for better visibility/contrast
+  const bgClass = `bg-${color}-100`;
+  const borderClass = `border-${color}-300`;
+
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.setData('application/label', label);
@@ -45,7 +55,7 @@ const NodeItem = ({ type, label, icon: Icon, colorClass, middlewareType }: NodeI
       onDragStart={(event) => onDragStart(event, type)}
       draggable
     >
-      <div className={`p-2.5 rounded-lg border-2 border-slate-100 ${colorClass.replace('text-', 'bg-').replace('500', '50')} ${colorClass}`}>
+      <div className={`p-2.5 rounded-lg border-2 text-slate-900 ${bgClass} ${borderClass}`}>
         <Icon size={20} />
       </div>
       <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">{label}</span>

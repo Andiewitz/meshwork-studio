@@ -1,6 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Layout, Sparkles, Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { 
+    X, 
+    Layout, 
+    Sparkles, 
+    Loader2, 
+    CheckCircle2, 
+    ArrowRight,
+    Search,
+    PenLine
+} from 'lucide-react';
 import { templates } from '../data/templates';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
@@ -9,76 +18,24 @@ import { PageTransition } from '../components/PageTransition';
 export const TemplateSelectorPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedId, setSelectedId] = useState<string>('blank');
-  const [isCreating, setIsCreating] = useState(false);
   
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const [selectedId, setSelectedId] = useState<string>('blank');
+  const [customTitle, setCustomTitle] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  // 1. Handle Mouse Wheel (Vertical -> Horizontal)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+  const selectedTemplate = templates.find(t => t.id === selectedId);
 
-    const handleWheel = (evt: WheelEvent) => {
-      // Map vertical scroll to horizontal if vertical delta is dominant
-      if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {
-         evt.preventDefault();
-         container.scrollLeft += evt.deltaY;
-      }
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  // 2. Auto-Highlight on Scroll (Center Detection)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const containerRect = container.getBoundingClientRect();
-      const containerCenter = containerRect.left + (containerRect.width / 2);
-      
-      let closestTemplateId = selectedId;
-      let minDistance = Infinity;
-
-      // Check distance of each card to the center of the container
-      templates.forEach((template, index) => {
-        const card = cardsRef.current[index];
-        if (!card) return;
-
-        const cardRect = card.getBoundingClientRect();
-        const cardCenter = cardRect.left + (cardRect.width / 2);
-        const distance = Math.abs(containerCenter - cardCenter);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            closestTemplateId = template.id;
-        }
-      });
-
-      if (closestTemplateId !== selectedId) {
-        setSelectedId(closestTemplateId);
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    // Initial check
-    handleScroll();
-    
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [selectedId]);
-
-
-  const handleCreate = async (e: React.MouseEvent, templateId: string) => {
-    e.stopPropagation(); // Prevent card click event
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user) return;
     setIsCreating(true);
     
     try {
-      const flow = await flowService.createFlowFromTemplate(user.uid, templateId);
+      const flow = await flowService.createFlowFromTemplate(
+        user.uid, 
+        selectedId,
+        customTitle || undefined
+      );
       navigate(`/flow/${flow.id}`);
     } catch (error) {
       console.error("Failed to create flow", error);
@@ -86,183 +43,179 @@ export const TemplateSelectorPage: React.FC = () => {
     }
   };
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 320; // Approx card width
-      scrollContainerRef.current.scrollBy({ 
-        left: direction === 'right' ? scrollAmount : -scrollAmount, 
-        behavior: 'smooth' 
-      });
-    }
-  };
-
   return (
-    <PageTransition loadingMessage="Loading Templates...">
-        <div className="min-h-screen bg-slate-950 flex flex-col text-white overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-6 flex items-center justify-between z-20">
-            <button 
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
-            >
-                <div className="p-2 rounded-full border border-slate-800 bg-slate-900 group-hover:bg-slate-800 transition-colors">
-                    <ArrowLeft size={18} />
-                </div>
-                <span className="text-sm font-medium hidden md:inline">Back to Dashboard</span>
-            </button>
+    <PageTransition loadingMessage="Loading Studio...">
+        <div className="relative min-h-screen w-full bg-slate-50 flex items-center justify-center p-4 overflow-hidden">
             
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-slate-600">MESHWORK STUDIO</span>
-            </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col justify-center relative pb-12">
-            <div className="text-center mb-8 px-4">
-                <h1 className="text-3xl md:text-4xl font-bold font-heading mb-3 tracking-tight">
-                    Initialize Architecture
-                </h1>
-                <p className="text-slate-400 max-w-lg mx-auto text-base">
-                    Select a foundation for your distributed system.
-                </p>
-            </div>
-
-            {/* Carousel Area */}
-            <div className="relative w-full group/carousel">
-                {/* Scroll Buttons */}
-                <button 
-                    onClick={() => scroll('left')}
-                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 backdrop-blur-sm transition-all hidden md:flex opacity-0 group-hover/carousel:opacity-100"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <button 
-                    onClick={() => scroll('right')}
-                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 backdrop-blur-sm transition-all hidden md:flex opacity-0 group-hover/carousel:opacity-100"
-                >
-                    <ChevronRight size={24} />
-                </button>
-
-                {/* Scroll Container */}
-                <div 
-                    ref={scrollContainerRef}
-                    className="flex gap-6 overflow-x-auto snap-x snap-mandatory py-8 no-scrollbar items-center scroll-smooth"
-                >
-                    {/* Start Spacer: Half screen width minus half card width (approx 160px) */}
-                    <div className="shrink-0 w-[10vw] md:w-[calc(50vw-160px)]" />
-
-                    {templates.map((template, index) => {
-                        const isSelected = selectedId === template.id;
-                        
-                        return (
-                            <div 
-                                key={template.id}
-                                ref={(el) => { if (el) cardsRef.current[index] = el; }}
-                                onClick={() => {
-                                    setSelectedId(template.id);
-                                    cardsRef.current[index]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                                }}
-                                className={`
-                                    relative flex-shrink-0 snap-center cursor-pointer transition-all duration-500 ease-out
-                                    flex flex-col overflow-hidden border
-                                    w-[280px] h-[420px] md:w-[320px] md:h-[460px] rounded-3xl
-                                    ${isSelected 
-                                        ? 'scale-100 opacity-100 border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-slate-900 z-10' 
-                                        : 'scale-90 opacity-40 border-slate-800 bg-slate-900/30 hover:opacity-60'}
-                                `}
-                            >
-                                {/* Visual Header */}
-                                <div className={`
-                                    h-40 md:h-48 w-full flex items-center justify-center relative overflow-hidden transition-colors duration-500
-                                    ${isSelected ? template.thumbnailColor.replace('bg-', 'bg-opacity-10 bg-') : 'bg-slate-950'}
-                                `}>
-                                    <div className="absolute inset-0 opacity-20" 
-                                        style={{ 
-                                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', 
-                                            backgroundSize: '20px 20px' 
-                                        }} 
-                                    />
-                                    
-                                    <div className={`
-                                        relative z-10 p-4 rounded-2xl bg-slate-950 shadow-2xl border border-slate-800 transition-transform duration-500 flex items-center justify-center
-                                        ${isSelected ? 'scale-110 shadow-blue-900/20' : 'scale-100'}
-                                    `}>
-                                        {template.id === 'blank' ? (
-                                            <Layout size={32} className={isSelected ? 'text-white' : 'text-slate-500'} />
-                                        ) : template.logo ? (
-                                            <img 
-                                                src={template.logo} 
-                                                alt={template.name} 
-                                                className={`w-8 h-8 md:w-10 md:h-10 object-contain transition-all duration-300 ${isSelected ? 'opacity-100' : 'opacity-60 grayscale'}`}
-                                            />
-                                        ) : (
-                                            <Sparkles size={32} className={isSelected ? 'text-amber-400' : 'text-slate-500'} />
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Content Body */}
-                                <div className="flex-1 p-6 md:p-8 flex flex-col relative bg-gradient-to-b from-slate-900 to-slate-950">
-                                    <div className="mb-4">
-                                        <h3 className={`text-lg md:text-xl font-bold font-heading mb-2 ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                                            {template.name}
-                                        </h3>
-                                        <p className="text-xs md:text-sm text-slate-500 leading-relaxed line-clamp-3">
-                                            {template.description}
-                                        </p>
-                                    </div>
-
-                                    <div className="mt-auto">
-                                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-600 uppercase tracking-widest mb-6">
-                                            <div className="flex items-center gap-1.5">
-                                                <Layout size={12} />
-                                                <span>{template.nodes.length} Nodes</span>
-                                            </div>
-                                            <div className="w-1 h-1 rounded-full bg-slate-800"></div>
-                                            <div>
-                                                {template.id === 'blank' ? 'Empty' : 'Template'}
-                                            </div>
-                                        </div>
-
-                                        {/* Create Button */}
-                                        <div className={`
-                                            transition-all duration-500 ease-out transform
-                                            ${isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
-                                        `}>
-                                            <button
-                                                onClick={(e) => handleCreate(e, template.id)}
-                                                disabled={isCreating}
-                                                className={`
-                                                    w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all
-                                                    ${isCreating 
-                                                        ? 'bg-slate-800 text-slate-400 cursor-wait' 
-                                                        : 'bg-white text-slate-900 hover:bg-slate-200 hover:scale-[1.02] shadow-lg shadow-white/5'}
-                                                `}
-                                            >
-                                                {isCreating && selectedId === template.id ? (
-                                                    <>
-                                                        <Loader2 size={16} className="animate-spin" />
-                                                        <span>Initializing...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle2 size={16} />
-                                                        <span>Initialize Mesh</span>
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    
-                    {/* End Spacer */}
-                    <div className="shrink-0 w-[10vw] md:w-[calc(50vw-160px)]" />
+            {/* Fake Dashboard Background (Blurred) */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-30 select-none overflow-hidden" aria-hidden="true">
+                <div className="flex h-full w-full">
+                    {/* Fake Sidebar */}
+                    <div className="w-64 bg-white border-r-2 border-slate-200 h-full flex flex-col p-4 gap-4 hidden md:flex">
+                        <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+                        <div className="h-4 w-24 bg-slate-100 rounded"></div>
+                        <div className="mt-8 space-y-3">
+                            <div className="h-10 w-full bg-slate-100 rounded-xl"></div>
+                            <div className="h-10 w-full bg-white border-2 border-slate-100 rounded-xl"></div>
+                            <div className="h-10 w-full bg-white border-2 border-slate-100 rounded-xl"></div>
+                        </div>
+                    </div>
+                    {/* Fake Content */}
+                    <div className="flex-1 bg-slate-50 p-6 md:p-8 flex flex-col gap-6">
+                        <div className="h-16 w-full border-b-2 border-slate-200 mb-2"></div>
+                        <div className="h-64 w-full bg-white rounded-3xl border-2 border-slate-200"></div>
+                        <div className="grid grid-cols-3 gap-6">
+                            <div className="h-40 bg-white rounded-3xl border-2 border-slate-200"></div>
+                            <div className="h-40 bg-white rounded-3xl border-2 border-slate-200"></div>
+                            <div className="h-40 bg-white rounded-3xl border-2 border-slate-200"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Backdrop Blur Overlay */}
+            <div className="absolute inset-0 z-0 backdrop-blur-md bg-slate-50/40"></div>
+
+            {/* The "Pop Up" Modal */}
+            <div className="relative z-10 w-full max-w-2xl bg-white border-2 border-slate-900 rounded-2xl shadow-[12px_12px_0_0_#0f172a] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                
+                {/* Header */}
+                <div className="px-6 py-5 border-b-2 border-slate-100 flex items-center justify-between bg-white">
+                    <div>
+                        <h1 className="text-xl font-bold font-heading text-slate-900 flex items-center gap-2">
+                           <Layout size={20} className="text-slate-500" />
+                           Create New Mesh
+                        </h1>
+                        <p className="text-xs text-slate-500 font-medium mt-1">Configure your new architecture project</p>
+                    </div>
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                        title="Close"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="flex flex-col md:flex-row h-[500px] md:h-[450px]">
+                    {/* Left: Template Selection */}
+                    <div className="flex-1 border-r-2 border-slate-100 overflow-y-auto bg-slate-50 p-2 md:p-4">
+                        <div className="mb-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Select Template
+                        </div>
+                        <div className="space-y-2">
+                            {templates.map((t) => {
+                                const isSelected = selectedId === t.id;
+                                return (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setSelectedId(t.id)}
+                                        className={`
+                                            w-full flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all duration-200
+                                            ${isSelected 
+                                                ? 'bg-white border-slate-900 shadow-[4px_4px_0_0_#cbd5e1]' 
+                                                : 'bg-transparent border-transparent hover:bg-white hover:border-slate-200'}
+                                        `}
+                                    >
+                                        <div className={`
+                                            w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border transition-colors
+                                            ${isSelected ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-200 text-slate-400'}
+                                        `}>
+                                            {t.id === 'blank' ? <Layout size={18} /> : 
+                                             t.logo ? <img src={t.logo} alt="" className="w-5 h-5 object-contain" /> : <Sparkles size={18} />}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className={`text-sm font-bold ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>
+                                                {t.name}
+                                            </div>
+                                            <div className="text-xs text-slate-400 line-clamp-1 mt-0.5">
+                                                {t.id === 'blank' ? 'Empty workspace' : 'Pre-configured'}
+                                            </div>
+                                        </div>
+                                        {isSelected && (
+                                            <div className="ml-auto flex items-center h-full text-slate-900">
+                                                <ArrowRight size={16} />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right: Configuration Form */}
+                    <div className="flex-1 flex flex-col p-6 bg-white overflow-y-auto">
+                        <form id="create-flow-form" onSubmit={handleCreate} className="flex-1 flex flex-col">
+                             
+                             {/* Preview Card */}
+                             <div className="mb-6 p-4 rounded-xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center">
+                                 <div className={`
+                                    w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-sm bg-white border-2 border-slate-200
+                                 `}>
+                                     {selectedTemplate?.id === 'blank' ? (
+                                        <Layout size={32} className="text-slate-700" />
+                                     ) : selectedTemplate?.logo ? (
+                                        <img src={selectedTemplate.logo} alt="" className="w-8 h-8 object-contain" />
+                                     ) : (
+                                        <Sparkles size={32} className="text-amber-500" />
+                                     )}
+                                 </div>
+                                 <h3 className="text-lg font-bold text-slate-900">{selectedTemplate?.name}</h3>
+                                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                                     {selectedTemplate?.description}
+                                 </p>
+                             </div>
+
+                             <div className="space-y-4 mb-auto">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
+                                        Project Name
+                                    </label>
+                                    <div className="relative">
+                                        <PenLine className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input 
+                                            type="text" 
+                                            value={customTitle}
+                                            onChange={(e) => setCustomTitle(e.target.value)}
+                                            placeholder={selectedTemplate?.name || "Untitled Mesh"}
+                                            className="w-full bg-white border-2 border-slate-200 text-slate-900 pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-slate-900 focus:shadow-[2px_2px_0_0_#0f172a] font-bold transition-all placeholder:font-normal"
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+                             </div>
+
+                             {/* Actions */}
+                             <div className="pt-6 mt-6 border-t-2 border-slate-100 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/')}
+                                    className="flex-1 px-4 py-3 bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-700 rounded-xl font-bold transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className="flex-[2] px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
+                                >
+                                    {isCreating ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>Building...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={18} />
+                                            <span>Create Project</span>
+                                        </>
+                                    )}
+                                </button>
+                             </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </PageTransition>
   );

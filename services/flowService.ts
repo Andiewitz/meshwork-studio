@@ -83,14 +83,14 @@ export const flowService = {
   },
 
   // Create a new flow from a Template
-  createFlowFromTemplate: async (ownerId: string, templateId: string) => {
+  createFlowFromTemplate: async (ownerId: string, templateId: string, customTitle?: string) => {
     const template = templates.find(t => t.id === templateId);
     if (!template) throw new Error("Template not found");
 
     const newFlow: FlowData = {
         id: '',
         ownerId,
-        title: template.id === 'blank' ? 'New Architecture' : template.name,
+        title: customTitle || (template.id === 'blank' ? 'New Architecture' : template.name),
         nodes: template.nodes,
         edges: template.edges,
         createdAt: Date.now(),
