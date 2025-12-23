@@ -36,6 +36,11 @@ const saveLocalFlows = (flows: FlowData[]) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(flows));
 };
 
+// Helper to generate unique ID
+const generateId = (prefix: string = 'local') => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
 export const flowService = {
   // Create a new flow (Empty)
   createFlow: async (ownerId: string, title: string) => {
@@ -52,7 +57,7 @@ export const flowService = {
 
     // Guest / Offline Mode
     if (ownerId === GUEST_ID) {
-        newFlow.id = `local-${Date.now()}`;
+        newFlow.id = generateId();
         const flows = getLocalFlows();
         flows.push(newFlow);
         saveLocalFlows(flows);
@@ -60,15 +65,16 @@ export const flowService = {
     }
     
     // Firestore Mode
-    // Remove id from object passed to addDoc (Firestore generates it)
-    const { id, ...data } = newFlow;
     try {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-        return { id: docRef.id, ...data } as FlowData;
+        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+            ...newFlow,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return { ...newFlow, id: docRef.id };
     } catch (error) {
-        console.error("Firestore create failed, falling back to local for robustness in demo", error);
-        // Fallback for demo purposes if config is invalid
-        newFlow.id = `local-fallback-${Date.now()}`;
+        console.error("Firestore create failed, falling back to local", error);
+        newFlow.id = generateId('local-fallback');
         const flows = getLocalFlows();
         flows.push(newFlow);
         saveLocalFlows(flows);
@@ -82,39 +88,116 @@ export const flowService = {
     if (!template) throw new Error("Template not found");
 
     const newFlow: FlowData = {
-      id: '',
-      ownerId,
-      title: template.name === 'Blank Canvas' ? 'Untitled Mesh' : template.name,
-      nodes: template.nodes,
-      edges: template.edges,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      isPublic: false
+        id: '',
+        ownerId,
+        title: template.id === 'blank' ? 'New Architecture' : template.name,
+        nodes: template.nodes,
+        edges: template.edges,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        isPublic: false
     };
 
     if (ownerId === GUEST_ID) {
-        newFlow.id = `local-${Date.now()}`;
+        newFlow.id = generateId();
         const flows = getLocalFlows();
         flows.push(newFlow);
         saveLocalFlows(flows);
         return newFlow;
     }
 
-    const { id, ...data } = newFlow;
     try {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
-        return { id: docRef.id, ...data } as FlowData;
+        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+            ...newFlow,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return { ...newFlow, id: docRef.id };
     } catch (error) {
-        console.error("Firestore create template failed, falling back", error);
-        newFlow.id = `local-fallback-${Date.now()}`;
-        const flows = getLocalFlows();
-        flows.push(newFlow);
-        saveLocalFlows(flows);
-        return newFlow;
+        console.error("Firestore create failed", error);
+        throw error;
     }
   },
 
-  // Save/Update an existing flow
+  // Duplicate a flow
+  duplicateFlow: async (userId: string, originalFlow: FlowData) => {
+    const newTitle = `${originalFlow.title} (Copy)`;
+    const newFlow: FlowData = {
+        ...originalFlow,
+        id: '', // Will be assigned
+        ownerId: userId,
+        title: newTitle,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+    };
+
+    if (userId === GUEST_ID) {
+        newFlow.id = generateId();
+        const flows = getLocalFlows();
+        flows.push(newFlow);
+        saveLocalFlows(flows);
+        return newFlow;
+    }
+
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...flowData } = newFlow;
+        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+            ...flowData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return { ...newFlow, id: docRef.id };
+    } catch (error) {
+        console.error("Firestore duplicate failed", error);
+        throw error;
+    }
+  },
+
+  // Get all flows for a user
+  getUserFlows: async (userId: string): Promise<FlowData[]> => {
+    if (userId === GUEST_ID) {
+        return getLocalFlows();
+    }
+
+    try {
+        const q = query(collection(db, COLLECTION_NAME), where("ownerId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Handle Firestore Timestamps if present
+            const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now();
+            const updatedAt = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now();
+            return { ...data, id: doc.id, createdAt, updatedAt } as FlowData;
+        });
+    } catch (error) {
+        console.error("Error fetching flows", error);
+        return [];
+    }
+  },
+
+  // Get single flow
+  getFlow: async (flowId: string): Promise<FlowData | null> => {
+    if (flowId.startsWith('local-')) {
+        const flows = getLocalFlows();
+        return flows.find(f => f.id === flowId) || null;
+    }
+
+    try {
+        const docRef = doc(db, COLLECTION_NAME, flowId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+             const data = docSnap.data();
+             return { ...data, id: docSnap.id } as FlowData;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching flow", error);
+        return null;
+    }
+  },
+
+  // Save/Update flow content (nodes/edges)
   saveFlow: async (flowId: string, nodes: Node[], edges: Edge[]) => {
     if (flowId.startsWith('local-')) {
         const flows = getLocalFlows();
@@ -128,64 +211,40 @@ export const flowService = {
         return;
     }
 
-    const flowRef = doc(db, COLLECTION_NAME, flowId);
-    await updateDoc(flowRef, {
-      nodes,
-      edges,
-      updatedAt: Date.now()
-    });
-  },
-
-  // Get all flows for a specific user
-  getUserFlows: async (userId: string): Promise<FlowData[]> => {
-    // Combine local fallback flows with guest flows if user is guest
-    if (userId === GUEST_ID) {
-        return getLocalFlows();
-    }
-
     try {
-        const q = query(
-        collection(db, COLLECTION_NAME), 
-        where("ownerId", "==", userId)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const fbFlows = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-        } as FlowData));
-
-        // Also return any fallback flows created during errors
-        const localFlows = getLocalFlows().filter(f => f.id.startsWith('local-fallback-'));
-        return [...fbFlows, ...localFlows];
-
+        const docRef = doc(db, COLLECTION_NAME, flowId);
+        await updateDoc(docRef, {
+            nodes,
+            edges,
+            updatedAt: serverTimestamp()
+        });
     } catch (error) {
-        console.error("Error fetching flows", error);
-        return getLocalFlows(); // Fallback to local on error
+        console.error("Error saving flow", error);
     }
   },
 
-  // Get a single flow by ID
-  getFlow: async (flowId: string): Promise<FlowData | null> => {
+  // Rename a flow
+  renameFlow: async (flowId: string, newTitle: string) => {
     if (flowId.startsWith('local-')) {
         const flows = getLocalFlows();
-        return flows.find(f => f.id === flowId) || null;
+        const index = flows.findIndex(f => f.id === flowId);
+        if (index !== -1) {
+            flows[index].title = newTitle;
+            flows[index].updatedAt = Date.now();
+            saveLocalFlows(flows);
+        }
+        return;
     }
 
     try {
         const docRef = doc(db, COLLECTION_NAME, flowId);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as FlowData;
-        } else {
-        return null;
-        }
+        await updateDoc(docRef, {
+            title: newTitle,
+            updatedAt: serverTimestamp()
+        });
     } catch (error) {
-        console.error("Error getting flow", error);
-        // Fallback check
-        const flows = getLocalFlows();
-        return flows.find(f => f.id === flowId) || null;
+        console.error("Error renaming flow", error);
+        throw error;
     }
   },
 
@@ -197,6 +256,12 @@ export const flowService = {
         saveLocalFlows(newFlows);
         return;
     }
-    await deleteDoc(doc(db, COLLECTION_NAME, flowId));
+
+    try {
+        await deleteDoc(doc(db, COLLECTION_NAME, flowId));
+    } catch (error) {
+        console.error("Error deleting flow", error);
+        throw error;
+    }
   }
 };

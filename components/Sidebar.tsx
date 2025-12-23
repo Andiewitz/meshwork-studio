@@ -30,18 +30,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-300 transition-all duration-300 border-r border-slate-900">
       {/* Logo Area */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-900">
+      <div className="h-20 flex items-center justify-between px-4 border-b border-slate-900 bg-slate-950">
         {isOpen ? (
-          <div className="flex flex-col">
-            <span className="text-xl font-bold font-heading text-white tracking-tight leading-tight">
-              Meshwork
-            </span>
-            <span className="text-[10px] font-mono text-slate-500">alpha v1.2.24</span>
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col justify-center">
+              <span className="text-lg font-bold font-heading text-white tracking-tight">
+                Meshwork Studio
+              </span>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full">
-            <span className="text-xl font-bold font-heading text-white">MS</span>
-          </div>
+          <div />
         )}
         <button 
           onClick={toggleSidebar}

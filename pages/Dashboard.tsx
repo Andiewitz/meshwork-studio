@@ -1,64 +1,173 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { FlowData } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, Clock, MoreHorizontal, FileText, Search, ArrowRight, Play } from 'lucide-react';
+import { Plus, Clock, MoreHorizontal, FileText, Search, ArrowRight, Play, Trash2, Edit, Copy } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
+import { RenameFlowModal } from '../components/modals/RenameFlowModal';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [flows, setFlows] = useState<FlowData[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Menu State
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Rename State
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [flowToRename, setFlowToRename] = useState<FlowData | null>(null);
 
   useEffect(() => {
-    const fetchFlows = async () => {
-      if (user) {
-        try {
-          const data = await flowService.getUserFlows(user.uid);
-          
-          if (data.length === 0 && user.uid === 'dev-guest-123') {
-             // Seed data for guest
-             const seedFlows = [
-                 { title: 'Welcome Flow', nodes: [], edges: [] },
-                 { title: 'E-commerce Architecture', nodes: [], edges: [] },
-                 { title: 'Ride Sharing (Uber)', nodes: [], edges: [] },
-                 { title: 'Video Streaming (Netflix)', nodes: [], edges: [] }
-             ];
-             
-             const createdFlows = [];
-             for (const seed of seedFlows) {
-                 const f = await flowService.createFlow(user.uid, seed.title);
-                 createdFlows.push(f);
-             }
-             setFlows(createdFlows);
-          } else {
-             setFlows(data);
-          }
-        } catch (error) {
-          console.error("Error fetching flows", error);
-        } finally {
-          setDataLoading(false);
-        }
-      }
-    };
-
     fetchFlows();
   }, [user]);
+
+  // Handle click outside to close menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const fetchFlows = async () => {
+    if (user) {
+      try {
+        const data = await flowService.getUserFlows(user.uid);
+        
+        if (data.length === 0 && user.uid === 'dev-guest-123') {
+           // Seed data for guest
+           const seedFlows = [
+               { title: 'Welcome Flow', nodes: [], edges: [] },
+               { title: 'E-commerce Architecture', nodes: [], edges: [] },
+               { title: 'Ride Sharing (Uber)', nodes: [], edges: [] },
+               { title: 'Video Streaming (Netflix)', nodes: [], edges: [] }
+           ];
+           
+           const createdFlows = [];
+           for (const seed of seedFlows) {
+               const f = await flowService.createFlow(user.uid, seed.title);
+               createdFlows.push(f);
+           }
+           setFlows(createdFlows);
+        } else {
+           setFlows(data);
+        }
+      } catch (error) {
+        console.error("Error fetching flows", error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    if (window.confirm('Are you sure you want to delete this flow? This action cannot be undone.')) {
+        try {
+            await flowService.deleteFlow(id);
+            // Optimistic update
+            setFlows(prev => prev.filter(f => f.id !== id));
+        } catch (error) {
+            console.error("Failed to delete flow", error);
+            alert("Failed to delete flow.");
+        }
+    }
+  };
+
+  const handleDuplicate = async (e: React.MouseEvent, flow: FlowData) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    if (!user) return;
+
+    try {
+        const newFlow = await flowService.duplicateFlow(user.uid, flow);
+        setFlows(prev => [newFlow, ...prev]);
+    } catch (error) {
+        console.error("Failed to duplicate flow", error);
+        alert("Failed to duplicate flow.");
+    }
+  };
+
+  const openRenameModal = (e: React.MouseEvent, flow: FlowData) => {
+      e.stopPropagation();
+      setFlowToRename(flow);
+      setRenameModalOpen(true);
+      setOpenMenuId(null);
+  };
+
+  const handleRenameSave = async (newTitle: string) => {
+      if (flowToRename) {
+          try {
+              await flowService.renameFlow(flowToRename.id, newTitle);
+              // Update local state
+              setFlows(prev => prev.map(f => f.id === flowToRename.id ? { ...f, title: newTitle, updatedAt: Date.now() } : f));
+          } catch (error) {
+              console.error("Failed to rename", error);
+          }
+      }
+  };
 
   // Logic: Sort by date, separate first as "Active"
   const filteredFlows = flows.filter(f => f.title.toLowerCase().includes(searchTerm.toLowerCase()));
   const sortedFlows = [...filteredFlows].sort((a, b) => b.updatedAt - a.updatedAt);
   
   const activeFlow = sortedFlows.length > 0 ? sortedFlows[0] : null;
-  // Recent flows can include the active one or exclude it. 
-  const recentFlows = sortedFlows; 
+  // Use slice(1) to avoid showing the active flow in the recent list, 
+  // preventing duplicate render and duplicate context menus for the same ID.
+  const recentFlows = sortedFlows.slice(1); 
+
+  const renderContextMenu = (flow: FlowData) => (
+    <div 
+        ref={menuRef}
+        className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl z-50 py-1.5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+        onClick={(e) => e.stopPropagation()}
+    >
+        <button 
+            onClick={(e) => openRenameModal(e, flow)}
+            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+        >
+            <Edit size={14} className="text-slate-400" />
+            Rename
+        </button>
+        <button 
+            onClick={(e) => handleDuplicate(e, flow)}
+            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+        >
+            <Copy size={14} className="text-slate-400" />
+            Duplicate
+        </button>
+        <div className="my-1 border-t border-slate-100"></div>
+        <button 
+            onClick={(e) => handleDelete(e, flow.id)}
+            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+        >
+            <Trash2 size={14} />
+            Delete
+        </button>
+    </div>
+  );
 
   return (
     <PageTransition isLoading={dataLoading} loadingMessage="Loading Canvas...">
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 pb-12">
         
+        {/* Rename Modal */}
+        <RenameFlowModal 
+            isOpen={renameModalOpen}
+            onClose={() => setRenameModalOpen(false)}
+            initialTitle={flowToRename?.title || ''}
+            onSave={handleRenameSave}
+        />
+
         {/* Top Search Bar */}
         <div className="relative group">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={20} />
@@ -80,7 +189,10 @@ export const Dashboard: React.FC = () => {
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[340px]">
             {/* Active Workflow Card (Takes 2 cols) */}
-            <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-8 flex flex-col relative overflow-hidden group">
+            <div 
+                onClick={() => activeFlow && navigate(`/flow/${activeFlow.id}`)}
+                className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-8 flex flex-col relative overflow-hidden group cursor-pointer transition-all hover:border-slate-300"
+            >
             {activeFlow ? (
                 <>
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
@@ -89,21 +201,40 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     <div className="relative z-10 flex-1 flex flex-col justify-center items-start">
-                            <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider mb-6 border border-slate-200">
-                                Active Workflow
-                            </span>
+                            <div className="w-full flex justify-between items-start mb-6">
+                                <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider border border-slate-200">
+                                    Active Workflow
+                                </span>
+
+                                {/* Context Menu for Active Flow */}
+                                <div className="relative">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMenuId(openMenuId === activeFlow.id ? null : activeFlow.id);
+                                        }}
+                                        className={`
+                                            p-2 rounded-full transition-all 
+                                            ${openMenuId === activeFlow.id ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50'}
+                                        `}
+                                    >
+                                        <MoreHorizontal size={20} />
+                                    </button>
+                                    {openMenuId === activeFlow.id && renderContextMenu(activeFlow)}
+                                </div>
+                            </div>
+
                             <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 mb-3 tracking-tight line-clamp-1">
                                 {activeFlow.title}
                             </h2>
                             <p className="text-slate-400 font-mono text-xs mb-8">ID: {activeFlow.id}</p>
                             
-                            <Link 
-                            to={`/flow/${activeFlow.id}`}
-                            className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all hover:scale-[1.02] shadow-xl shadow-slate-900/10 flex items-center gap-3 group/btn"
+                            <div 
+                                className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all hover:scale-[1.02] shadow-xl shadow-slate-900/10 flex items-center gap-3 group/btn w-fit"
                             >
-                            <span>Continue Editing</span>
-                            <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </Link>
+                                <span>Continue Editing</span>
+                                <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                            </div>
                     </div>
 
                     {/* Mini Visual representation of nodes/edges */}
@@ -155,30 +286,58 @@ export const Dashboard: React.FC = () => {
         {/* Recent Activity Section */}
         <div>
             <h3 className="text-lg font-bold font-heading text-slate-900 mb-6">Recent Activity</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recentFlows.map(flow => (
-                <Link key={flow.id} to={`/flow/${flow.id}`} className="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 transition-all duration-300 group flex flex-col h-48">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-slate-100 rounded-2xl text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
-                            <FileText size={22} />
-                        </div>
-                        <button className="text-slate-300 hover:text-slate-600 p-2 hover:bg-slate-50 rounded-full transition-all">
-                            <MoreHorizontal size={20} />
-                        </button>
-                    </div>
-                    
-                    <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 text-lg mb-1 truncate leading-tight group-hover:text-blue-600 transition-colors">{flow.title}</h4>
-                        <p className="text-xs text-slate-400 font-mono">ID: {flow.id.slice(0,8)}</p>
-                    </div>
+            {recentFlows.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {recentFlows.map(flow => (
+                    <div 
+                        key={flow.id} 
+                        onClick={() => navigate(`/flow/${flow.id}`)}
+                        className="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 transition-all duration-300 group flex flex-col h-48 cursor-pointer relative"
+                    >
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-slate-100 rounded-2xl text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
+                                <FileText size={22} />
+                            </div>
+                            
+                            {/* Context Menu Trigger */}
+                            <div className="relative">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuId(openMenuId === flow.id ? null : flow.id);
+                                    }}
+                                    className={`
+                                        p-2 rounded-full transition-all 
+                                        ${openMenuId === flow.id ? 'bg-slate-100 text-slate-900' : 'text-slate-300 hover:text-slate-600 hover:bg-slate-50'}
+                                    `}
+                                >
+                                    <MoreHorizontal size={20} />
+                                </button>
 
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-4 pt-4 border-t border-slate-50 group-hover:border-slate-100">
-                        <Clock size={14} />
-                        <span>Edited {new Date(flow.updatedAt).toLocaleDateString()}</span>
+                                {/* Dropdown Menu */}
+                                {openMenuId === flow.id && renderContextMenu(flow)}
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-slate-900 text-lg mb-1 truncate leading-tight group-hover:text-blue-600 transition-colors">
+                                {flow.title}
+                            </h4>
+                            <p className="text-xs text-slate-400 font-mono">ID: {flow.id.slice(0,8)}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider mt-4 pt-4 border-t border-slate-50 group-hover:border-slate-100">
+                            <Clock size={14} />
+                            <span>Edited {new Date(flow.updatedAt).toLocaleDateString()}</span>
+                        </div>
                     </div>
-                </Link>
-            ))}
-            </div>
+                ))}
+                </div>
+            ) : (
+                <div className="text-slate-400 italic text-sm">
+                    {flows.length > 0 ? 'No other recent activity.' : 'No recent activity.'}
+                </div>
+            )}
         </div>
       </div>
     </PageTransition>
