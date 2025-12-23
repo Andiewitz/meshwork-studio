@@ -19,7 +19,7 @@ export const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="h-16 bg-white border-b border-slate-300 shadow-sm px-6 flex items-center justify-between sticky top-0 z-10">
+    <header className="h-16 bg-white border-b border-slate-900 shadow-sm px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center gap-4 flex-1">
         {/* Spacer or Breadcrumbs could go here */}
       </div>
@@ -39,7 +39,7 @@ export const Header: React.FC = () => {
             </button>
 
             {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] border border-slate-300 p-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-[4px_4px_0_0_rgba(0,0,0,1)] border border-slate-900 p-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                     <div className="flex items-start gap-3">
                         <div className="p-2 bg-amber-50 rounded-lg text-amber-600 shrink-0">
                             <AlertTriangle size={20} />
