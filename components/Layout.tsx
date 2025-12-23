@@ -10,7 +10,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="flex h-screen w-full bg-white overflow-hidden font-sans">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans">
       {/* Sidebar Area */}
       <div 
         className={`
@@ -22,9 +22,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
         <Header />
-        <main className="flex-1 overflow-auto relative">
+        <main className="flex-1 overflow-auto relative scroll-smooth">
           {children}
         </main>
       </div>

@@ -128,7 +128,7 @@ export const Dashboard: React.FC = () => {
   const renderContextMenu = (flow: FlowData) => (
     <div 
         ref={menuRef}
-        className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl z-50 py-1.5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+        className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-300 shadow-[4px_4px_0_0_#cbd5e1] rounded-xl z-50 py-1.5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
         onClick={(e) => e.stopPropagation()}
     >
         <button 
@@ -174,7 +174,7 @@ export const Dashboard: React.FC = () => {
             <input 
             type="text" 
             placeholder="Search flows..." 
-            className="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-300 text-lg transition-all placeholder:text-slate-400"
+            className="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-[4px_4px_0_0_#e2e8f0] border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-400 text-lg transition-all placeholder:text-slate-400"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             />
@@ -191,7 +191,7 @@ export const Dashboard: React.FC = () => {
             {/* Active Workflow Card (Takes 2 cols) */}
             <div 
                 onClick={() => activeFlow && navigate(`/flow/${activeFlow.id}`)}
-                className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-8 flex flex-col relative overflow-hidden group cursor-pointer transition-all hover:border-slate-300"
+                className="lg:col-span-2 bg-white rounded-3xl border border-slate-300 shadow-[6px_6px_0_0_#cbd5e1] p-8 flex flex-col relative overflow-hidden group cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[8px_8px_0_0_#94a3b8]"
             >
             {activeFlow ? (
                 <>
@@ -292,7 +292,7 @@ export const Dashboard: React.FC = () => {
                     <div 
                         key={flow.id} 
                         onClick={() => navigate(`/flow/${flow.id}`)}
-                        className="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 transition-all duration-300 group flex flex-col h-48 cursor-pointer relative"
+                        className="bg-white p-6 rounded-3xl border border-slate-300 shadow-[4px_4px_0_0_#cbd5e1] hover:shadow-[6px_6px_0_0_#94a3b8] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-48 cursor-pointer relative"
                     >
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-3 bg-slate-100 rounded-2xl text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
