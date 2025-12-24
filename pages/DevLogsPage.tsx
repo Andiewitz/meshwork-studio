@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Rocket, Star, Wrench, Bug, Layers, Globe, ShieldCheck, Sparkles, Layout, Cloud, Database, Palette, MousePointer2 } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface LogEntryProps {
@@ -59,220 +59,53 @@ export const DevLogsPage: React.FC = () => {
                 Back to Dashboard
             </Link>
             <h1 className="text-3xl font-bold font-heading text-slate-900 mb-2">Developer Logs</h1>
-            <p className="text-slate-500">
-                Tracking the evolution of Meshwork Studio. A detailed record of updates, improvements, and fixes.
-            </p>
+            <p className="text-slate-500">Track the evolution of the Meshwork Studio platform.</p>
         </div>
 
-        <div className="space-y-2">
-            <LogEntry version="v1.2.24-alpha" date="October 28, 2023" type="patch">
+        <div className="border-l-2 border-slate-200 ml-3 space-y-0">
+
+            {/* v1.3.0 */}
+            <LogEntry version="v1.3.0-alpha" date="March 10, 2024" type="major">
                 <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                        <Palette size={18} className="text-slate-800" />
-                        Aesthetic Overhaul
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <PaintBucket className="text-indigo-500" size={20} />
+                        The Style Update
                     </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                        We've refined the application's visual language, moving to a sophisticated monochrome "Navy Black" theme and improving the project initialization flow.
+                    <p className="text-slate-600 mt-1 text-sm leading-relaxed">
+                        A major visual overhaul focusing on the "Neo-Brutalist" aesthetic. We've unified the design language across modals, the library, and the canvas interactions to ensure high contrast and better readability.
                     </p>
                 </div>
-                
-                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
-                    <Section title="Visual Refresh" icon={Layout} colorClass="text-slate-800">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-800 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Monochrome Dashboard:</strong> Replaced generic blue accents with a high-contrast Slate/Zinc palette for a professional, technical look.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-800 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Template Carousel:</strong> Completely redesigned the "Start New Mesh" experience. It now features a horizontal, snap-scrolling carousel with dark-themed cards and high-fidelity previews.</span>
-                        </li>
-                    </Section>
 
-                    <Section title="UX Improvements" icon={MousePointer2} colorClass="text-slate-600">
-                         <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Action Consolidation:</strong> Removed redundant "Create Project" buttons from the header to declutter the interface and focus user attention on the primary grid actions.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Scrollbar Hiding:</strong> Implemented utility classes to hide scrollbars in the carousel for a cleaner, native-app feel while maintaining functionality.</span>
-                        </li>
+                <div className="space-y-4">
+                     <Section title="Visual & UX" icon={Palette} colorClass="text-indigo-600">
+                        <li>Replaced the template carousel with a focused <strong>New Project Modal</strong> featuring blurred backdrops.</li>
+                        <li>Updated <strong>Node Library</strong> to use pastel backgrounds with high-contrast borders.</li>
+                        <li>Standardized all configuration modals (Database, Client, etc.) to use the consistent brutalist shadow and border style.</li>
+                        <li>Improved font rendering for 'Inter' and 'Plus Jakarta Sans'.</li>
+                    </Section>
+                     <Section title="Fixes" icon={Wrench} colorClass="text-slate-600">
+                        <li>Fixed icon visibility in the Node Library (now using dark strokes on light fills).</li>
+                        <li>Fixed text truncation issues in the Dashboard active card.</li>
                     </Section>
                 </div>
             </LogEntry>
 
-            <LogEntry version="v1.2.2-alpha" date="October 27, 2023" type="patch">
+            {/* v1.2.24 */}
+            <LogEntry version="v1.2.24-alpha" date="Feb 28, 2024" type="major">
                 <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                        <Sparkles size={18} className="text-teal-600" />
-                        Template Fidelity & UX Polish
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <Rocket className="text-blue-500" size={20} />
+                        Initial Public Alpha
                     </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                        We've updated our templates to reflect real-world engineering standards based on technical whitepapers, and polished the loading experience.
-                    </p>
-                </div>
-                
-                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
-                    <Section title="Real-World Architectures" icon={Layout} colorClass="text-teal-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Netflix:</strong> Now correctly depicts the Zuul Gateway / Eureka Discovery / Cassandra pattern with Open Connect CDN.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Airbnb:</strong> Updated to reflect Service Oriented Architecture (SOA) with sharded MySQL and Nginx load balancing.</span>
-                        </li>
-                         <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Uber:</strong> Added Ringpop consistent hashing logic and geospatial Redis implementations.</span>
-                        </li>
-                    </Section>
-
-                    <Section title="General UX" icon={Wrench} colorClass="text-slate-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Loading States:</strong> Smoother transitions when entering the canvas.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Version Sync:</strong> Unified version labeling across Sidebar, Header, and Canvas.</span>
-                        </li>
-                    </Section>
-                </div>
-            </LogEntry>
-
-            <LogEntry version="v1.2.0-alpha" date="October 26, 2023" type="minor">
-                <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                        <Sparkles size={18} className="text-purple-600" />
-                        Templates & Stability
-                    </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                        We've overhauled the project creation flow with a new Template System and significantly improved data persistence for guest users.
+                    <p className="text-slate-600 mt-1 text-sm leading-relaxed">
+                        Welcome to the first usable build of Meshwork Studio. This release focuses on core canvas functionality, node configuration, and local state management for guest users.
                     </p>
                 </div>
 
-                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
-                    <Section title="Templates System" icon={Layout} colorClass="text-purple-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>New Onboarding:</strong> Choose between a Blank Canvas or pre-configured architectures.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Presets:</strong> Added Airbnb (Booking) and Netflix (Streaming) system design templates.</span>
-                        </li>
+                <div className="space-y-4">
+                     <Section title="New Features" icon={Star} colorClass="text-amber-500">
+                        <li><strong>Infinite Canvas:</strong> Pan, zoom, and drag nodes with the React Flow engine.</li>
+                        <li><strong>Guest Mode:</strong> Full functionality without login (local storage persistence).</li>
+                        <li><strong>Templates:</strong> Start with Blank, Airbnb, Netflix, or Uber architecture presets.</li>
+                        <li><strong>Context Menu:</strong> Right-click to edit, duplicate, or delete nodes and connections.</li>
                     </Section>
-
-                    <Section title="New Components" icon={Cloud} colorClass="text-sky-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>External Service Node:</strong> Dedicated component for 3rd party APIs (Stripe, Auth0, AWS S3, SendGrid).</span>
-                        </li>
-                    </Section>
-
-                    <Section title="Core Engineering" icon={Database} colorClass="text-emerald-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Hybrid Storage:</strong> Guest mode now uses LocalStorage with a seamless fallback mechanism, eliminating network timeouts.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Connection Logic:</strong> Fixed handle snapping issues; connections now respect specific sides (top/bottom/left/right).</span>
-                        </li>
-                    </Section>
-                </div>
-            </LogEntry>
-
-            <LogEntry version="v1.1.0-alpha" date="October 25, 2023" type="minor">
-                <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                       <Layers size={18} className="text-indigo-600" />
-                       The Middleware Update
-                    </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                        This update introduces specific middleware components designed to sit between your major services. These smaller, specialized nodes help visualize the "glue" of distributed systems.
-                    </p>
-                </div>
-                
-                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
-                    <Section title="New Components" icon={Star} colorClass="text-indigo-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>API Gateway:</strong> Central routing and management node.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Auth & Verification:</strong> Token validation and security guards.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Cache Layers:</strong> Redis/CDN representations for performance layers.</span>
-                        </li>
-                         <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Resilience Patterns:</strong> Rate Limiters and Circuit Breakers.</span>
-                        </li>
-                    </Section>
-
-                     <Section title="UI Improvements" icon={Globe} colorClass="text-blue-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></span>
-                            <span>New "Middleware" category in the component library.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></span>
-                            <span>Compact node design for middleware to distinguish them from primary infrastructure.</span>
-                        </li>
-                    </Section>
-                </div>
-            </LogEntry>
-
-            <LogEntry version="v1.0.0-alpha" date="October 24, 2023" type="major">
-                <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                       <Rocket size={18} className="text-blue-600" />
-                       Initial Public Alpha
-                    </h3>
-                    <p className="text-slate-600 leading-relaxed">
-                        We are excited to release the first alpha version of Meshwork Studio! This release focuses on the core drag-and-drop experience for distributed system architecture diagrams.
-                    </p>
-                </div>
-                
-                <div className="border-t border-slate-100 pt-4 mt-4 grid gap-6">
-                    <Section title="New Features" icon={Star} colorClass="text-emerald-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Visual Flow Editor:</strong> Comprehensive canvas with drag-and-drop support, zooming, and panning.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Component Library:</strong> Added specialized nodes for Servers, Services, Databases (with 30+ presets), Queues, and Load Balancers.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Connection Protocols:</strong> Define edge types (HTTP, gRPC, WebSocket, AMQP, JDBC) with visual indicators.</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0"></span>
-                            <span><strong>Authentication:</strong> Seamless Google Sign-In and a dedicated Guest Mode for developers.</span>
-                        </li>
-                    </Section>
-
-                    <Section title="Improvements" icon={Wrench} colorClass="text-amber-600">
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></span>
-                            <span>Enhanced node visuals with "System UI" styling (SF Pro/Inter typography).</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0"></span>
-                            <span>Integrated real-time edge label rendering for technical diagrams.</span>
-                        </li>
-                    </Section>
-                </div>
-            </LogEntry>
-        </div>
-      </div>
-    </div>
-  );
-};

@@ -43,11 +43,12 @@ const generateId = (prefix: string = 'local') => {
 
 export const flowService = {
   // Create a new flow (Empty)
-  createFlow: async (ownerId: string, title: string) => {
+  createFlow: async (ownerId: string, title: string, icon: string = 'layout') => {
     const newFlow: FlowData = {
       id: '', // Placeholder, will be assigned
       ownerId,
       title,
+      icon,
       nodes: [],
       edges: [],
       createdAt: Date.now(),
@@ -83,7 +84,7 @@ export const flowService = {
   },
 
   // Create a new flow from a Template
-  createFlowFromTemplate: async (ownerId: string, templateId: string, customTitle?: string) => {
+  createFlowFromTemplate: async (ownerId: string, templateId: string, customTitle?: string, icon: string = 'layout') => {
     const template = templates.find(t => t.id === templateId);
     if (!template) throw new Error("Template not found");
 
@@ -91,6 +92,7 @@ export const flowService = {
         id: '',
         ownerId,
         title: customTitle || (template.id === 'blank' ? 'New Architecture' : template.name),
+        icon,
         nodes: template.nodes,
         edges: template.edges,
         createdAt: Date.now(),

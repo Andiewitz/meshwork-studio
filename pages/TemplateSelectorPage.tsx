@@ -7,13 +7,13 @@ import {
     Loader2, 
     CheckCircle2, 
     ArrowRight,
-    Search,
     PenLine
 } from 'lucide-react';
 import { templates } from '../data/templates';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
 import { PageTransition } from '../components/PageTransition';
+import { PROJECT_ICONS, DEFAULT_ICON } from '../utils/projectIcons';
 
 export const TemplateSelectorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export const TemplateSelectorPage: React.FC = () => {
   
   const [selectedId, setSelectedId] = useState<string>('blank');
   const [customTitle, setCustomTitle] = useState('');
+  const [selectedIconKey, setSelectedIconKey] = useState<string>(DEFAULT_ICON);
   const [isCreating, setIsCreating] = useState(false);
 
   const selectedTemplate = templates.find(t => t.id === selectedId);
@@ -34,7 +35,8 @@ export const TemplateSelectorPage: React.FC = () => {
       const flow = await flowService.createFlowFromTemplate(
         user.uid, 
         selectedId,
-        customTitle || undefined
+        customTitle || undefined,
+        selectedIconKey
       );
       navigate(`/flow/${flow.id}`);
     } catch (error) {
@@ -42,6 +44,8 @@ export const TemplateSelectorPage: React.FC = () => {
       setIsCreating(false);
     }
   };
+
+  const SelectedIconComponent = PROJECT_ICONS[selectedIconKey] || Layout;
 
   return (
     <PageTransition loadingMessage="Loading Studio...">
@@ -77,10 +81,10 @@ export const TemplateSelectorPage: React.FC = () => {
             <div className="absolute inset-0 z-0 backdrop-blur-md bg-slate-50/40"></div>
 
             {/* The "Pop Up" Modal */}
-            <div className="relative z-10 w-full max-w-2xl bg-white border-2 border-slate-900 rounded-2xl shadow-[12px_12px_0_0_#0f172a] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="relative z-10 w-full max-w-2xl bg-white border-2 border-slate-900 rounded-2xl shadow-[12px_12px_0_0_#0f172a] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 max-h-[90vh]">
                 
                 {/* Header */}
-                <div className="px-6 py-5 border-b-2 border-slate-100 flex items-center justify-between bg-white">
+                <div className="px-6 py-5 border-b-2 border-slate-100 flex items-center justify-between bg-white shrink-0">
                     <div>
                         <h1 className="text-xl font-bold font-heading text-slate-900 flex items-center gap-2">
                            <Layout size={20} className="text-slate-500" />
@@ -97,9 +101,9 @@ export const TemplateSelectorPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="flex flex-col md:flex-row h-[500px] md:h-[450px]">
+                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                     {/* Left: Template Selection */}
-                    <div className="flex-1 border-r-2 border-slate-100 overflow-y-auto bg-slate-50 p-2 md:p-4">
+                    <div className="flex-1 border-r-2 border-slate-100 overflow-y-auto bg-slate-50 p-2 md:p-4 min-h-[200px]">
                         <div className="mb-2 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             Select Template
                         </div>
@@ -148,16 +152,14 @@ export const TemplateSelectorPage: React.FC = () => {
                         <form id="create-flow-form" onSubmit={handleCreate} className="flex-1 flex flex-col">
                              
                              {/* Preview Card */}
-                             <div className="mb-6 p-4 rounded-xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center">
+                             <div className="mb-6 p-4 rounded-xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center shrink-0">
                                  <div className={`
-                                    w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-sm bg-white border-2 border-slate-200
+                                    w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-sm bg-white border-2 border-slate-200 text-slate-900
                                  `}>
-                                     {selectedTemplate?.id === 'blank' ? (
-                                        <Layout size={32} className="text-slate-700" />
-                                     ) : selectedTemplate?.logo ? (
+                                     {selectedTemplate?.logo ? (
                                         <img src={selectedTemplate.logo} alt="" className="w-8 h-8 object-contain" />
                                      ) : (
-                                        <Sparkles size={32} className="text-amber-500" />
+                                        <SelectedIconComponent size={32} />
                                      )}
                                  </div>
                                  <h3 className="text-lg font-bold text-slate-900">{selectedTemplate?.name}</h3>
@@ -166,7 +168,7 @@ export const TemplateSelectorPage: React.FC = () => {
                                  </p>
                              </div>
 
-                             <div className="space-y-4 mb-auto">
+                             <div className="space-y-6 mb-auto">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
                                         Project Name
@@ -183,10 +185,37 @@ export const TemplateSelectorPage: React.FC = () => {
                                         />
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
+                                        Project Icon
+                                    </label>
+                                    <div className="grid grid-cols-5 gap-2">
+                                        {Object.entries(PROJECT_ICONS).map(([key, Icon]) => {
+                                            const isActive = selectedIconKey === key;
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    type="button"
+                                                    onClick={() => setSelectedIconKey(key)}
+                                                    className={`
+                                                        aspect-square rounded-xl flex items-center justify-center border-2 transition-all duration-200
+                                                        ${isActive 
+                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-[2px_2px_0_0_#cbd5e1] scale-105' 
+                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600'}
+                                                    `}
+                                                    title={key}
+                                                >
+                                                    <Icon size={20} />
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                              </div>
 
                              {/* Actions */}
-                             <div className="pt-6 mt-6 border-t-2 border-slate-100 flex gap-3">
+                             <div className="pt-6 mt-6 border-t-2 border-slate-100 flex gap-3 shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => navigate('/')}

@@ -22,6 +22,7 @@ export interface FlowData {
   id: string;
   ownerId: string;
   title: string;
+  icon?: string;
   nodes: Node<FlowNodeData>[];
   edges: Edge[];
   createdAt: number;
