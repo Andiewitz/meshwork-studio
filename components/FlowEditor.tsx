@@ -450,7 +450,7 @@ const FlowEditorContent: React.FC = () => {
       {/* Prototype Version Label */}
       <div className="absolute top-5 right-6 z-40 pointer-events-none select-none">
         <span className="px-3 py-1.5 bg-slate-900 text-white border border-slate-700 rounded-lg text-xs font-bold font-mono shadow-xl opacity-80">
-          alpha v1.2.24
+          alpha v1.4.0
         </span>
       </div>
 

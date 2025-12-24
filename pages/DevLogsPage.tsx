@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket, Globe, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface LogEntryProps {
@@ -64,6 +64,31 @@ export const DevLogsPage: React.FC = () => {
 
         <div className="border-l-2 border-slate-200 ml-3 space-y-0">
 
+            {/* v1.4.0 */}
+            <LogEntry version="v1.4.0-alpha" date="March 15, 2024" type="major">
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <Globe className="text-emerald-500" size={20} />
+                        The Ecosystem Expansion
+                    </h3>
+                    <p className="text-slate-600 mt-1 text-sm leading-relaxed">
+                        We've massively expanded the node library to include real-world services and tools. This update bridges the gap between abstract architecture and concrete implementation details by supporting 3rd-party vendor logos and categories.
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                     <Section title="Integrations Library" icon={Box} colorClass="text-emerald-600">
+                        <li><strong>New Miscellaneous Category:</strong> Added a dedicated section for "Integrations & Tools" in the sidebar.</li>
+                        <li><strong>30+ New Nodes:</strong> Added specific nodes for AWS, Google Cloud, Azure, Vercel, Docker, Kubernetes, Terraform, Stripe, Auth0, and more.</li>
+                        <li><strong>Brand Assets:</strong> Integrated <code>simpleicons</code> to render authentic SVG logos for all new service nodes.</li>
+                     </Section>
+                     <Section title="Canvas & Core" icon={Layers} colorClass="text-blue-600">
+                         <li><strong>Dynamic Logo Rendering:</strong> The <code>ExternalServiceNode</code> now accepts and renders logo URLs passed via drag-and-drop data transfer.</li>
+                         <li><strong>Library Organization:</strong> Refined the Node Library layout with clear sub-headers for Cloud, Containers, DevOps, and SaaS.</li>
+                     </Section>
+                </div>
+            </LogEntry>
+
             {/* v1.3.0 */}
             <LogEntry version="v1.3.0-alpha" date="March 10, 2024" type="major">
                 <div className="mb-4">
@@ -109,3 +134,10 @@ export const DevLogsPage: React.FC = () => {
                         <li><strong>Templates:</strong> Start with Blank, Airbnb, Netflix, or Uber architecture presets.</li>
                         <li><strong>Context Menu:</strong> Right-click to edit, duplicate, or delete nodes and connections.</li>
                     </Section>
+                </div>
+            </LogEntry>
+        </div>
+      </div>
+    </div>
+  );
+};

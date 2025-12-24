@@ -45,7 +45,7 @@ export const Header: React.FC = () => {
                             <AlertTriangle size={20} />
                         </div>
                         <div>
-                            <h4 className="font-bold text-slate-900 text-sm mb-1">Alpha Preview (v1.2.24)</h4>
+                            <h4 className="font-bold text-slate-900 text-sm mb-1">Alpha Preview (v1.4.0)</h4>
                             <p className="text-xs text-slate-500 leading-relaxed">
                                 You are using an early alpha build. Features may change, and data persistence in Guest Mode is local-only.
                             </p>
