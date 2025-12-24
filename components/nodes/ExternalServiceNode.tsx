@@ -5,6 +5,8 @@ import { Cloud, ArrowUpRight } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const ExternalServiceNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+  const logo = data.logo as string | undefined;
+
   return (
     <div className={`
       relative group min-w-[160px]
@@ -26,19 +28,25 @@ export const ExternalServiceNode = memo(({ data, selected }: NodeProps<FlowNodeD
       `}>
         {/* Icon */}
         <div className={`
-            flex items-center justify-center w-10 h-10 rounded-full border bg-white
+            flex items-center justify-center w-10 h-10 rounded-full border bg-white p-2 overflow-hidden
             ${selected ? 'border-sky-200 text-sky-500' : 'border-slate-200 text-slate-500'}
         `}>
-          <Cloud size={20} />
+          {logo ? (
+             <img src={logo} alt="" className="w-full h-full object-contain" />
+          ) : (
+             <Cloud size={20} />
+          )}
         </div>
 
         {/* Content */}
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">External</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+               {logo ? 'Service' : 'External'}
+            </span>
             <ArrowUpRight size={10} className="text-slate-300" />
           </div>
-          <span className="text-sm font-bold text-slate-700 font-heading leading-tight">
+          <span className="text-sm font-bold text-slate-700 font-heading leading-tight line-clamp-1">
             {data.label}
           </span>
         </div>

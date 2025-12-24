@@ -397,6 +397,7 @@ const FlowEditorContent: React.FC = () => {
       const type = event.dataTransfer.getData('application/reactflow');
       const mwType = event.dataTransfer.getData('application/middlewareType');
       const label = event.dataTransfer.getData('application/label');
+      const logo = event.dataTransfer.getData('application/logo');
 
       if (typeof type === 'undefined' || !type || !reactFlowInstance) return;
 
@@ -405,7 +406,12 @@ const FlowEditorContent: React.FC = () => {
         id: `${type}-${Date.now()}`,
         type,
         position,
-        data: { label: label || `New ${type}`, middlewareType: mwType || undefined, clientType: type === 'client' ? 'desktop' : undefined },
+        data: { 
+            label: label || `New ${type}`, 
+            middlewareType: mwType || undefined, 
+            clientType: type === 'client' ? 'desktop' : undefined,
+            logo: logo || undefined
+        },
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -555,10 +561,8 @@ const FlowEditorContent: React.FC = () => {
 
 export const FlowEditor: React.FC = () => {
   return (
-    <div className="h-full w-full">
-      <ReactFlowProvider>
-        <FlowEditorContent />
-      </ReactFlowProvider>
-    </div>
+    <ReactFlowProvider>
+      <FlowEditorContent />
+    </ReactFlowProvider>
   );
 };
