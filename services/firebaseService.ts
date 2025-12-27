@@ -30,9 +30,10 @@ try {
 export const auth: any = {
   currentUser: null,
   onAuthStateChanged: (callback: (user: any) => void) => {
-    // Immediate return for mock consistency
-    const isGuest = localStorage.getItem('meshwork_guest_mode') === 'true';
-    if (!isGuest) callback(null);
+    // Always trigger callback with null to simulate "not logged in via Firebase"
+    // The AuthContext will handle checking for the 'meshwork_guest_mode' flag
+    // and setting the DEV_USER accordingly.
+    setTimeout(() => callback(null), 10);
     return () => {}; // No-op unsubscribe
   },
   signInWithPopup: () => Promise.reject("Firebase service is currently in maintenance. Please use Guest Mode."),
