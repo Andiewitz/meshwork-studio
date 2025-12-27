@@ -191,14 +191,20 @@ const FlowEditorContent: React.FC = () => {
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault();
+      
+      // Check if we are right-clicking a selected node while others are also selected
+      const selectedNodes = nodes.filter(n => n.selected);
+      const isMultiSelection = selectedNodes.length > 1 && node.selected;
+
       setMenu({
         id: node.id,
         top: event.clientY,
         left: event.clientX,
-        type: node.type || 'node'
+        type: isMultiSelection ? 'selection' : (node.type || 'node'),
+        data: { selectedCount: isMultiSelection ? selectedNodes.length : 1 }
       });
     },
-    [setMenu]
+    [setMenu, nodes]
   );
 
   // Handle Edge Right Click (Context Menu)
@@ -233,32 +239,78 @@ const FlowEditorContent: React.FC = () => {
     if (menu) {
       if (menu.type === 'edge') {
           setEdges((eds) => eds.filter((e) => e.id !== menu.id));
+      } else if (menu.type === 'selection') {
+          // Delete all selected nodes and their connections
+          const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id);
+          setNodes((nds) => nds.filter((n) => !n.selected));
+          setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
       } else {
+          // Delete single node
           setNodes((nds) => nds.filter((n) => n.id !== menu.id));
           setEdges((eds) => eds.filter((e) => e.source !== menu.id && e.target !== menu.id));
       }
       setMenu(null);
     }
-  }, [menu, setNodes, setEdges]);
+  }, [menu, setNodes, setEdges, nodes]);
+
+  const handleMenuAlign = useCallback(() => {
+    const GRID_SIZE = 20; // Define grid size
+    
+    setNodes((nds) => nds.map((node) => {
+      // Align selected nodes (or the single context menu node if nothing selected)
+      if (node.selected || (menu && node.id === menu.id)) {
+        return {
+          ...node,
+          position: {
+            x: Math.round(node.position.x / GRID_SIZE) * GRID_SIZE,
+            y: Math.round(node.position.y / GRID_SIZE) * GRID_SIZE,
+          },
+        };
+      }
+      return node;
+    }));
+    setMenu(null);
+  }, [menu, setNodes]);
 
   const handleMenuDuplicate = useCallback(() => {
     if (menu && menu.type !== 'edge') {
-      const nodeToDuplicate = nodes.find((n) => n.id === menu.id);
-      if (nodeToDuplicate) {
-        const newNode: Node = {
-          ...nodeToDuplicate,
-          id: `${nodeToDuplicate.type}-${Date.now()}`,
-          position: {
-            x: nodeToDuplicate.position.x + 50,
-            y: nodeToDuplicate.position.y + 50,
-          },
-          data: {
-            ...nodeToDuplicate.data,
-            label: `${nodeToDuplicate.data.label} (Copy)`,
-          },
-          selected: true,
-        };
-        setNodes((nds) => [...nds.map(n => ({...n, selected: false})), newNode]);
+      if (menu.type === 'selection') {
+          // Duplicate all selected nodes
+          const selectedNodes = nodes.filter(n => n.selected);
+          const newNodes: Node[] = selectedNodes.map(node => ({
+              ...node,
+              id: `${node.type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              position: {
+                  x: node.position.x + 50,
+                  y: node.position.y + 50,
+              },
+              data: {
+                  ...node.data,
+                  label: `${node.data.label} (Copy)`,
+              },
+              selected: true
+          }));
+          // Deselect originals, add new ones
+          setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
+
+      } else {
+          const nodeToDuplicate = nodes.find((n) => n.id === menu.id);
+          if (nodeToDuplicate) {
+            const newNode: Node = {
+              ...nodeToDuplicate,
+              id: `${nodeToDuplicate.type}-${Date.now()}`,
+              position: {
+                x: nodeToDuplicate.position.x + 50,
+                y: nodeToDuplicate.position.y + 50,
+              },
+              data: {
+                ...nodeToDuplicate.data,
+                label: `${nodeToDuplicate.data.label} (Copy)`,
+              },
+              selected: true,
+            };
+            setNodes((nds) => [...nds.map(n => ({...n, selected: false})), newNode]);
+          }
       }
       setMenu(null);
     }
@@ -317,7 +369,7 @@ const FlowEditorContent: React.FC = () => {
   }, [menu, setNodes, setEdges]);
 
   const handleMenuEdit = useCallback(() => {
-    if (menu && menu.type !== 'edge') {
+    if (menu && menu.type !== 'edge' && menu.type !== 'selection') {
       const node = nodes.find((n) => n.id === menu.id);
       if (node) {
         if (node.type === 'database') {
@@ -589,9 +641,11 @@ const FlowEditorContent: React.FC = () => {
             onDuplicate={handleMenuDuplicate}
             onSeverConnections={handleMenuSeverConnections}
             onSplitConnection={handleSplitConnection}
+            onAlign={handleMenuAlign}
             onDelete={handleMenuDelete}
             onClose={() => setMenu(null)}
             nodeType={menu.type}
+            selectionCount={menu.data?.selectedCount}
             />
         )}
 

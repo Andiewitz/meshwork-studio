@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Edit, Copy, Trash2, Unplug, Split } from 'lucide-react';
+import { Edit, Copy, Trash2, Unplug, Split, LayoutGrid } from 'lucide-react';
 
 interface ContextMenuProps {
   top: number;
@@ -8,9 +8,11 @@ interface ContextMenuProps {
   onDuplicate?: () => void;
   onSeverConnections?: () => void;
   onSplitConnection?: () => void;
+  onAlign?: () => void;
   onDelete: () => void;
   onClose: () => void;
-  nodeType?: string; // 'edge' or node type
+  nodeType?: string; // 'edge', 'node', or 'selection'
+  selectionCount?: number;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ 
@@ -20,9 +22,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onDuplicate, 
   onSeverConnections,
   onSplitConnection,
+  onAlign,
   onDelete, 
   onClose,
-  nodeType 
+  nodeType,
+  selectionCount = 0
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -40,20 +44,26 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   }, [onClose]);
 
   const isEdge = nodeType === 'edge';
+  const isSelection = nodeType === 'selection';
 
   return (
     <div
       ref={menuRef}
       style={{ top, left }}
-      className="fixed z-[100] w-56 bg-white border-2 border-slate-900 rounded-xl shadow-[6px_6px_0_0_#0f172a] py-1.5 animate-in fade-in zoom-in-95 duration-100 flex flex-col"
+      className="fixed z-[100] w-64 bg-white border-2 border-slate-900 rounded-xl shadow-[6px_6px_0_0_#0f172a] py-1.5 animate-in fade-in zoom-in-95 duration-100 flex flex-col"
     >
       <div className="px-3 py-1.5 border-b-2 border-slate-100 mb-1">
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          {isEdge ? 'Connection Actions' : `${nodeType || 'Node'} Actions`}
+          {isSelection 
+            ? `${selectionCount} Items Selected` 
+            : isEdge 
+              ? 'Connection Actions' 
+              : `${nodeType || 'Node'} Actions`
+          }
         </span>
       </div>
 
-      {!isEdge && onEdit && (
+      {!isEdge && !isSelection && onEdit && (
         <button
           onClick={onEdit}
           className="w-full text-left px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors flex items-center gap-2 group"
@@ -63,17 +73,28 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         </button>
       )}
 
+      {/* Align Feature for Selection */}
+      {(isSelection || !isEdge) && onAlign && (
+        <button
+          onClick={onAlign}
+          className="w-full text-left px-3 py-2 text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2 group"
+        >
+          <LayoutGrid size={14} className="text-slate-400 group-hover:text-indigo-600" />
+          Align to Grid
+        </button>
+      )}
+
       {!isEdge && onDuplicate && (
         <button
           onClick={onDuplicate}
           className="w-full text-left px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors flex items-center gap-2 group"
         >
           <Copy size={14} className="text-slate-400 group-hover:text-slate-900" />
-          Duplicate
+          Duplicate {isSelection ? 'Selection' : ''}
         </button>
       )}
 
-      {!isEdge && onSeverConnections && (
+      {!isEdge && !isSelection && onSeverConnections && (
         <button
           onClick={onSeverConnections}
           className="w-full text-left px-3 py-2 text-sm font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-2 group"
@@ -100,7 +121,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         className="w-full text-left px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 group"
       >
         <Trash2 size={14} className="text-red-500/70 group-hover:text-red-600" />
-        Delete
+        {isSelection ? `Delete ${selectionCount} Items` : 'Delete'}
       </button>
     </div>
   );

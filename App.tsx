@@ -4,6 +4,7 @@ import { FlowEditor } from './components/FlowEditor';
 import { Dashboard } from './pages/Dashboard';
 import { LoginPage } from './pages/LoginPage';
 import { DevLogsPage } from './pages/DevLogsPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { TemplateSelectorPage } from './pages/TemplateSelectorPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -37,6 +38,7 @@ const App: React.FC = () => {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/dev-logs" element={<DevLogsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Layout>
