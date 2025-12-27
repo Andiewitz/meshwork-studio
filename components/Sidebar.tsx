@@ -33,19 +33,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       <div className="h-20 flex items-center justify-between px-4 border-b-2 border-slate-900 bg-white">
         {isOpen ? (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-sm">
+            <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white shadow-sm border-2 border-slate-900">
                <span className="font-bold font-heading text-lg">M</span>
             </div>
             <div className="flex flex-col justify-center">
               <span className="text-lg font-bold font-heading text-slate-900 tracking-tight leading-none">
                 Meshwork
               </span>
-              <span className="text-[10px] font-bold text-slate-400 tracking-widest">STUDIO</span>
+              <span className="text-[10px] font-bold text-violet-600 tracking-widest">STUDIO</span>
             </div>
           </div>
         ) : (
            <div className="w-full flex justify-center">
-             <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-sm">
+             <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white shadow-sm border-2 border-slate-900">
                <span className="font-bold font-heading text-lg">M</span>
             </div>
            </div>
@@ -64,9 +64,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       <div className="p-4">
         <NavLink to="/flow/new" className={`
             flex items-center justify-center gap-2 w-full 
-            bg-slate-900 text-white hover:bg-slate-800
+            bg-violet-600 text-white hover:bg-violet-700
             rounded-xl p-3 transition-all 
-            shadow-[3px_3px_0_0_#94a3b8] hover:shadow-[1px_1px_0_0_#94a3b8] hover:translate-y-[2px]
+            shadow-[3px_3px_0_0_#000000] hover:shadow-[1px_1px_0_0_#000000] hover:translate-y-[2px]
             border-2 border-slate-900
             ${!isOpen && 'px-0 aspect-square'}
         `}>
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) => `
               flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative border-2
               ${isActive 
-                ? 'bg-slate-100 border-slate-900 text-slate-900 shadow-[2px_2px_0_0_#0f172a]' 
+                ? 'bg-violet-50 border-slate-900 text-violet-900 shadow-[2px_2px_0_0_#0f172a]' 
                 : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'}
               ${!isOpen && 'justify-center px-0'}
             `}
@@ -95,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                   size={20} 
                   className={`
                     ${isOpen ? "mr-3" : ""} 
-                    ${isActive ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-900'}
+                    ${isActive ? 'text-violet-700' : 'text-slate-500 group-hover:text-slate-900'}
                   `} 
                 />
                 

@@ -14,7 +14,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
          
          {/* Background Pattern for Full Screen */}
          {fullScreen && (
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#0f172a 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#7c3aed 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
          )}
 
          <div className="relative bg-white border-2 border-slate-900 p-8 rounded-2xl shadow-[8px_8px_0_0_#0f172a] flex flex-col items-center gap-8 max-w-sm w-full mx-4 animate-in zoom-in-95 duration-300">
@@ -22,14 +22,14 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
             {/* Brutalist Loader: Rotating Square with Static Center */}
             <div className="relative w-20 h-20">
                 {/* Static Ghost */}
-                <div className="absolute inset-0 bg-slate-100 rounded-xl border-2 border-slate-200 transform rotate-45"></div>
+                <div className="absolute inset-0 bg-violet-50 rounded-xl border-2 border-violet-200 transform rotate-45"></div>
                 
                 {/* Spinning Element */}
-                <div className="absolute inset-0 bg-slate-900 rounded-xl animate-spin shadow-sm z-10" style={{ animationDuration: '3s' }}></div>
+                <div className="absolute inset-0 bg-violet-600 rounded-xl animate-spin shadow-sm z-10" style={{ animationDuration: '3s' }}></div>
                 
                 {/* Static Overlay to create 'border' effect */}
                 <div className="absolute inset-3 bg-white rounded-lg border-2 border-slate-900 z-20 flex items-center justify-center">
-                    <div className="w-3 h-3 bg-slate-900 rounded-sm animate-pulse"></div>
+                    <div className="w-3 h-3 bg-violet-600 rounded-sm animate-pulse"></div>
                 </div>
             </div>
 
@@ -37,9 +37,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
                 <h3 className="text-xl font-bold font-heading text-slate-900 tracking-tight">
                     Meshwork Studio
                 </h3>
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                <div className="flex items-center gap-2 px-3 py-1 bg-violet-50 rounded-full border border-violet-200">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-slate-500 text-xs font-mono font-bold uppercase tracking-widest">
+                    <span className="text-violet-600 text-xs font-mono font-bold uppercase tracking-widest">
                         {message}
                     </span>
                 </div>
