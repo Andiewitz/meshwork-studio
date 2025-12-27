@@ -686,9 +686,18 @@ const FlowEditorContent: React.FC = () => {
             className="touch-none"
             connectionRadius={50}
             connectionMode={ConnectionMode.Loose}
-            panOnDrag={activeTool === 'pan'}
+            
+            // Interaction Logic:
+            // 1. SELECT mode: Can select (box), cannot drag nodes, cannot pan (left click).
+            // 2. MOVE mode: Can drag nodes, can pan, cannot select box.
+            // 3. PAN mode: Cannot select, cannot drag nodes, can pan.
+            // 4. CONNECT mode: Standard interaction but focus on handles.
+            
+            nodesDraggable={activeTool === 'move'}
+            panOnDrag={activeTool === 'pan' || activeTool === 'move' || activeTool === 'connect'}
             selectionOnDrag={activeTool === 'select'}
-            elementsSelectable={activeTool !== 'pan'}
+            elementsSelectable={activeTool !== 'pan'} 
+            
             snapToGrid={false}
         >
             <Background 

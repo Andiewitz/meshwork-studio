@@ -2,6 +2,7 @@ import React from 'react';
 import { 
   MousePointer2, 
   Hand, 
+  Move, // Import Move icon
   Undo, 
   Redo, 
   Minus, 
@@ -9,7 +10,7 @@ import {
   Link2
 } from 'lucide-react';
 
-export type CanvasTool = 'select' | 'pan' | 'connect';
+export type CanvasTool = 'select' | 'move' | 'pan' | 'connect';
 
 interface CanvasNavProps {
   zoomIn: () => void;
@@ -48,6 +49,13 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
             title="Select Mode"
           >
             <MousePointer2 size={18} />
+          </button>
+          <button 
+            onClick={() => setActiveTool('move')}
+            className={activeTool === 'move' ? activeBtnClass : btnClass} 
+            title="Move Mode"
+          >
+            <Move size={18} />
           </button>
           <button 
             onClick={() => setActiveTool('pan')}
@@ -107,6 +115,11 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
       {activeTool === 'connect' && (
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-white text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 shadow-lg">
           Click a line to define protocol
+        </div>
+      )}
+      {activeTool === 'move' && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-white text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 shadow-lg">
+          Drag nodes to arrange
         </div>
       )}
     </div>
