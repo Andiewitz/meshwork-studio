@@ -20,7 +20,7 @@ import type {
   NodeMouseHandler,
   EdgeMouseHandler
 } from 'reactflow';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Save, Cloud, Check, Clock, AlertTriangle, Menu, Download, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
@@ -59,6 +59,17 @@ const FlowEditorContent: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Editor State
+  const [flowTitle, setFlowTitle] = useState('Untitled Mesh');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'unsaved'>('idle');
+  const [showGui, setShowGui] = useState(true);
+  
+  // Refs for Auto-Save
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  const isDirtyRef = useRef(false);
+
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   
   // Tool State
@@ -70,7 +81,7 @@ const FlowEditorContent: React.FC = () => {
       top: number; 
       left: number; 
       type: string;
-      data?: any; // To store edge data or coordinates for splitting
+      data?: any; 
   } | null>(null);
 
   // Modal States
@@ -104,6 +115,18 @@ const FlowEditorContent: React.FC = () => {
     external: ExternalServiceNode,
   }), []);
 
+  // Sync Refs
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+    if (!isLoading) {
+        isDirtyRef.current = true;
+        if (saveStatus === 'saved' || saveStatus === 'idle') {
+            setSaveStatus('unsaved');
+        }
+    }
+  }, [nodes, edges, isLoading]);
+
   // Load Flow Data
   useEffect(() => {
     const loadFlow = async () => {
@@ -114,27 +137,46 @@ const FlowEditorContent: React.FC = () => {
         if (flowData) {
           setNodes(flowData.nodes);
           setEdges(flowData.edges);
+          setFlowTitle(flowData.title);
+          setLastSaved(new Date(flowData.updatedAt));
+          // Reset dirty flag after load
+          isDirtyRef.current = false;
+          setSaveStatus('saved');
         }
       } catch (error) {
         console.error("Error loading flow", error);
       } finally {
-        // Small delay to show off the loading animation even if data is instant local
         setTimeout(() => setIsLoading(false), 800);
       }
     };
     loadFlow();
   }, [flowId, setNodes, setEdges]);
 
-  // Auto-Save (Simple debounce implementation)
-  useEffect(() => {
-    if (isLoading || !flowId) return;
-    
-    const saveTimeout = setTimeout(() => {
-       flowService.saveFlow(flowId, nodes, edges);
-    }, 2000);
+  // Save Function
+  const handleSave = useCallback(async () => {
+    if (!flowId) return;
+    setSaveStatus('saving');
+    try {
+        await flowService.saveFlow(flowId, nodesRef.current, edgesRef.current);
+        setSaveStatus('saved');
+        setLastSaved(new Date());
+        isDirtyRef.current = false;
+    } catch (e) {
+        console.error("Save failed", e);
+        setSaveStatus('error');
+    }
+  }, [flowId]);
 
-    return () => clearTimeout(saveTimeout);
-  }, [nodes, edges, flowId, isLoading]);
+  // Auto-Save Interval (30s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (isDirtyRef.current && flowId && !isLoading) {
+            handleSave();
+        }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [flowId, handleSave, isLoading]);
 
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({ 
@@ -163,9 +205,7 @@ const FlowEditorContent: React.FC = () => {
   const onEdgeContextMenu = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.preventDefault();
-      event.stopPropagation(); // Stop propagation to canvas
-      
-      // Calculate position for potential split
+      event.stopPropagation();
       const canvasPosition = reactFlowInstance?.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
@@ -188,7 +228,7 @@ const FlowEditorContent: React.FC = () => {
 
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
-  // Handle Menu Actions (Delete, Duplicate, etc.) - Code omitted for brevity as it's unchanged logic
+  // Menu Handlers
   const handleMenuDelete = useCallback(() => {
     if (menu) {
       if (menu.type === 'edge') {
@@ -218,7 +258,6 @@ const FlowEditorContent: React.FC = () => {
           },
           selected: true,
         };
-        // Deselect original
         setNodes((nds) => [...nds.map(n => ({...n, selected: false})), newNode]);
       }
       setMenu(null);
@@ -249,7 +288,6 @@ const FlowEditorContent: React.FC = () => {
           };
 
           setEdges((eds) => eds.filter(e => e.id !== edgeId));
-
           setNodes((nds) => nds.concat(junctionNode));
           
           setTimeout(() => {
@@ -428,133 +466,182 @@ const FlowEditorContent: React.FC = () => {
   );
 
   return (
-    <div className="w-full h-screen bg-zinc-900 relative overflow-hidden" ref={reactFlowWrapper}>
-      {/* Minimal Exit Button - Top Left */}
-      <div className="absolute top-4 left-4 z-50">
-        <button 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-900 text-slate-900 font-bold rounded-xl shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px] transition-all group"
-        >
-          <ChevronLeft size={20} strokeWidth={3} className="group-hover:-translate-x-0.5 transition-transform" />
-          <span className="text-sm">Exit</span>
-        </button>
-      </div>
+    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden">
+      
+      {/* Top Navbar */}
+      {showGui && (
+        <div className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
+            <div className="flex items-center gap-4">
+                <button 
+                    onClick={() => navigate('/')}
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                    title="Back to Dashboard"
+                >
+                    <ChevronLeft size={24} strokeWidth={2.5} />
+                </button>
+                
+                <div className="h-6 w-px bg-slate-200"></div>
 
-      {/* Loading State Overlay using shared component */}
-      {isLoading && (
-        <div className="absolute inset-0 z-[60] bg-zinc-900 animate-out fade-out duration-500 fill-mode-forwards pointer-events-none">
-             <LoadingScreen message="Initializing Environment..." fullScreen={false} />
+                <div>
+                    <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
+                        {saveStatus === 'saving' && <span className="text-blue-500 flex items-center gap-1"><Clock size={10} /> Saving...</span>}
+                        {saveStatus === 'saved' && <span className="text-emerald-500 flex items-center gap-1"><Check size={10} /> Saved {lastSaved && `at ${lastSaved.toLocaleTimeString()}`}</span>}
+                        {saveStatus === 'unsaved' && <span className="text-amber-500 flex items-center gap-1"><AlertTriangle size={10} /> Unsaved Changes</span>}
+                        {saveStatus === 'error' && <span className="text-red-500 flex items-center gap-1"><AlertTriangle size={10} /> Save Error</span>}
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200">
+                    <Clock size={14} className="text-slate-400" />
+                    <span className="text-xs font-bold text-slate-500">Auto-save: 30s</span>
+                </div>
+                
+                <button 
+                    onClick={handleSave}
+                    disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+                    className={`
+                        flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border-2
+                        ${saveStatus === 'unsaved' || saveStatus === 'error'
+                            ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a] hover:-translate-y-0.5' 
+                            : 'bg-white text-slate-400 border-slate-200 cursor-default'}
+                    `}
+                >
+                    <Save size={16} />
+                    <span>Save</span>
+                </button>
+            </div>
         </div>
       )}
 
-      {/* Prototype Version Label */}
-      <div className="absolute top-5 right-6 z-40 pointer-events-none select-none">
-        <span className="px-3 py-1.5 bg-slate-900 text-white border border-slate-700 rounded-lg text-xs font-bold font-mono shadow-xl opacity-80">
-          alpha v1.4.0
-        </span>
-      </div>
+      {/* Main Canvas Area */}
+      <div className="flex-1 relative overflow-hidden" ref={reactFlowWrapper}>
+        
+        {/* Toggle GUI Button */}
+        <div className="absolute bottom-6 right-6 z-50">
+          <button
+            onClick={() => setShowGui(!showGui)}
+            className={`
+              p-3 rounded-xl border-2 transition-all duration-200 font-bold flex items-center gap-2
+              ${showGui 
+                ? 'bg-white text-slate-900 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px]' 
+                : 'bg-indigo-600 text-white border-white shadow-[4px_4px_0_0_#000] hover:bg-indigo-700 opacity-90 hover:opacity-100'}
+            `}
+            title={showGui ? "Hide Interface" : "Show Interface"}
+          >
+            {showGui ? <Eye size={20} /> : <EyeOff size={20} />}
+          </button>
+        </div>
 
-      {/* Node Library Sidebar */}
-      <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
-      
-      {/* Database Selector Modal */}
-      <DatabaseSelectorModal 
-        isOpen={dbModalOpen}
-        onClose={() => setDbModalOpen(false)}
-        onSelect={handleDbSelect}
-      />
-      
-      {/* Client Configuration Modal */}
-      <ClientConfigModal 
-        isOpen={clientModalOpen}
-        onClose={() => setClientModalOpen(false)}
-        initialLabel={configuringClientData.label}
-        initialType={configuringClientData.type}
-        onSave={handleClientSave}
-      />
+        {/* Loading State Overlay */}
+        {isLoading && (
+            <div className="absolute inset-0 z-[60] bg-zinc-900 animate-out fade-out duration-500 fill-mode-forwards pointer-events-none">
+                <LoadingScreen message="Initializing Environment..." fullScreen={false} />
+            </div>
+        )}
 
-      {/* Cache / CDN Selector Modal */}
-      <CacheSelectorModal
-        isOpen={cacheModalOpen}
-        onClose={() => setCacheModalOpen(false)}
-        onSelect={handleCacheSelect}
-      />
-      
-      {/* Generic Edit Node Modal */}
-      <EditNodeModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        initialLabel={editingLabel}
-        onSave={handleEditSave}
-      />
-
-      {/* Connection Settings Modal */}
-      <ConnectionSettingsModal
-        isOpen={connectionModalOpen}
-        onClose={() => setConnectionModalOpen(false)}
-        onSave={handleConnectionSave}
-        currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null}
-      />
-
-      {/* Context Menu */}
-      {menu && (
-        <ContextMenu
-          top={menu.top}
-          left={menu.left}
-          onEdit={handleMenuEdit}
-          onDuplicate={handleMenuDuplicate}
-          onSeverConnections={handleMenuSeverConnections}
-          onSplitConnection={handleSplitConnection}
-          onDelete={handleMenuDelete}
-          onClose={() => setMenu(null)}
-          nodeType={menu.type}
-        />
-      )}
-
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onInit={setReactFlowInstance}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onNodeContextMenu={onNodeContextMenu}
-        onEdgeContextMenu={onEdgeContextMenu}
-        onPaneClick={onPaneClick}
-        onEdgeClick={onEdgeClick}
-        nodeTypes={nodeTypes}
-        fitView
-        minZoom={0.1}
-        maxZoom={2}
-        className="touch-none"
-        connectionRadius={50}
-        connectionMode={ConnectionMode.Loose}
-        panOnDrag={activeTool === 'pan'}
-        selectionOnDrag={activeTool === 'select'}
-        elementsSelectable={activeTool !== 'pan'}
-      >
-        <Background 
-          color="#ffffff" 
-          variant={BackgroundVariant.Dots} 
-          gap={24} 
-          size={1.5}
-          className="opacity-50" 
+        {/* Node Library Sidebar */}
+        {showGui && <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />}
+        
+        {/* Modals */}
+        <DatabaseSelectorModal 
+            isOpen={dbModalOpen}
+            onClose={() => setDbModalOpen(false)}
+            onSelect={handleDbSelect}
         />
         
-        <CanvasNav 
-          zoomIn={zoomIn} 
-          zoomOut={zoomOut}
-          onUndo={() => console.log('undo')}
-          onRedo={() => console.log('redo')}
-          onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-          isLibraryOpen={isLibraryOpen}
-          activeTool={activeTool}
-          setActiveTool={setActiveTool}
+        <ClientConfigModal 
+            isOpen={clientModalOpen}
+            onClose={() => setClientModalOpen(false)}
+            initialLabel={configuringClientData.label}
+            initialType={configuringClientData.type}
+            onSave={handleClientSave}
         />
-      </ReactFlow>
+
+        <CacheSelectorModal
+            isOpen={cacheModalOpen}
+            onClose={() => setCacheModalOpen(false)}
+            onSelect={handleCacheSelect}
+        />
+        
+        <EditNodeModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            initialLabel={editingLabel}
+            onSave={handleEditSave}
+        />
+
+        <ConnectionSettingsModal
+            isOpen={connectionModalOpen}
+            onClose={() => setConnectionModalOpen(false)}
+            onSave={handleConnectionSave}
+            currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null}
+        />
+
+        {/* Context Menu */}
+        {menu && (
+            <ContextMenu
+            top={menu.top}
+            left={menu.left}
+            onEdit={handleMenuEdit}
+            onDuplicate={handleMenuDuplicate}
+            onSeverConnections={handleMenuSeverConnections}
+            onSplitConnection={handleSplitConnection}
+            onDelete={handleMenuDelete}
+            onClose={() => setMenu(null)}
+            nodeType={menu.type}
+            />
+        )}
+
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onEdgeContextMenu={onEdgeContextMenu}
+            onPaneClick={onPaneClick}
+            onEdgeClick={onEdgeClick}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={0.1}
+            maxZoom={2}
+            className="touch-none"
+            connectionRadius={50}
+            connectionMode={ConnectionMode.Loose}
+            panOnDrag={activeTool === 'pan'}
+            selectionOnDrag={activeTool === 'select'}
+            elementsSelectable={activeTool !== 'pan'}
+        >
+            <Background 
+            color="#ffffff" 
+            variant={BackgroundVariant.Dots} 
+            gap={24} 
+            size={1.5}
+            className="opacity-50" 
+            />
+            
+            {showGui && (
+              <CanvasNav 
+                zoomIn={zoomIn} 
+                zoomOut={zoomOut}
+                onUndo={() => console.log('undo')}
+                onRedo={() => console.log('redo')}
+                onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
+                isLibraryOpen={isLibraryOpen}
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+              />
+            )}
+        </ReactFlow>
+      </div>
     </div>
   );
 };

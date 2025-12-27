@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     X, 
@@ -7,7 +7,8 @@ import {
     Loader2, 
     CheckCircle2, 
     ArrowRight,
-    PenLine
+    PenLine,
+    ChevronDown
 } from 'lucide-react';
 import { templates } from '../data/templates';
 import { flowService } from '../services/flowService';
@@ -23,8 +24,23 @@ export const TemplateSelectorPage: React.FC = () => {
   const [customTitle, setCustomTitle] = useState('');
   const [selectedIconKey, setSelectedIconKey] = useState<string>(DEFAULT_ICON);
   const [isCreating, setIsCreating] = useState(false);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const iconPickerRef = useRef<HTMLDivElement>(null);
 
   const selectedTemplate = templates.find(t => t.id === selectedId);
+
+  // Close icon picker on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (iconPickerRef.current && !iconPickerRef.current.contains(event.target as Node)) {
+        setShowIconPicker(false);
+      }
+    };
+    if (showIconPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showIconPicker]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,19 +167,63 @@ export const TemplateSelectorPage: React.FC = () => {
                     <div className="flex-1 flex flex-col p-6 bg-white overflow-y-auto">
                         <form id="create-flow-form" onSubmit={handleCreate} className="flex-1 flex flex-col">
                              
-                             {/* Preview Card */}
-                             <div className="mb-6 p-4 rounded-xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center shrink-0">
-                                 <div className={`
-                                    w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-sm bg-white border-2 border-slate-200 text-slate-900
-                                 `}>
-                                     {selectedTemplate?.logo ? (
-                                        <img src={selectedTemplate.logo} alt="" className="w-8 h-8 object-contain" />
-                                     ) : (
-                                        <SelectedIconComponent size={32} />
-                                     )}
+                             {/* Preview Card with Integrated Icon Picker */}
+                             <div className="mb-8 p-4 rounded-3xl bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center shrink-0 relative">
+                                 <div className="relative" ref={iconPickerRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowIconPicker(!showIconPicker)}
+                                        className={`
+                                            w-20 h-20 rounded-3xl flex items-center justify-center mb-3 shadow-md bg-white border-2 border-slate-200 text-slate-900
+                                            hover:border-indigo-500 hover:shadow-[4px_4px_0_0_#6366f1] transition-all transform hover:-translate-y-1 active:translate-y-0
+                                            group
+                                        `}
+                                    >
+                                        {selectedTemplate?.logo ? (
+                                            <img src={selectedTemplate.logo} alt="" className="w-10 h-10 object-contain" />
+                                        ) : (
+                                            <SelectedIconComponent size={36} />
+                                        )}
+                                        
+                                        {/* Edit Badge */}
+                                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-slate-900 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <ChevronDown size={12} strokeWidth={3} />
+                                        </div>
+                                    </button>
+
+                                    {/* Small Icon Picker Menu */}
+                                    {showIconPicker && (
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 p-3 bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] z-50 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="grid grid-cols-4 gap-2 w-48">
+                                                {Object.entries(PROJECT_ICONS).map(([key, Icon]) => {
+                                                    const isActive = selectedIconKey === key;
+                                                    return (
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedIconKey(key);
+                                                                setShowIconPicker(false);
+                                                            }}
+                                                            className={`
+                                                                aspect-square rounded-lg flex items-center justify-center border transition-all
+                                                                ${isActive 
+                                                                    ? 'bg-slate-900 text-white border-slate-900' 
+                                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300 hover:text-slate-600'}
+                                                            `}
+                                                            title={key}
+                                                        >
+                                                            <Icon size={18} />
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                  </div>
-                                 <h3 className="text-lg font-bold text-slate-900">{selectedTemplate?.name}</h3>
-                                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                                 
+                                 <h3 className="text-xl font-bold text-slate-900 font-heading">{selectedTemplate?.name}</h3>
+                                 <p className="text-xs text-slate-500 mt-2 leading-relaxed max-w-[200px]">
                                      {selectedTemplate?.description}
                                  </p>
                              </div>
@@ -180,53 +240,26 @@ export const TemplateSelectorPage: React.FC = () => {
                                             value={customTitle}
                                             onChange={(e) => setCustomTitle(e.target.value)}
                                             placeholder={selectedTemplate?.name || "Untitled Mesh"}
-                                            className="w-full bg-white border-2 border-slate-200 text-slate-900 pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-slate-900 focus:shadow-[2px_2px_0_0_#0f172a] font-bold transition-all placeholder:font-normal"
+                                            className="w-full bg-white border-2 border-slate-200 text-slate-900 pl-10 pr-4 py-3 rounded-2xl focus:outline-none focus:border-slate-900 focus:shadow-[4px_4px_0_0_#cbd5e1] font-bold transition-all placeholder:font-normal"
                                             autoFocus
                                         />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
-                                        Project Icon
-                                    </label>
-                                    <div className="grid grid-cols-5 gap-2">
-                                        {Object.entries(PROJECT_ICONS).map(([key, Icon]) => {
-                                            const isActive = selectedIconKey === key;
-                                            return (
-                                                <button
-                                                    key={key}
-                                                    type="button"
-                                                    onClick={() => setSelectedIconKey(key)}
-                                                    className={`
-                                                        aspect-square rounded-xl flex items-center justify-center border-2 transition-all duration-200
-                                                        ${isActive 
-                                                            ? 'bg-slate-900 border-slate-900 text-white shadow-[2px_2px_0_0_#cbd5e1] scale-105' 
-                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600'}
-                                                    `}
-                                                    title={key}
-                                                >
-                                                    <Icon size={20} />
-                                                </button>
-                                            );
-                                        })}
                                     </div>
                                 </div>
                              </div>
 
                              {/* Actions */}
-                             <div className="pt-6 mt-6 border-t-2 border-slate-100 flex gap-3 shrink-0">
+                             <div className="pt-6 mt-8 border-t-2 border-slate-100 flex gap-3 shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => navigate('/')}
-                                    className="flex-1 px-4 py-3 bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-700 rounded-xl font-bold transition-all"
+                                    className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-700 rounded-2xl font-bold transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex-[2] px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
+                                    className="flex-[2] px-4 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold transition-all hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
                                 >
                                     {isCreating ? (
                                         <>

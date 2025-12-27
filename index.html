@@ -4,26 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meshwork Studio</title>
-    <!-- We keep the CDN for Tailwind for the scaffold, but normally this would be a postcss dependency -->
+    <!-- We keep the CDN for Tailwind for the scaffold, normally this would be a postcss dependency -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/reactflow/dist/style.css" rel="stylesheet" />
-    <!-- Fonts: Inter for SF Pro feel substitute in standard web, Plus Jakarta Sans for headings -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     
     <style>
-      /* Apply System Font Stack for 'SF Pro' feel as primary */
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       }
-      
-      /* Secondary fitting font for Headings/Brand */
       h1, h2, h3, h4, h5, h6, .font-heading {
         font-family: 'Plus Jakarta Sans', sans-serif;
       }
-
-      /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -38,17 +33,13 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
       }
-
-      /* Utility: Hide Scrollbar but keep functionality */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
       .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
-
-      /* Page Transitions */
       @keyframes fadeInUp {
         from {
           opacity: 0;
@@ -59,7 +50,6 @@
           transform: translateY(0);
         }
       }
-      
       .page-enter {
         animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
@@ -67,23 +57,26 @@
   <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
-    "reactflow": "https://esm.sh/reactflow@^11.11.4",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.1?deps=react@18.2.0,react-dom@18.2.0",
+    "reactflow": "https://esm.sh/reactflow@11.10.4?deps=react@18.2.0,react-dom@18.2.0",
+    "firebase/app": "https://esm.sh/firebase@10.8.0/app",
+    "firebase/auth": "https://esm.sh/firebase@10.8.0/auth",
+    "firebase/firestore": "https://esm.sh/firebase@10.8.0/firestore",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@4.2.1",
+    "vite": "https://esm.sh/vite@5.1.4",
     "@mui/material": "https://esm.sh/@mui/material@5.15.11?deps=react@18.2.0,react-dom@18.2.0",
     "@emotion/react": "https://esm.sh/@emotion/react@11.11.3?deps=react@18.2.0",
-    "@emotion/styled": "https://esm.sh/@emotion/styled@11.11.0?deps=react@18.2.0,@emotion/react@11.11.3"
+    "@emotion/styled": "https://esm.sh/@emotion/styled@11.11.0?deps=react@18.2.0,@emotion/react@11.11.3",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/"
   }
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 antialiased overflow-hidden">
+  <body class="bg-[#fdfbf7] text-slate-900 antialiased overflow-hidden">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

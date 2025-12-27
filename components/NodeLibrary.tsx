@@ -2,19 +2,24 @@ import React from 'react';
 import { 
     Server, 
     Database, 
-    Layers, 
     Cpu, 
-    X, 
-    Network, 
-    ShieldCheck, 
-    Gauge, 
     Globe, 
-    ArrowRightLeft,
-    Zap,
-    Lock,
-    Monitor,
-    Cloud,
-    Box
+    Zap, 
+    Shield, 
+    Lock, 
+    Smartphone, 
+    Monitor, 
+    Network,
+    Router,
+    ScrollText,
+    X,
+    Box,
+    Search,
+    Split,
+    LayoutGrid,
+    Clock,
+    HardDrive,
+    Anchor
 } from 'lucide-react';
 
 interface NodeLibraryProps {
@@ -22,51 +27,85 @@ interface NodeLibraryProps {
   onClose: () => void;
 }
 
+type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal';
+
 interface NodeItemProps {
     type: string;
     label: string;
     icon?: any;
     logo?: string;
-    colorClass: string;
+    variant: Variant;
     middlewareType?: string;
+    clientType?: string;
 }
 
-const NodeItem = ({ type, label, icon: Icon, logo, colorClass, middlewareType }: NodeItemProps) => {
-  // Extract color name to generate pastel background + contrasting border
-  // Input format expected: "text-color-shade" (e.g. text-sky-600)
-  const colorMatch = colorClass.match(/text-([a-z]+)-/);
-  const color = colorMatch ? colorMatch[1] : 'slate';
-  
-  // Dynamic classes for CDN Tailwind
-  const bgClass = `bg-${color}-100`;
-  const borderClass = `border-${color}-300`;
+const VARIANTS: Record<Variant, { bg: string, border: string, text: string, shadow: string, isLight: boolean }> = {
+    blue:   { bg: 'bg-blue-500',   border: 'border-blue-600',   text: 'text-white', shadow: 'shadow-blue-900', isLight: false },
+    emerald:{ bg: 'bg-emerald-400', border: 'border-emerald-500', text: 'text-black', shadow: 'shadow-emerald-900', isLight: true },
+    rose:   { bg: 'bg-rose-500',    border: 'border-rose-600',    text: 'text-white', shadow: 'shadow-rose-900', isLight: false },
+    amber:  { bg: 'bg-amber-400',   border: 'border-amber-500',   text: 'text-black', shadow: 'shadow-amber-900', isLight: true },
+    violet: { bg: 'bg-violet-500',  border: 'border-violet-600',  text: 'text-white', shadow: 'shadow-violet-900', isLight: false },
+    slate:  { bg: 'bg-slate-800',   border: 'border-slate-900',   text: 'text-white', shadow: 'shadow-slate-900', isLight: false },
+    pink:   { bg: 'bg-pink-500',    border: 'border-pink-600',    text: 'text-white', shadow: 'shadow-pink-900', isLight: false },
+    cyan:   { bg: 'bg-cyan-400',    border: 'border-cyan-500',    text: 'text-black', shadow: 'shadow-cyan-900', isLight: true },
+    orange: { bg: 'bg-orange-500',  border: 'border-orange-600',  text: 'text-white', shadow: 'shadow-orange-900', isLight: false },
+    lime:   { bg: 'bg-lime-400',    border: 'border-lime-500',    text: 'text-black', shadow: 'shadow-lime-900', isLight: true },
+    indigo: { bg: 'bg-indigo-600',  border: 'border-indigo-700',  text: 'text-white', shadow: 'shadow-indigo-900', isLight: false },
+    teal:   { bg: 'bg-teal-400',    border: 'border-teal-500',    text: 'text-black', shadow: 'shadow-teal-900', isLight: true },
+};
+
+const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clientType }: NodeItemProps) => {
+  const styles = VARIANTS[variant];
+  // Calculate logo filter based on background brightness
+  // if background is light, we want black icon (brightness-0)
+  // if background is dark, we want white icon (brightness-0 invert)
+  const imgFilterClass = styles.isLight ? 'brightness-0' : 'brightness-0 invert';
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.setData('application/label', label);
-    if (middlewareType) {
-        event.dataTransfer.setData('application/middlewareType', middlewareType);
-    }
-    if (logo) {
-        event.dataTransfer.setData('application/logo', logo);
-    }
+    if (middlewareType) event.dataTransfer.setData('application/middlewareType', middlewareType);
+    if (clientType) event.dataTransfer.setData('application/clientType', clientType);
+    if (logo) event.dataTransfer.setData('application/logo', logo);
     event.dataTransfer.effectAllowed = 'move';
   };
 
   return (
     <div 
-      className="flex flex-col items-center gap-2 p-3 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-slate-900 rounded-xl cursor-grab active:cursor-grabbing transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#cbd5e1]"
+      className={`
+        relative flex flex-col items-center gap-2 p-3 
+        bg-white border-2 border-black rounded-xl 
+        shadow-[4px_4px_0_0_#000] 
+        cursor-grab active:cursor-grabbing 
+        transition-all duration-200
+        hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] hover:bg-slate-50
+        active:translate-y-0 active:shadow-[2px_2px_0_0_#000]
+        group
+      `}
       onDragStart={(event) => onDragStart(event, type)}
       draggable
     >
-      <div className={`p-2.5 rounded-lg border-2 text-slate-900 ${bgClass} ${borderClass} flex items-center justify-center`}>
+      {/* Icon Container */}
+      <div className={`
+        w-10 h-10 flex items-center justify-center rounded-lg border-2 border-black
+        ${styles.bg} ${styles.text}
+        transition-transform group-hover:scale-110
+      `}>
         {logo ? (
-            <img src={logo} alt={label} className="w-5 h-5 object-contain" />
+            <img 
+                src={logo} 
+                alt={label} 
+                className={`w-6 h-6 object-contain drop-shadow-sm filter ${imgFilterClass}`} 
+            />
         ) : (
-            Icon && <Icon size={20} />
+            Icon && <Icon size={20} strokeWidth={2.5} />
         )}
       </div>
-      <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">{label}</span>
+      
+      {/* Label */}
+      <span className="text-[10px] font-bold text-black text-center leading-tight uppercase tracking-tight">
+        {label}
+      </span>
     </div>
   );
 };
@@ -75,121 +114,119 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose }) => 
   return (
     <div 
       className={`
-        absolute top-4 bottom-4 right-4 w-96
-        bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] z-50
+        absolute top-4 bottom-4 right-4 w-[400px]
+        bg-[#fdfbf7] border-2 border-black rounded-2xl shadow-[12px_12px_0_0_#000] z-50
         transform transition-transform duration-300 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : 'translate-x-[120%]'}
       `}
     >
-      <div className="flex items-center justify-between p-4 border-b-2 border-slate-900">
-        <h2 className="text-slate-900 font-heading font-bold text-lg">Components</h2>
-        <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
-          <X size={20} />
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 border-b-2 border-black bg-white rounded-t-2xl">
+        <div className="flex items-center gap-3">
+             <div className="w-8 h-8 bg-violet-500 border-2 border-black rounded-lg flex items-center justify-center text-white">
+                 <LayoutGrid size={18} />
+             </div>
+             <div>
+                <h2 className="text-xl font-bold font-heading text-black leading-none">Library</h2>
+                <p className="text-xs font-bold text-slate-500 mt-1">Drag & drop to canvas</p>
+             </div>
+        </div>
+        <button 
+            onClick={onClose} 
+            className="p-2 bg-white border-2 border-black rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-[2px]"
+        >
+          <X size={20} strokeWidth={3} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-8 scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-5 space-y-8 scroll-smooth no-scrollbar">
         
         {/* Core Infrastructure */}
         <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1 border-b-2 border-slate-100 pb-1">Infrastructure</h3>
+            <div className="flex items-center gap-2 mb-4">
+                <span className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black"></span>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Compute & Host</h3>
+            </div>
             <div className="grid grid-cols-3 gap-3">
-                <NodeItem type="client" label="Client App" icon={Monitor} colorClass="text-sky-600" />
-                <NodeItem type="loadBalancer" label="Load Balancer" icon={Network} colorClass="text-violet-600" />
-                <NodeItem type="server" label="Server" icon={Server} colorClass="text-indigo-600" />
-                <NodeItem type="service" label="Service" icon={Cpu} colorClass="text-emerald-600" />
-                <NodeItem type="database" label="Database" icon={Database} colorClass="text-blue-600" />
-                <NodeItem type="queue" label="Queue" icon={Layers} colorClass="text-amber-600" />
-                <NodeItem type="external" label="Generic Ext." icon={Cloud} colorClass="text-slate-600" />
+                <NodeItem type="client" label="User / Client" icon={Monitor} variant="cyan" />
+                <NodeItem type="client" label="Mobile" icon={Smartphone} variant="cyan" clientType="phone" />
+                <NodeItem type="loadBalancer" label="Load Balancer" icon={Split} variant="pink" />
+                <NodeItem type="server" label="App Server" icon={Server} variant="indigo" />
+                <NodeItem type="service" label="Microservice" icon={Cpu} variant="emerald" />
+                <NodeItem type="server" label="Bare Metal" icon={Box} variant="slate" />
+                <NodeItem type="external" label="Function" icon={Zap} variant="orange" />
             </div>
         </div>
 
-        {/* Middleware */}
+        {/* Data & Storage */}
         <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1 border-b-2 border-slate-100 pb-1">Middleware</h3>
-            <div className="grid grid-cols-3 gap-2">
-                <NodeItem type="middleware" middlewareType="gateway" label="API Gateway" icon={Globe} colorClass="text-blue-500" />
-                <NodeItem type="middleware" middlewareType="auth" label="Auth Guard" icon={ShieldCheck} colorClass="text-emerald-500" />
-                <NodeItem type="middleware" middlewareType="cache" label="Cache / CDN" icon={Layers} colorClass="text-red-500" />
-                <NodeItem type="middleware" middlewareType="ratelimit" label="Rate Limiter" icon={Gauge} colorClass="text-orange-500" />
-                <NodeItem type="middleware" middlewareType="proxy" label="Rev. Proxy" icon={ArrowRightLeft} colorClass="text-violet-500" />
-                <NodeItem type="middleware" middlewareType="circuitbreaker" label="Breaker" icon={Zap} colorClass="text-yellow-500" />
-                <NodeItem type="middleware" middlewareType="mesh" label="Service Mesh" icon={Network} colorClass="text-cyan-500" />
-                <NodeItem type="middleware" middlewareType="security" label="WAF / Sec" icon={Lock} colorClass="text-slate-500" />
+            <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                <span className="w-3 h-3 bg-amber-400 rounded-full border-2 border-black"></span>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Data & Storage</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+                <NodeItem type="database" label="Database" icon={Database} variant="blue" />
+                <NodeItem type="database" label="Cache" icon={Zap} variant="amber" />
+                <NodeItem type="queue" label="Queue" icon={ScrollText} variant="violet" />
+                <NodeItem type="database" label="Search" icon={Search} variant="blue" />
+                <NodeItem type="database" label="Time Series" icon={Clock} variant="blue" />
+                <NodeItem type="external" label="Storage" icon={HardDrive} variant="slate" />
             </div>
         </div>
 
-        {/* Integrations & Tools */}
+        {/* Networking & Security */}
         <div>
-             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1 border-b-2 border-slate-100 pb-1">Integrations & Tools</h3>
+            <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                <span className="w-3 h-3 bg-rose-500 rounded-full border-2 border-black"></span>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Net & Security</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+                <NodeItem type="middleware" middlewareType="gateway" label="API Gateway" icon={Globe} variant="orange" />
+                <NodeItem type="middleware" middlewareType="proxy" label="Rev. Proxy" icon={Router} variant="violet" />
+                <NodeItem type="middleware" middlewareType="auth" label="Auth Guard" icon={Shield} variant="rose" />
+                <NodeItem type="middleware" middlewareType="security" label="WAF" icon={Lock} variant="rose" />
+                <NodeItem type="middleware" middlewareType="mesh" label="Service Mesh" icon={Network} variant="teal" />
+                <NodeItem type="middleware" middlewareType="ratelimit" label="Rate Limit" icon={Anchor} variant="slate" />
+            </div>
+        </div>
+
+        {/* Cloud Providers */}
+        <div>
+             <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                <span className="w-3 h-3 bg-slate-800 rounded-full border-2 border-black"></span>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Cloud & SaaS</h3>
+            </div>
              
-             {/* Cloud Providers */}
+             {/* AWS */}
              <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase mb-2">Cloud Providers</h4>
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Providers</h4>
                 <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="AWS" logo="https://cdn.simpleicons.org/amazonwebservices" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="GCP" logo="https://cdn.simpleicons.org/googlecloud" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Azure" logo="https://cdn.simpleicons.org/microsoftazure" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="DigitalOcean" logo="https://cdn.simpleicons.org/digitalocean" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Vercel" logo="https://cdn.simpleicons.org/vercel" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Netlify" logo="https://cdn.simpleicons.org/netlify" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Heroku" logo="https://cdn.simpleicons.org/heroku" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Fly.io" logo="https://cdn.simpleicons.org/flydotio" colorClass="text-slate-600" />
+                    <NodeItem type="external" label="AWS" logo="https://cdn.simpleicons.org/amazonwebservices" variant="slate" />
+                    <NodeItem type="external" label="Google" logo="https://cdn.simpleicons.org/googlecloud" variant="slate" />
+                    <NodeItem type="external" label="Azure" logo="https://cdn.simpleicons.org/microsoftazure" variant="slate" />
+                    <NodeItem type="external" label="DigitalOcean" logo="https://cdn.simpleicons.org/digitalocean" variant="slate" />
                 </div>
              </div>
 
-             {/* Containers & Orchestration */}
+             {/* Containers */}
              <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase mb-2">Containers & Orchestration</h4>
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Containers</h4>
                 <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Docker" logo="https://cdn.simpleicons.org/docker/2496ED" colorClass="text-sky-600" />
-                    <NodeItem type="external" label="Kubernetes" logo="https://cdn.simpleicons.org/kubernetes/326CE5" colorClass="text-blue-600" />
-                    <NodeItem type="external" label="Helm" logo="https://cdn.simpleicons.org/helm" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="ArgoCD" logo="https://cdn.simpleicons.org/argo" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Podman" logo="https://cdn.simpleicons.org/podman" colorClass="text-slate-600" />
+                    <NodeItem type="external" label="Docker" logo="https://cdn.simpleicons.org/docker" variant="blue" />
+                    <NodeItem type="external" label="K8s" logo="https://cdn.simpleicons.org/kubernetes" variant="blue" />
+                    <NodeItem type="external" label="Helm" logo="https://cdn.simpleicons.org/helm" variant="slate" />
+                    <NodeItem type="external" label="Argo" logo="https://cdn.simpleicons.org/argo" variant="slate" />
                 </div>
              </div>
 
-             {/* DevOps & IaC */}
+             {/* SaaS */}
              <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase mb-2">DevOps & IaC</h4>
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Services</h4>
                 <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Terraform" logo="https://cdn.simpleicons.org/terraform/7B42BC" colorClass="text-violet-600" />
-                    <NodeItem type="external" label="Ansible" logo="https://cdn.simpleicons.org/ansible" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Jenkins" logo="https://cdn.simpleicons.org/jenkins" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="GitHub Actions" logo="https://cdn.simpleicons.org/githubactions" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="GitLab CI" logo="https://cdn.simpleicons.org/gitlab" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="CircleCI" logo="https://cdn.simpleicons.org/circleci" colorClass="text-slate-600" />
-                </div>
-             </div>
-
-             {/* Monitoring & Logging */}
-             <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase mb-2">Monitoring & Observability</h4>
-                <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Prometheus" logo="https://cdn.simpleicons.org/prometheus/E6522C" colorClass="text-orange-600" />
-                    <NodeItem type="external" label="Grafana" logo="https://cdn.simpleicons.org/grafana/F46800" colorClass="text-orange-600" />
-                    <NodeItem type="external" label="Datadog" logo="https://cdn.simpleicons.org/datadog/632CA6" colorClass="text-purple-600" />
-                    <NodeItem type="external" label="New Relic" logo="https://cdn.simpleicons.org/newrelic" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Splunk" logo="https://cdn.simpleicons.org/splunk" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Elastic" logo="https://cdn.simpleicons.org/elastic" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Sentry" logo="https://cdn.simpleicons.org/sentry" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="PagerDuty" logo="https://cdn.simpleicons.org/pagerduty" colorClass="text-slate-600" />
-                </div>
-             </div>
-
-             {/* SaaS & APIs */}
-             <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-300 uppercase mb-2">SaaS & APIs</h4>
-                <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Stripe" logo="https://cdn.simpleicons.org/stripe/008CDD" colorClass="text-indigo-600" />
-                    <NodeItem type="external" label="PayPal" logo="https://cdn.simpleicons.org/paypal" colorClass="text-blue-600" />
-                    <NodeItem type="external" label="Auth0" logo="https://cdn.simpleicons.org/auth0" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Twilio" logo="https://cdn.simpleicons.org/twilio" colorClass="text-red-600" />
-                    <NodeItem type="external" label="SendGrid" logo="https://cdn.simpleicons.org/twilio" colorClass="text-blue-600" />
-                    <NodeItem type="external" label="Slack" logo="https://cdn.simpleicons.org/slack" colorClass="text-slate-600" />
-                    <NodeItem type="external" label="Discord" logo="https://cdn.simpleicons.org/discord/5865F2" colorClass="text-indigo-600" />
-                    <NodeItem type="external" label="OpenAI" logo="https://cdn.simpleicons.org/openai" colorClass="text-slate-600" />
+                    <NodeItem type="external" label="Stripe" logo="https://cdn.simpleicons.org/stripe" variant="indigo" />
+                    <NodeItem type="external" label="Auth0" logo="https://cdn.simpleicons.org/auth0" variant="slate" />
+                    <NodeItem type="external" label="Twilio" logo="https://cdn.simpleicons.org/twilio" variant="rose" />
+                    <NodeItem type="external" label="OpenAI" logo="https://cdn.simpleicons.org/openai" variant="emerald" />
                 </div>
              </div>
         </div>

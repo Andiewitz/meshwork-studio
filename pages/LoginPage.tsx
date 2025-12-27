@@ -27,7 +27,8 @@ export const LoginPage: React.FC = () => {
 
   return (
     <PageTransition loadingMessage="Preparing Environment...">
-        <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] p-4 relative overflow-hidden font-sans">
+        {/* Updated Background to Creamy White */}
+        <div className="min-h-screen flex items-center justify-center bg-[#fdfbf7] p-4 relative overflow-hidden font-sans">
              {/* Background Grid Pattern */}
             <div className="absolute inset-0 opacity-[0.05]" 
                  style={{ 
@@ -41,12 +42,12 @@ export const LoginPage: React.FC = () => {
                 {/* Colorful Logo Section */}
                 <div className="mb-10 flex flex-col items-center gap-4">
                     <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-                        <LetterBlock char="M" color="bg-violet-600" rotate="-rotate-3" />
+                        <LetterBlock char="M" color="bg-orange-600" rotate="-rotate-3" />
                         <LetterBlock char="E" color="bg-emerald-400" rotate="rotate-2" textColor="text-black" />
                         <LetterBlock char="S" color="bg-amber-400" rotate="-rotate-2" textColor="text-black" />
                         <LetterBlock char="H" color="bg-blue-500" rotate="rotate-1" />
                         <LetterBlock char="W" color="bg-rose-500" rotate="-rotate-3" />
-                        <LetterBlock char="O" color="bg-orange-400" rotate="rotate-2" textColor="text-black" />
+                        <LetterBlock char="O" color="bg-yellow-400" rotate="rotate-2" textColor="text-black" />
                         <LetterBlock char="R" color="bg-cyan-400" rotate="-rotate-1" textColor="text-black" />
                         <LetterBlock char="K" color="bg-green-500" rotate="rotate-3" />
                     </div>
@@ -96,7 +97,7 @@ export const LoginPage: React.FC = () => {
 
                         <button
                             onClick={loginAsGuest}
-                            className="w-full flex items-center justify-center gap-3 bg-violet-600 text-white font-bold py-4 px-4 rounded-xl border-2 border-black hover:bg-violet-700 shadow-[4px_4px_0_0_#000000] hover:shadow-[2px_2px_0_0_#000000] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none transition-all duration-200"
+                            className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white font-bold py-4 px-4 rounded-xl border-2 border-black hover:bg-slate-800 shadow-[4px_4px_0_0_#000000] hover:shadow-[2px_2px_0_0_#000000] hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none transition-all duration-200"
                         >
                             <Code2 size={20} strokeWidth={2.5} />
                             Start Building

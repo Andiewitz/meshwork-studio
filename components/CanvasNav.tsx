@@ -33,7 +33,8 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
   setActiveTool
 }) => {
   const btnClass = "p-2 rounded-lg border-2 border-transparent transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-900";
-  const activeBtnClass = "p-2 rounded-lg bg-violet-600 text-white border-2 border-violet-600 shadow-[2px_2px_0_0_#000000] transition-all transform -translate-y-0.5";
+  // Slate-900 for neutral, professional tool selection
+  const activeBtnClass = "p-2 rounded-lg bg-slate-900 text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000000] transition-all transform -translate-y-0.5";
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
@@ -64,14 +65,14 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
           </button>
         </div>
 
-        {/* Add Nodes Button */}
+        {/* Add Nodes Button - Violet for Creative Action */}
         <div className="flex items-center gap-1 px-3 border-r-2 border-slate-100">
           <button 
             onClick={onToggleLibrary}
             className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-sm transition-all border-2
                 ${isLibraryOpen 
-                    ? 'bg-violet-600 text-white border-violet-800 shadow-[2px_2px_0_0_#000000] -translate-y-0.5' 
+                    ? 'bg-violet-600 text-white border-violet-600 shadow-[2px_2px_0_0_#000000] -translate-y-0.5' 
                     : 'bg-white text-slate-900 border-slate-200 hover:border-slate-900 hover:shadow-[2px_2px_0_0_#cbd5e1] hover:-translate-y-0.5'}
             `}
           >
