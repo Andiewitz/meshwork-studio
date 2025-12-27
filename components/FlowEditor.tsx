@@ -518,7 +518,10 @@ const FlowEditorContent: React.FC = () => {
   );
 
   return (
-    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden">
+    <div 
+      className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       
       {/* Top Navbar */}
       {showGui && (
