@@ -192,15 +192,23 @@ const FlowEditorContent: React.FC = () => {
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault();
       
-      // Check if we are right-clicking a selected node while others are also selected
+      // Look up the node in the current state to ensure we have the latest 'selected' status
+      // The node passed in the event might be slightly stale or a copy
+      const currentNode = nodes.find(n => n.id === node.id) || node;
       const selectedNodes = nodes.filter(n => n.selected);
-      const isMultiSelection = selectedNodes.length > 1 && node.selected;
+      
+      // It is a multi-selection menu if:
+      // 1. More than 1 node is selected
+      // 2. The node we clicked on IS part of that selection
+      // If we right-click a node that is NOT selected (even if others are), usually we'd want to just show that node's menu (and maybe select it?)
+      // React Flow usually selects the node on right click if it wasn't selected, but let's just handle the menu logic here.
+      const isMultiSelection = selectedNodes.length > 1 && currentNode.selected;
 
       setMenu({
-        id: node.id,
+        id: currentNode.id,
         top: event.clientY,
         left: event.clientX,
-        type: isMultiSelection ? 'selection' : (node.type || 'node'),
+        type: isMultiSelection ? 'selection' : (currentNode.type || 'node'),
         data: { selectedCount: isMultiSelection ? selectedNodes.length : 1 }
       });
     },
@@ -230,6 +238,14 @@ const FlowEditorContent: React.FC = () => {
       });
     },
     [reactFlowInstance]
+  );
+
+  const onPaneContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      setMenu(null);
+    },
+    [setMenu]
   );
 
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
@@ -665,6 +681,7 @@ const FlowEditorContent: React.FC = () => {
             onNodeContextMenu={onNodeContextMenu}
             onEdgeContextMenu={onEdgeContextMenu}
             onPaneClick={onPaneClick}
+            onPaneContextMenu={onPaneContextMenu}
             onEdgeClick={onEdgeClick}
             nodeTypes={nodeTypes}
             fitView
