@@ -190,18 +190,14 @@ const FlowEditorContent: React.FC = () => {
   // Handle Node Right Click (Context Menu)
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
+      // Prevent browser menu AND prevent propagation to the pane
       event.preventDefault();
+      event.stopPropagation();
       
       // Look up the node in the current state to ensure we have the latest 'selected' status
-      // The node passed in the event might be slightly stale or a copy
       const currentNode = nodes.find(n => n.id === node.id) || node;
       const selectedNodes = nodes.filter(n => n.selected);
       
-      // It is a multi-selection menu if:
-      // 1. More than 1 node is selected
-      // 2. The node we clicked on IS part of that selection
-      // If we right-click a node that is NOT selected (even if others are), usually we'd want to just show that node's menu (and maybe select it?)
-      // React Flow usually selects the node on right click if it wasn't selected, but let's just handle the menu logic here.
       const isMultiSelection = selectedNodes.length > 1 && currentNode.selected;
 
       setMenu({
@@ -693,11 +689,12 @@ const FlowEditorContent: React.FC = () => {
             panOnDrag={activeTool === 'pan'}
             selectionOnDrag={activeTool === 'select'}
             elementsSelectable={activeTool !== 'pan'}
+            snapToGrid={false}
         >
             <Background 
             color="#ffffff" 
             variant={BackgroundVariant.Dots} 
-            gap={24} 
+            gap={20} 
             size={1.5}
             className="opacity-50" 
             />
