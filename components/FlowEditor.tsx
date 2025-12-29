@@ -59,6 +59,9 @@ const FlowEditorContent: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Track mouse position for automatic menu placement
+  const mousePos = useRef({ x: 0, y: 0 });
+
   // Editor State
   const [flowTitle, setFlowTitle] = useState('Untitled Mesh');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -126,6 +129,31 @@ const FlowEditorContent: React.FC = () => {
         }
     }
   }, [nodes, edges, isLoading]);
+
+  // Handle mouse move to track menu position
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    mousePos.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  // Automatic Menu Trigger on Selection End
+  const onSelectionEnd = useCallback(() => {
+    // We only want to trigger auto-menu in SELECT mode
+    if (activeTool !== 'select') return;
+
+    // Small timeout to let ReactFlow finish updating state
+    setTimeout(() => {
+        const selectedNodes = nodesRef.current.filter(n => n.selected);
+        if (selectedNodes.length > 1) {
+            setMenu({
+                id: 'multi-select',
+                top: mousePos.current.y,
+                left: mousePos.current.x,
+                type: 'selection',
+                data: { selectedCount: selectedNodes.length }
+            });
+        }
+    }, 10);
+  }, [activeTool]);
 
   // Load Flow Data
   useEffect(() => {
@@ -533,6 +561,7 @@ const FlowEditorContent: React.FC = () => {
     <div 
       className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden"
       onContextMenu={(e) => e.preventDefault()}
+      onMouseMove={handleMouseMove}
     >
       
       {/* Top Navbar */}
@@ -679,6 +708,7 @@ const FlowEditorContent: React.FC = () => {
             onPaneClick={onPaneClick}
             onPaneContextMenu={onPaneContextMenu}
             onEdgeClick={onEdgeClick}
+            onSelectionEnd={onSelectionEnd}
             nodeTypes={nodeTypes}
             fitView
             minZoom={0.1}
@@ -688,16 +718,12 @@ const FlowEditorContent: React.FC = () => {
             connectionMode={ConnectionMode.Loose}
             
             // Interaction Logic:
-            // 1. SELECT mode: Can select (box), cannot drag nodes, cannot pan (left click).
-            // 2. MOVE mode: Can drag nodes, can pan, cannot select box.
-            // 3. PAN mode: Cannot select, cannot drag nodes, can pan.
-            // 4. CONNECT mode: Standard interaction but focus on handles.
-            
             nodesDraggable={activeTool === 'move'}
-            panOnDrag={activeTool === 'pan' || activeTool === 'move' || activeTool === 'connect'}
+            panOnDrag={true}
             selectionOnDrag={activeTool === 'select'}
-            elementsSelectable={activeTool !== 'pan'} 
-            
+            panOnScroll={true}
+            zoomOnScroll={true}
+            elementsSelectable={true}
             snapToGrid={false}
         >
             <Background 
