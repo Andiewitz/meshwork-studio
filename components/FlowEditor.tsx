@@ -2,14 +2,12 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
-  Controls,
   addEdge,
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
   BackgroundVariant,
   useReactFlow,
-  Panel,
   ConnectionMode,
   SelectionMode,
 } from 'reactflow';
@@ -19,21 +17,19 @@ import type {
   Connection,
   NodeTypes,
   ReactFlowInstance,
-  NodeMouseHandler,
-  EdgeMouseHandler
 } from 'reactflow';
-import { ChevronLeft, Save, Check, Clock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
 import { ContextMenu } from './ContextMenu';
-import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
-import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
+import { DatabaseSelectorModal } from './modals/DatabaseSelectorModal';
+import { ConnectionSettingsModal } from './modals/ConnectionSettingsModal';
 import { EditNodeModal } from './modals/EditNodeModal';
 import { ClientConfigModal } from './modals/ClientConfigModal';
-import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
+import { CacheSelectorModal } from './modals/CacheSelectorModal';
 import { LoadingScreen } from './LoadingScreen';
 
 // Custom Distributed System Nodes
@@ -47,11 +43,15 @@ import { ClientNode } from './nodes/ClientNode';
 import { JunctionNode } from './nodes/JunctionNode';
 import { ExternalServiceNode } from './nodes/ExternalServiceNode';
 
+/**
+ * Internal component that uses React Flow hooks.
+ * Must be rendered inside a ReactFlowProvider.
+ */
 const FlowEditorContent: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { flowId } = useParams();
-  const { zoomIn, zoomOut } = useReactFlow();
+  const { zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
   
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -117,7 +117,7 @@ const FlowEditorContent: React.FC = () => {
             setSaveStatus('unsaved');
         }
     }
-  }, [nodes, edges, isLoading]);
+  }, [nodes, edges, isLoading, saveStatus]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     mousePos.current = { x: e.clientX, y: e.clientY };
@@ -217,7 +217,7 @@ const FlowEditorContent: React.FC = () => {
     (event: React.MouseEvent, edge: Edge) => {
       event.preventDefault();
       event.stopPropagation();
-      const canvasPosition = reactFlowInstance?.screenToFlowPosition({
+      const canvasPosition = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
       });
@@ -234,7 +234,7 @@ const FlowEditorContent: React.FC = () => {
         }
       });
     },
-    [reactFlowInstance]
+    [screenToFlowPosition]
   );
 
   const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
@@ -263,13 +263,13 @@ const FlowEditorContent: React.FC = () => {
   const handleMenuAlign = useCallback(() => {
     const GRID_SIZE = 20;
     setNodes((nds) => nds.map((node) => {
-      if (node.selected || (menu && node.id === menu.id)) {
+      if (node.selected || node.id === menu?.id) {
         return {
           ...node,
           position: {
             x: Math.round(node.position.x / GRID_SIZE) * GRID_SIZE,
             y: Math.round(node.position.y / GRID_SIZE) * GRID_SIZE,
-          },
+          }
         };
       }
       return node;
@@ -277,289 +277,266 @@ const FlowEditorContent: React.FC = () => {
     setMenu(null);
   }, [menu, setNodes]);
 
-  const handleMenuDuplicate = useCallback(() => {
-    if (menu && menu.type !== 'edge') {
-      if (menu.type === 'selection') {
-          const selectedNodes = nodes.filter(n => n.selected);
-          const newNodes: Node[] = selectedNodes.map(node => ({
-              ...node,
-              id: `${node.type}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-              position: {
-                  x: node.position.x + 50,
-                  y: node.position.y + 50,
-              },
-              data: {
-                  ...node.data,
-                  label: `${node.data.label} (Copy)`,
-              },
-              selected: true
-          }));
-          setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
-      } else {
-          const nodeToDuplicate = nodes.find((n) => n.id === menu.id);
-          if (nodeToDuplicate) {
-            const newNode: Node = {
-              ...nodeToDuplicate,
-              id: `${nodeToDuplicate.type}-${Date.now()}`,
-              position: {
-                x: nodeToDuplicate.position.x + 50,
-                y: nodeToDuplicate.position.y + 50,
-              },
-              data: {
-                ...nodeToDuplicate.data,
-                label: `${nodeToDuplicate.data.label} (Copy)`,
-              },
-              selected: true,
-            };
-            setNodes((nds) => [...nds.map(n => ({...n, selected: false})), newNode]);
-          }
-      }
-      setMenu(null);
-    }
-  }, [menu, nodes, setNodes]);
-
-  const handleMenuSeverConnections = useCallback(() => {
-    if (menu && menu.type !== 'edge') {
-      setEdges((eds) => eds.filter((e) => e.source !== menu.id && e.target !== menu.id));
-      setMenu(null);
-    }
-  }, [menu, setEdges]);
-
-  const handleSplitConnection = useCallback(() => {
-      if (menu && menu.type === 'edge' && menu.data && menu.data.splitPosition) {
-          const edgeId = menu.id;
-          const { source, target, splitPosition } = menu.data;
-          const junctionId = `junction-${Date.now()}`;
-          const junctionNode: Node = {
-              id: junctionId,
-              type: 'junction',
-              position: { 
-                  x: splitPosition.x - 8,
-                  y: splitPosition.y - 8 
-              },
-              data: { label: '' }
-          };
-          setEdges((eds) => eds.filter(e => e.id !== edgeId));
-          setNodes((nds) => nds.concat(junctionNode));
-          setTimeout(() => {
-            setEdges((eds) => [
-                ...eds,
-                { id: `e-${source}-${junctionId}`, source: source, target: junctionId, animated: true, style: { stroke: '#71717a', strokeWidth: 2 }, type: 'default' },
-                { id: `e-${junctionId}-${target}`, source: junctionId, target: target, animated: true, style: { stroke: '#71717a', strokeWidth: 2 }, type: 'default' }
-            ]);
-          }, 10);
-          setMenu(null);
-      }
-  }, [menu, setNodes, setEdges]);
-
-  const handleMenuEdit = useCallback(() => {
-    if (menu && menu.type !== 'edge' && menu.type !== 'selection') {
-      const node = nodes.find((n) => n.id === menu.id);
-      if (node) {
-        if (node.type === 'database') {
-          setConfiguringNodeId(node.id);
-          setDbModalOpen(true);
-        } else if (node.type === 'client') {
-            setConfiguringClientId(node.id);
-            setConfiguringClientData({ label: node.data.label, type: (node.data.clientType as string) || 'desktop' });
-            setClientModalOpen(true);
-        } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
-            setConfiguringCacheId(node.id);
-            setCacheModalOpen(true);
-        } else {
-          setEditingNodeId(node.id);
-          setEditingLabel(node.data.label);
-          setEditModalOpen(true);
-        }
-      }
-      setMenu(null);
-    }
-  }, [menu, nodes]);
-
-  const handleEditSave = (newLabel: string) => {
-    if (editingNodeId) {
-      setNodes((nds) => nds.map((node) => node.id === editingNodeId ? { ...node, data: { ...node.data, label: newLabel } } : node));
-    }
-  };
-
-  const handleClientSave = (label: string, type: string) => {
-      if (configuringClientId) {
-          setNodes((nds) => nds.map((node) => node.id === configuringClientId ? { ...node, data: { ...node.data, label, clientType: type } } : node));
-      }
-  };
-
-  const handleCacheSelect = (tech: CacheOption) => {
-    if (configuringCacheId) {
-        setNodes((nds) => nds.map((node) => node.id === configuringCacheId ? { ...node, data: { ...node.data, label: node.data.label === 'Cache / CDN' || node.data.label === 'New middleware' ? tech.name : node.data.label, techName: tech.name, techLogo: tech.logo } } : node));
-    }
-  };
-
-  const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
-    if (node.type === 'database') {
-      setConfiguringNodeId(node.id);
-      setDbModalOpen(true);
-    } else if (node.type === 'client') {
-        setConfiguringClientId(node.id);
-        setConfiguringClientData({ label: node.data.label, type: (node.data.clientType as string) || 'desktop' });
-        setClientModalOpen(true);
-    } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
-        setConfiguringCacheId(node.id);
-        setCacheModalOpen(true);
-    } else if (node.type !== 'junction') {
-        setEditingNodeId(node.id);
-        setEditingLabel(node.data.label);
-        setEditModalOpen(true);
-    }
-  }, []);
-
-  const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
-    if (activeTool === 'connect') {
-      event.stopPropagation();
-      setEditingEdgeId(edge.id);
-      setConnectionModalOpen(true);
-    }
-  }, [activeTool]);
-
-  const handleDbSelect = (dbInfo: DatabaseOption) => {
-    if (!configuringNodeId) return;
-    setNodes((nds) => nds.map((node) => node.id === configuringNodeId ? { ...node, data: { ...node.data, dbType: dbInfo.id, dbName: dbInfo.name, dbCategory: dbInfo.category, dbLogo: dbInfo.logo, label: node.data.label === 'New database' ? dbInfo.name : node.data.label } } : node));
-  };
-
-  const handleConnectionSave = (protocol: ConnectionOption) => {
-    if (!editingEdgeId) return;
-    setEdges((eds) => eds.map((edge) => {
-      if (edge.id === editingEdgeId) {
-        return { 
-          ...edge, 
-          label: protocol.id, 
-          style: { ...edge.style, stroke: protocol.color, strokeWidth: 2 }, 
-          labelStyle: { fill: '#9ca3af', fontSize: 11, fontWeight: 500, fontFamily: 'monospace' }, 
-          labelBgStyle: { fill: '#18181b', fillOpacity: 0.9, stroke: '#27272a' }, 
-          labelBgPadding: [6, 4], 
-          labelBgBorderRadius: 6, 
-          animated: protocol.id !== 'JDBC' && protocol.id !== 'TCP', 
-          data: { ...edge.data, protocol: protocol.id } 
-        };
-      }
-      return edge;
-    }));
-  };
-
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onDrop = useCallback((event: React.DragEvent) => {
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
       event.preventDefault();
+
       const type = event.dataTransfer.getData('application/reactflow');
-      const mwType = event.dataTransfer.getData('application/middlewareType');
       const label = event.dataTransfer.getData('application/label');
+      const middlewareType = event.dataTransfer.getData('application/middlewareType');
+      const clientType = event.dataTransfer.getData('application/clientType');
       const logo = event.dataTransfer.getData('application/logo');
+
       if (!type || !reactFlowInstance) return;
-      const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
         type,
         position,
-        data: { label: label || `New ${type}`, middlewareType: mwType || undefined, clientType: type === 'client' ? 'desktop' : undefined, logo: logo || undefined },
+        data: { 
+          label: label || `New ${type}`,
+          middlewareType,
+          clientType,
+          logo
+        },
       };
+
       setNodes((nds) => nds.concat(newNode));
-      if (type === 'database') {
-        setTimeout(() => { setConfiguringNodeId(newNode.id); setDbModalOpen(true); }, 100);
-      } else if (type === 'client') {
-          setTimeout(() => { setConfiguringClientId(newNode.id); setConfiguringClientData({ label: newNode.data.label, type: 'desktop' }); setClientModalOpen(true); }, 100);
-      } else if (type === 'middleware' && mwType === 'cache') {
-          setTimeout(() => { setConfiguringCacheId(newNode.id); setCacheModalOpen(true); }, 100);
-      }
-    }, [reactFlowInstance, setNodes]
+    },
+    [reactFlowInstance, setNodes]
   );
 
-  // Derived CSS cursor based on the active tool
-  const getCursorClass = () => {
-    if (activeTool === 'select') return 'cursor-crosshair';
-    if (activeTool === 'pan') return 'cursor-grab active:cursor-grabbing';
-    return 'cursor-default';
-  };
+  const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
+      if (node.type === 'database') {
+          setConfiguringNodeId(node.id);
+          setDbModalOpen(true);
+      } else if (node.type === 'client') {
+          setConfiguringClientId(node.id);
+          setConfiguringClientData({ label: node.data.label, type: node.data.clientType || 'desktop' });
+          setClientModalOpen(true);
+      } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
+          setConfiguringCacheId(node.id);
+          setCacheModalOpen(true);
+      } else {
+          setEditingNodeId(node.id);
+          setEditingLabel(node.data.label);
+          setEditModalOpen(true);
+      }
+  }, []);
+
+  if (isLoading) return <LoadingScreen message="Unrolling Canvas..." />;
 
   return (
-    <div 
-      className={`w-full h-screen bg-zinc-900 flex flex-col overflow-hidden ${getCursorClass()}`} 
-      onContextMenu={(e) => e.preventDefault()} 
-      onMouseMove={handleMouseMove}
-    >
-      {showGui && (
-        <div className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
-            <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/')} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors"><ChevronLeft size={24} /></button>
-                <div className="h-6 w-px bg-slate-200"></div>
-                <div>
-                    <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-                        {saveStatus === 'saving' && <span className="text-blue-500">Saving...</span>}
-                        {saveStatus === 'saved' && <span className="text-emerald-500">Saved</span>}
-                        {saveStatus === 'unsaved' && <span className="text-amber-500">Unsaved Changes</span>}
-                    </p>
-                </div>
+    <div className="flex flex-col h-screen w-full bg-slate-50 overflow-hidden font-sans">
+      {/* Editor Header */}
+      <header className="h-16 bg-white border-b-2 border-slate-900 flex items-center justify-between px-6 z-10 sticky top-0">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-slate-900 font-heading leading-tight">{flowTitle}</h1>
+            <div className="flex items-center gap-2">
+               <span className={`text-[10px] font-bold uppercase tracking-widest ${saveStatus === 'saved' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                  {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Synced' : 'Draft'}
+               </span>
+               {lastSaved && (
+                 <span className="text-[10px] text-slate-400">
+                    • Last saved {lastSaved.toLocaleTimeString()}
+                 </span>
+               )}
             </div>
-            <div className="flex items-center gap-3">
-                <button onClick={handleSave} disabled={saveStatus === 'saving' || saveStatus === 'saved'} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border-2 ${saveStatus === 'unsaved' ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a]' : 'bg-white text-slate-400 border-slate-200 cursor-default'}`}><Save size={16} /><span>Save</span></button>
-            </div>
+          </div>
         </div>
-      )}
-      <div className="flex-1 relative overflow-hidden" ref={reactFlowWrapper}>
-        <div className="absolute bottom-6 right-6 z-50">
-          <button onClick={() => setShowGui(!showGui)} className={`p-3 rounded-xl border-2 font-bold ${showGui ? 'bg-white text-slate-900 border-slate-900' : 'bg-indigo-600 text-white border-white'}`}>{showGui ? <Eye size={20} /> : <EyeOff size={20} />}</button>
+
+        <div className="flex items-center gap-3">
+           <button 
+             onClick={() => setShowGui(!showGui)}
+             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-slate-900 text-sm font-bold hover:bg-slate-50 transition-all shadow-[2px_2px_0_0_#0f172a] active:shadow-none active:translate-y-0.5"
+           >
+             {showGui ? <EyeOff size={16} /> : <Eye size={16} />}
+             <span>{showGui ? 'Hide Tools' : 'Show UI'}</span>
+           </button>
+           <button 
+             onClick={handleSave}
+             disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+             className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-bold border-2 border-slate-900 hover:bg-indigo-700 transition-all shadow-[2px_2px_0_0_#0f172a] active:shadow-none active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             <Save size={16} />
+             <span>{saveStatus === 'saving' ? 'Syncing...' : 'Save Draft'}</span>
+           </button>
         </div>
-        {isLoading && <div className="absolute inset-0 z-[60] bg-zinc-900"><LoadingScreen message="Loading Canvas..." fullScreen={false} /></div>}
-        {showGui && <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />}
-        <DatabaseSelectorModal isOpen={dbModalOpen} onClose={() => setDbModalOpen(false)} onSelect={handleDbSelect} />
-        <ClientConfigModal isOpen={clientModalOpen} onClose={() => setClientModalOpen(false)} initialLabel={configuringClientData.label} initialType={configuringClientData.type} onSave={handleClientSave} />
-        <CacheSelectorModal isOpen={cacheModalOpen} onClose={() => setCacheModalOpen(false)} onSelect={handleCacheSelect} />
-        <EditNodeModal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} initialLabel={editingLabel} onSave={handleEditSave} />
-        <ConnectionSettingsModal isOpen={connectionModalOpen} onClose={() => setConnectionModalOpen(false)} onSave={handleConnectionSave} currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null} />
-        {menu && <ContextMenu top={menu.top} left={menu.left} onEdit={handleMenuEdit} onDuplicate={handleMenuDuplicate} onSeverConnections={handleMenuSeverConnections} onSplitConnection={handleSplitConnection} onAlign={handleMenuAlign} onDelete={handleMenuDelete} onClose={() => setMenu(null)} nodeType={menu.type} selectionCount={menu.data?.selectedCount} />}
+      </header>
+
+      <div className="flex-1 relative" ref={reactFlowWrapper}>
         <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onInit={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeDoubleClick={onNodeDoubleClick}
-            onNodeContextMenu={onNodeContextMenu}
-            onEdgeContextMenu={onEdgeContextMenu}
-            onPaneClick={onPaneClick}
-            onPaneContextMenu={onPaneContextMenu}
-            onEdgeClick={onEdgeClick}
-            onSelectionEnd={onSelectionEnd}
-            nodeTypes={nodeTypes}
-            fitView
-            connectionMode={ConnectionMode.Loose}
-            
-            // EXCLUSIVE INTERACTION CONFIGURATION:
-            // - Everything related to moving the canvas or nodes is disabled in 'select' mode.
-            // - This includes dragging nodes, panning via click-drag, and panning via scroll/trackpad.
-            nodesDraggable={activeTool === 'pan'}
-            panOnDrag={activeTool === 'pan'}
-            panOnScroll={activeTool === 'pan'}
-            selectionOnDrag={activeTool === 'select'}
-            selectionKeyCode={activeTool === 'select' ? null : 'Shift'}
-            selectionMode={SelectionMode.Partial}
-            
-            zoomOnScroll={true}
-            elementsSelectable={true}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onNodeContextMenu={onNodeContextMenu}
+          onEdgeContextMenu={onEdgeContextMenu}
+          onPaneClick={onPaneClick}
+          onPaneContextMenu={onPaneContextMenu}
+          onSelectionEnd={onSelectionEnd}
+          onNodeDoubleClick={onNodeDoubleClick}
+          onEdgeClick={(_e, edge) => {
+              if (activeTool === 'connect') {
+                  setEditingEdgeId(edge.id);
+                  setConnectionModalOpen(true);
+              }
+          }}
+          nodeTypes={nodeTypes}
+          connectionMode={ConnectionMode.Loose}
+          selectionMode={SelectionMode.Partial}
+          onMouseMove={handleMouseMove}
+          fitView
         >
-            <Background color="#ffffff" variant={BackgroundVariant.Dots} gap={20} size={1.5} className="opacity-50" />
-            {showGui && <CanvasNav zoomIn={zoomIn} zoomOut={zoomOut} onUndo={() => {}} onRedo={() => {}} onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} isLibraryOpen={isLibraryOpen} activeTool={activeTool} setActiveTool={setActiveTool} />}
+          <Background variant={BackgroundVariant.Dots} gap={20} color="#cbd5e1" />
+          
+          {showGui && (
+            <>
+              <CanvasNav 
+                zoomIn={zoomIn} 
+                zoomOut={zoomOut} 
+                onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
+                isLibraryOpen={isLibraryOpen}
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+              />
+              <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
+            </>
+          )}
+
+          {menu && (
+            <ContextMenu 
+              {...menu} 
+              onClose={() => setMenu(null)} 
+              onDelete={handleMenuDelete}
+              onAlign={handleMenuAlign}
+              nodeType={menu.type}
+              selectionCount={menu.data?.selectedCount}
+              onEdit={() => {
+                const node = nodes.find(n => n.id === menu.id);
+                if (node) {
+                    onNodeDoubleClick({} as any, node);
+                }
+                setMenu(null);
+              }}
+              onSplitConnection={() => {
+                 if (menu.type === 'edge') {
+                    const position = menu.data.splitPosition;
+                    const junctionId = `junction-${Date.now()}`;
+                    const newNode = {
+                        id: junctionId,
+                        type: 'junction',
+                        position,
+                        data: { label: '' }
+                    };
+                    const oldEdge = edges.find(e => e.id === menu.id);
+                    if (oldEdge) {
+                        setNodes(nds => [...nds, newNode]);
+                        setEdges(eds => [
+                            ...eds.filter(e => e.id !== menu.id),
+                            { id: `e-${Date.now()}-1`, source: oldEdge.source, target: junctionId, animated: oldEdge.animated },
+                            { id: `e-${Date.now()}-2`, source: junctionId, target: oldEdge.target, animated: oldEdge.animated }
+                        ]);
+                    }
+                    setMenu(null);
+                 }
+              }}
+            />
+          )}
         </ReactFlow>
+
+        {/* Configuration Modals */}
+        <DatabaseSelectorModal 
+            isOpen={dbModalOpen} 
+            onClose={() => setDbModalOpen(false)}
+            onSelect={(db) => {
+                setNodes(nds => nds.map(n => n.id === configuringNodeId ? { 
+                    ...n, 
+                    data: { ...n.data, dbType: db.id, dbName: db.name, dbCategory: db.category, dbLogo: db.logo } 
+                } : n));
+                setDbModalOpen(false);
+            }}
+        />
+
+        <ClientConfigModal 
+            isOpen={clientModalOpen}
+            onClose={() => setClientModalOpen(false)}
+            initialLabel={configuringClientData.label}
+            initialType={configuringClientData.type}
+            onSave={(label, type) => {
+                setNodes(nds => nds.map(n => n.id === configuringClientId ? { 
+                    ...n, 
+                    data: { ...n.data, label, clientType: type } 
+                } : n));
+                setClientModalOpen(false);
+            }}
+        />
+
+        <CacheSelectorModal 
+            isOpen={cacheModalOpen}
+            onClose={() => setCacheModalOpen(false)}
+            onSelect={(tech) => {
+                setNodes(nds => nds.map(n => n.id === configuringCacheId ? { 
+                    ...n, 
+                    data: { ...n.data, techName: tech.name, techLogo: tech.logo, label: tech.name } 
+                } : n));
+                setCacheModalOpen(false);
+            }}
+        />
+
+        <EditNodeModal 
+            isOpen={editModalOpen} 
+            onClose={() => setEditModalOpen(false)}
+            initialLabel={editingLabel}
+            onSave={(newLabel) => {
+                setNodes(nds => nds.map(n => n.id === editingNodeId ? { ...n, data: { ...n.data, label: newLabel } } : n));
+                setEditModalOpen(false);
+            }}
+        />
+
+        <ConnectionSettingsModal 
+            isOpen={connectionModalOpen}
+            onClose={() => setConnectionModalOpen(false)}
+            currentLabel={edges.find(e => e.id === editingEdgeId)?.label as string}
+            onSave={(protocol) => {
+                setEdges(eds => eds.map(e => e.id === editingEdgeId ? { 
+                    ...e, 
+                    label: protocol.id, 
+                    style: { ...e.style, stroke: protocol.color } 
+                } : e));
+                setConnectionModalOpen(false);
+            }}
+        />
       </div>
     </div>
   );
 };
 
+/**
+ * Main FlowEditor export wrapped in the ReactFlowProvider.
+ * This is the entry point used in App.tsx.
+ */
 export const FlowEditor: React.FC = () => (
   <ReactFlowProvider>
     <FlowEditorContent />
