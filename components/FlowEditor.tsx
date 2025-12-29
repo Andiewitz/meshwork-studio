@@ -474,9 +474,16 @@ const FlowEditorContent: React.FC = () => {
     }, [reactFlowInstance, setNodes]
   );
 
+  // Derived CSS cursor based on the active tool
+  const getCursorClass = () => {
+    if (activeTool === 'select') return 'cursor-crosshair';
+    if (activeTool === 'pan') return 'cursor-grab active:cursor-grabbing';
+    return 'cursor-default';
+  };
+
   return (
     <div 
-      className={`w-full h-screen bg-zinc-900 flex flex-col overflow-hidden ${activeTool === 'select' ? 'cursor-crosshair' : ''}`} 
+      className={`w-full h-screen bg-zinc-900 flex flex-col overflow-hidden ${getCursorClass()}`} 
       onContextMenu={(e) => e.preventDefault()} 
       onMouseMove={handleMouseMove}
     >
@@ -531,12 +538,11 @@ const FlowEditorContent: React.FC = () => {
             fitView
             connectionMode={ConnectionMode.Loose}
             
-            // EXCLUSIVE MARQUEE SELECTION LOGIC:
-            // 1. Disable node dragging entirely in select mode.
-            // 2. Disable canvas panning via drag entirely in select mode.
-            // 3. Enable selection marquee on left-click drag.
+            // EXCLUSIVE INTERACTION CONFIGURATION:
+            // - Dragging (Nodes & Canvas) is only enabled when the 'Pan' tool is active.
+            // - Marquee selection is enabled only when the 'Select' tool is active.
             nodesDraggable={activeTool === 'pan'}
-            panOnDrag={activeTool === 'select' ? false : true}
+            panOnDrag={activeTool === 'pan'}
             selectionOnDrag={activeTool === 'select'}
             selectionMode={SelectionMode.Partial}
             
