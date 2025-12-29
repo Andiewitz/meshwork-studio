@@ -10,6 +10,7 @@ import ReactFlow, {
   useReactFlow,
   Panel,
   ConnectionMode,
+  SelectionMode,
 } from 'reactflow';
 import type {
   Node,
@@ -31,6 +32,7 @@ import { ContextMenu } from './ContextMenu';
 import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
 import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
 import { EditNodeModal } from './modals/EditNodeModal';
+// Fixed: Removed unused ClientOption import that doesn't exist in ClientConfigModal
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
 import { LoadingScreen } from './LoadingScreen';
@@ -137,10 +139,9 @@ const FlowEditorContent: React.FC = () => {
 
   // Automatic Menu Trigger on Selection End
   const onSelectionEnd = useCallback(() => {
-    // We only want to trigger auto-menu in SELECT mode
+    // Only trigger auto-menu in SELECT mode to avoid interference with movement
     if (activeTool !== 'select') return;
 
-    // Small timeout to let ReactFlow finish updating state
     setTimeout(() => {
         const selectedNodes = nodesRef.current.filter(n => n.selected);
         if (selectedNodes.length > 1) {
@@ -152,7 +153,7 @@ const FlowEditorContent: React.FC = () => {
                 data: { selectedCount: selectedNodes.length }
             });
         }
-    }, 10);
+    }, 50);
   }, [activeTool]);
 
   // Load Flow Data
@@ -167,7 +168,6 @@ const FlowEditorContent: React.FC = () => {
           setEdges(flowData.edges);
           setFlowTitle(flowData.title);
           setLastSaved(new Date(flowData.updatedAt));
-          // Reset dirty flag after load
           isDirtyRef.current = false;
           setSaveStatus('saved');
         }
@@ -218,14 +218,10 @@ const FlowEditorContent: React.FC = () => {
   // Handle Node Right Click (Context Menu)
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      // Prevent browser menu AND prevent propagation to the pane
       event.preventDefault();
       event.stopPropagation();
-      
-      // Look up the node in the current state to ensure we have the latest 'selected' status
       const currentNode = nodes.find(n => n.id === node.id) || node;
       const selectedNodes = nodes.filter(n => n.selected);
-      
       const isMultiSelection = selectedNodes.length > 1 && currentNode.selected;
 
       setMenu({
@@ -236,7 +232,7 @@ const FlowEditorContent: React.FC = () => {
         data: { selectedCount: isMultiSelection ? selectedNodes.length : 1 }
       });
     },
-    [setMenu, nodes]
+    [nodes]
   );
 
   // Handle Edge Right Click (Context Menu)
@@ -269,10 +265,10 @@ const FlowEditorContent: React.FC = () => {
       event.preventDefault();
       setMenu(null);
     },
-    [setMenu]
+    []
   );
 
-  const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
+  const onPaneClick = useCallback(() => setMenu(null), []);
 
   // Menu Handlers
   const handleMenuDelete = useCallback(() => {
@@ -280,12 +276,10 @@ const FlowEditorContent: React.FC = () => {
       if (menu.type === 'edge') {
           setEdges((eds) => eds.filter((e) => e.id !== menu.id));
       } else if (menu.type === 'selection') {
-          // Delete all selected nodes and their connections
           const selectedNodeIds = nodes.filter(n => n.selected).map(n => n.id);
           setNodes((nds) => nds.filter((n) => !n.selected));
           setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
       } else {
-          // Delete single node
           setNodes((nds) => nds.filter((n) => n.id !== menu.id));
           setEdges((eds) => eds.filter((e) => e.source !== menu.id && e.target !== menu.id));
       }
@@ -294,10 +288,8 @@ const FlowEditorContent: React.FC = () => {
   }, [menu, setNodes, setEdges, nodes]);
 
   const handleMenuAlign = useCallback(() => {
-    const GRID_SIZE = 20; // Define grid size
-    
+    const GRID_SIZE = 20;
     setNodes((nds) => nds.map((node) => {
-      // Align selected nodes (or the single context menu node if nothing selected)
       if (node.selected || (menu && node.id === menu.id)) {
         return {
           ...node,
@@ -315,7 +307,6 @@ const FlowEditorContent: React.FC = () => {
   const handleMenuDuplicate = useCallback(() => {
     if (menu && menu.type !== 'edge') {
       if (menu.type === 'selection') {
-          // Duplicate all selected nodes
           const selectedNodes = nodes.filter(n => n.selected);
           const newNodes: Node[] = selectedNodes.map(node => ({
               ...node,
@@ -330,9 +321,7 @@ const FlowEditorContent: React.FC = () => {
               },
               selected: true
           }));
-          // Deselect originals, add new ones
           setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
-
       } else {
           const nodeToDuplicate = nodes.find((n) => n.id === menu.id);
           if (nodeToDuplicate) {
@@ -564,7 +553,6 @@ const FlowEditorContent: React.FC = () => {
       onMouseMove={handleMouseMove}
     >
       
-      {/* Top Navbar */}
       {showGui && (
         <div className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
             <div className="flex items-center gap-4">
@@ -575,9 +563,7 @@ const FlowEditorContent: React.FC = () => {
                 >
                     <ChevronLeft size={24} strokeWidth={2.5} />
                 </button>
-                
                 <div className="h-6 w-px bg-slate-200"></div>
-
                 <div>
                     <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
@@ -590,20 +576,10 @@ const FlowEditorContent: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                    <Clock size={14} className="text-slate-400" />
-                    <span className="text-xs font-bold text-slate-500">Auto-save: 30s</span>
-                </div>
-                
                 <button 
                     onClick={handleSave}
                     disabled={saveStatus === 'saving' || saveStatus === 'saved'}
-                    className={`
-                        flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border-2
-                        ${saveStatus === 'unsaved' || saveStatus === 'error'
-                            ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a] hover:-translate-y-0.5' 
-                            : 'bg-white text-slate-400 border-slate-200 cursor-default'}
-                    `}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border-2 ${saveStatus === 'unsaved' || saveStatus === 'error' ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a] hover:-translate-y-0.5' : 'bg-white text-slate-400 border-slate-200 cursor-default'}`}
                 >
                     <Save size={16} />
                     <span>Save</span>
@@ -612,85 +588,32 @@ const FlowEditorContent: React.FC = () => {
         </div>
       )}
 
-      {/* Main Canvas Area */}
       <div className="flex-1 relative overflow-hidden" ref={reactFlowWrapper}>
-        
-        {/* Toggle GUI Button */}
         <div className="absolute bottom-6 right-6 z-50">
           <button
             onClick={() => setShowGui(!showGui)}
-            className={`
-              p-3 rounded-xl border-2 transition-all duration-200 font-bold flex items-center gap-2
-              ${showGui 
-                ? 'bg-white text-slate-900 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px]' 
-                : 'bg-indigo-600 text-white border-white shadow-[4px_4px_0_0_#000] hover:bg-indigo-700 opacity-90 hover:opacity-100'}
-            `}
-            title={showGui ? "Hide Interface" : "Show Interface"}
+            className={`p-3 rounded-xl border-2 transition-all duration-200 font-bold flex items-center gap-2 ${showGui ? 'bg-white text-slate-900 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px]' : 'bg-indigo-600 text-white border-white shadow-[4px_4px_0_0_#000] hover:bg-indigo-700 opacity-90 hover:opacity-100'}`}
           >
             {showGui ? <Eye size={20} /> : <EyeOff size={20} />}
           </button>
         </div>
 
-        {/* Loading State Overlay */}
         {isLoading && (
             <div className="absolute inset-0 z-[60] bg-zinc-900 animate-out fade-out duration-500 fill-mode-forwards pointer-events-none">
                 <LoadingScreen message="Initializing Environment..." fullScreen={false} />
             </div>
         )}
 
-        {/* Node Library Sidebar */}
         {showGui && <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />}
         
-        {/* Modals */}
-        <DatabaseSelectorModal 
-            isOpen={dbModalOpen}
-            onClose={() => setDbModalOpen(false)}
-            onSelect={handleDbSelect}
-        />
-        
-        <ClientConfigModal 
-            isOpen={clientModalOpen}
-            onClose={() => setClientModalOpen(false)}
-            initialLabel={configuringClientData.label}
-            initialType={configuringClientData.type}
-            onSave={handleClientSave}
-        />
+        <DatabaseSelectorModal isOpen={dbModalOpen} onClose={() => setDbModalOpen(false)} onSelect={handleDbSelect} />
+        <ClientConfigModal isOpen={clientModalOpen} onClose={() => setClientModalOpen(false)} initialLabel={configuringClientData.label} initialType={configuringClientData.type} onSave={handleClientSave} />
+        <CacheSelectorModal isOpen={cacheModalOpen} onClose={() => setCacheModalOpen(false)} onSelect={handleCacheSelect} />
+        <EditNodeModal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} initialLabel={editingLabel} onSave={handleEditSave} />
+        <ConnectionSettingsModal isOpen={connectionModalOpen} onClose={() => setConnectionModalOpen(false)} onSave={handleConnectionSave} currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null} />
 
-        <CacheSelectorModal
-            isOpen={cacheModalOpen}
-            onClose={() => setCacheModalOpen(false)}
-            onSelect={handleCacheSelect}
-        />
-        
-        <EditNodeModal
-            isOpen={editModalOpen}
-            onClose={() => setEditModalOpen(false)}
-            initialLabel={editingLabel}
-            onSave={handleEditSave}
-        />
-
-        <ConnectionSettingsModal
-            isOpen={connectionModalOpen}
-            onClose={() => setConnectionModalOpen(false)}
-            onSave={handleConnectionSave}
-            currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null}
-        />
-
-        {/* Context Menu */}
         {menu && (
-            <ContextMenu
-            top={menu.top}
-            left={menu.left}
-            onEdit={handleMenuEdit}
-            onDuplicate={handleMenuDuplicate}
-            onSeverConnections={handleMenuSeverConnections}
-            onSplitConnection={handleSplitConnection}
-            onAlign={handleMenuAlign}
-            onDelete={handleMenuDelete}
-            onClose={() => setMenu(null)}
-            nodeType={menu.type}
-            selectionCount={menu.data?.selectedCount}
-            />
+            <ContextMenu top={menu.top} left={menu.left} onEdit={handleMenuEdit} onDuplicate={handleMenuDuplicate} onSeverConnections={handleMenuSeverConnections} onSplitConnection={handleSplitConnection} onAlign={handleMenuAlign} onDelete={handleMenuDelete} onClose={() => setMenu(null)} nodeType={menu.type} selectionCount={menu.data?.selectedCount} />
         )}
 
         <ReactFlow
@@ -717,22 +640,20 @@ const FlowEditorContent: React.FC = () => {
             connectionRadius={50}
             connectionMode={ConnectionMode.Loose}
             
-            // Interaction Logic:
-            nodesDraggable={activeTool === 'move'}
-            panOnDrag={true}
+            // Interaction logic:
+            // Mode Select: No dragging nodes, allowing the marquee box to start on top of nodes.
+            // Mode Pan: Dragging nodes and moving background.
+            nodesDraggable={activeTool === 'pan'}
+            panOnDrag={activeTool === 'select' ? false : true}
             selectionOnDrag={activeTool === 'select'}
+            selectionMode={SelectionMode.Partial}
+            
             panOnScroll={true}
             zoomOnScroll={true}
             elementsSelectable={true}
             snapToGrid={false}
         >
-            <Background 
-            color="#ffffff" 
-            variant={BackgroundVariant.Dots} 
-            gap={20} 
-            size={1.5}
-            className="opacity-50" 
-            />
+            <Background color="#ffffff" variant={BackgroundVariant.Dots} gap={20} size={1.5} className="opacity-50" />
             
             {showGui && (
               <CanvasNav 
