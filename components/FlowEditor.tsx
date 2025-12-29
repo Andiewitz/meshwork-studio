@@ -540,16 +540,15 @@ const FlowEditorContent: React.FC = () => {
             connectionMode={ConnectionMode.Loose}
             
             // EXCLUSIVE INTERACTION CONFIGURATION:
-            // - Panning and Node dragging are only allowed if activeTool is 'pan'.
-            // - Selection box dragging is enabled ONLY in 'select' mode.
-            // - selectionKeyCode set to null in 'select' mode means you don't need to hold Shift.
+            // - Everything related to moving the canvas or nodes is disabled in 'select' mode.
+            // - This includes dragging nodes, panning via click-drag, and panning via scroll/trackpad.
             nodesDraggable={activeTool === 'pan'}
             panOnDrag={activeTool === 'pan'}
+            panOnScroll={activeTool === 'pan'}
             selectionOnDrag={activeTool === 'select'}
             selectionKeyCode={activeTool === 'select' ? null : 'Shift'}
             selectionMode={SelectionMode.Partial}
             
-            panOnScroll={true}
             zoomOnScroll={true}
             elementsSelectable={true}
         >
