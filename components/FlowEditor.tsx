@@ -475,7 +475,11 @@ const FlowEditorContent: React.FC = () => {
   );
 
   return (
-    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden" onContextMenu={(e) => e.preventDefault()} onMouseMove={handleMouseMove}>
+    <div 
+      className={`w-full h-screen bg-zinc-900 flex flex-col overflow-hidden ${activeTool === 'select' ? 'cursor-crosshair' : ''}`} 
+      onContextMenu={(e) => e.preventDefault()} 
+      onMouseMove={handleMouseMove}
+    >
       {showGui && (
         <div className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
             <div className="flex items-center gap-4">
@@ -526,11 +530,19 @@ const FlowEditorContent: React.FC = () => {
             nodeTypes={nodeTypes}
             fitView
             connectionMode={ConnectionMode.Loose}
+            
+            // Fixed interaction logic:
+            // 1. nodesDraggable is only true in PAN mode.
+            // 2. panOnDrag uses middle (1) and right (2) buttons in SELECT mode to avoid left-click conflict.
+            // 3. selectionOnDrag is only true in SELECT mode.
             nodesDraggable={activeTool === 'pan'}
-            panOnDrag={activeTool === 'select' ? false : true}
+            panOnDrag={activeTool === 'select' ? [1, 2] : true}
             selectionOnDrag={activeTool === 'select'}
             selectionMode={SelectionMode.Partial}
-            panOnScroll zoomOnScroll elementsSelectable
+            
+            panOnScroll={true}
+            zoomOnScroll={true}
+            elementsSelectable={true}
         >
             <Background color="#ffffff" variant={BackgroundVariant.Dots} gap={20} size={1.5} className="opacity-50" />
             {showGui && <CanvasNav zoomIn={zoomIn} zoomOut={zoomOut} onUndo={() => {}} onRedo={() => {}} onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} isLibraryOpen={isLibraryOpen} activeTool={activeTool} setActiveTool={setActiveTool} />}
