@@ -531,12 +531,12 @@ const FlowEditorContent: React.FC = () => {
             fitView
             connectionMode={ConnectionMode.Loose}
             
-            // Fixed interaction logic:
-            // 1. nodesDraggable is only true in PAN mode.
-            // 2. panOnDrag uses middle (1) and right (2) buttons in SELECT mode to avoid left-click conflict.
-            // 3. selectionOnDrag is only true in SELECT mode.
+            // EXCLUSIVE MARQUEE SELECTION LOGIC:
+            // 1. Disable node dragging entirely in select mode.
+            // 2. Disable canvas panning via drag entirely in select mode.
+            // 3. Enable selection marquee on left-click drag.
             nodesDraggable={activeTool === 'pan'}
-            panOnDrag={activeTool === 'select' ? [1, 2] : true}
+            panOnDrag={activeTool === 'select' ? false : true}
             selectionOnDrag={activeTool === 'select'}
             selectionMode={SelectionMode.Partial}
             
