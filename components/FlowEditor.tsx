@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -539,11 +540,13 @@ const FlowEditorContent: React.FC = () => {
             connectionMode={ConnectionMode.Loose}
             
             // EXCLUSIVE INTERACTION CONFIGURATION:
-            // - Dragging (Nodes & Canvas) is only enabled when the 'Pan' tool is active.
-            // - Marquee selection is enabled only when the 'Select' tool is active.
+            // - Panning and Node dragging are only allowed if activeTool is 'pan'.
+            // - Selection box dragging is enabled ONLY in 'select' mode.
+            // - selectionKeyCode set to null in 'select' mode means you don't need to hold Shift.
             nodesDraggable={activeTool === 'pan'}
             panOnDrag={activeTool === 'pan'}
             selectionOnDrag={activeTool === 'select'}
+            selectionKeyCode={activeTool === 'select' ? null : 'Shift'}
             selectionMode={SelectionMode.Partial}
             
             panOnScroll={true}
