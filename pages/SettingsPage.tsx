@@ -1,12 +1,17 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   User, 
   Settings as SettingsIcon, 
   Database, 
+  Eye, 
+  EyeOff, 
+  Check, 
+  Save, 
   Trash2, 
   Download,
+  Key,
+  Monitor,
   Moon,
   Grid3X3
 } from 'lucide-react';
@@ -17,11 +22,31 @@ type SettingsTab = 'ai' | 'account' | 'preferences' | 'data';
 
 export const SettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('ai');
   
+  // AI Key State
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
+
   // Preference State
   const [gridSnap, setGridSnap] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Load existing key
+    const storedKey = localStorage.getItem('meshwork_api_key');
+    if (storedKey) setApiKey(storedKey);
+  }, []);
+
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (apiKey.trim()) {
+      localStorage.setItem('meshwork_api_key', apiKey.trim());
+      setKeySaved(true);
+      setTimeout(() => setKeySaved(false), 2000);
+    }
+  };
 
   const clearData = () => {
     if (confirm('Are you sure? This will delete all local flows and settings.')) {
@@ -75,24 +100,57 @@ export const SettingsPage: React.FC = () => {
                   <div className="w-12 h-12 bg-white border-2 border-slate-900 rounded-xl flex items-center justify-center mb-4 shadow-sm text-indigo-600">
                     <Sparkles size={24} />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 font-heading">AI Features</h2>
+                  <h2 className="text-xl font-bold text-slate-900 font-heading">AI Configuration</h2>
                   <p className="text-slate-500 text-sm mt-1 max-w-lg">
-                    Meshwork Studio leverages Google Gemini to provide intelligent architectural suggestions and auto-documentation. 
+                    Connect your own Google Gemini API key to enable generative architecture suggestions, auto-documentation, and intelligent node configuration.
                   </p>
                 </div>
 
-                <div className="p-8">
-                    <div className="p-4 bg-emerald-50 border-2 border-emerald-100 rounded-xl flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold">OK</span>
+                <div className="p-8 space-y-6">
+                  <form onSubmit={handleSaveKey}>
+                    <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
+                      Google Gemini API Key
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                          <Key size={18} />
                         </div>
-                        <div>
-                            <h4 className="font-bold text-emerald-800 text-sm">AI Engine Active</h4>
-                            <p className="text-xs text-emerald-600/80 leading-relaxed mt-1">
-                                The system is connected to Google Gemini via the platform API. No additional configuration is required.
-                            </p>
-                        </div>
+                        <input 
+                          type={showKey ? "text" : "password"}
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder="AIzaSy..."
+                          className="w-full pl-10 pr-12 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-mono text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors text-slate-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowKey(!showKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <button 
+                        type="submit"
+                        className={`
+                          px-6 py-2 rounded-xl font-bold text-sm border-2 transition-all flex items-center gap-2
+                          ${keySaved 
+                            ? 'bg-emerald-500 border-emerald-600 text-white' 
+                            : 'bg-slate-900 border-slate-900 text-white hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5'}
+                        `}
+                      >
+                        {keySaved ? <Check size={18} /> : <Save size={18} />}
+                        {keySaved ? 'Saved' : 'Save Key'}
+                      </button>
                     </div>
+                    <p className="mt-3 text-xs text-slate-400">
+                      Your key is stored locally in your browser and is never sent to our servers.
+                      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-600 font-bold hover:underline ml-1">
+                        Get a key here.
+                      </a>
+                    </p>
+                  </form>
                 </div>
               </div>
             )}

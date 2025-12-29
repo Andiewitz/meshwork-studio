@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Database, Server, Box, GitGraph, Clock, HardDrive, Cpu, X, Plus } from 'lucide-react';
-import { Dialog, DialogTitle, DialogContent, IconButton, InputBase, Typography, Divider, Button } from '@mui/material';
 
 export interface DatabaseOption {
   id: string;
@@ -27,14 +26,56 @@ const CATEGORIES = [
 ];
 
 const DATABASES: DatabaseOption[] = [
+  // SQL
   { id: 'postgresql', name: 'PostgreSQL', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg' },
   { id: 'mysql', name: 'MySQL', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg' },
   { id: 'sqlite', name: 'SQLite', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sqlite/sqlite-original.svg' },
+  { id: 'mssql', name: 'SQL Server', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/microsoftsqlserver/microsoftsqlserver-original.svg' },
+  { id: 'oracle', name: 'Oracle DB', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/oracle/oracle-original.svg' },
+  { id: 'mariadb', name: 'MariaDB', category: 'sql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mariadb/mariadb-original.svg' },
+  { id: 'cockroachdb', name: 'CockroachDB', category: 'sql' },
+  { id: 'spanner', name: 'Google Spanner', category: 'sql' },
+
+  // NoSQL
   { id: 'mongodb', name: 'MongoDB', category: 'nosql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg' },
   { id: 'firestore', name: 'Firebase Firestore', category: 'nosql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/firebase/firebase-original.svg' },
+  { id: 'dynamodb', name: 'DynamoDB', category: 'nosql' }, // AWS icon difficult to pin without specific setup
+  { id: 'couchbase', name: 'Couchbase', category: 'nosql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/couchbase/couchbase-original.svg' },
+  { id: 'cassandra', name: 'Cassandra', category: 'nosql', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apachecassandra/apachecassandra-original.svg' },
+
+  // Cache
   { id: 'redis', name: 'Redis', category: 'cache', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg' },
+  { id: 'memcached', name: 'Memcached', category: 'cache' },
+  { id: 'etcd', name: 'etcd', category: 'cache' },
+
+  // Vector
+  { id: 'pinecone', name: 'Pinecone', category: 'vector' },
+  { id: 'weaviate', name: 'Weaviate', category: 'vector' },
+  { id: 'milvus', name: 'Milvus', category: 'vector' },
+  { id: 'qdrant', name: 'Qdrant', category: 'vector' },
+  { id: 'chroma', name: 'ChromaDB', category: 'vector' },
+
+  // Time Series
+  { id: 'influxdb', name: 'InfluxDB', category: 'timeseries' },
+  { id: 'prometheus', name: 'Prometheus', category: 'timeseries', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/prometheus/prometheus-original.svg' },
+  { id: 'timescale', name: 'TimescaleDB', category: 'timeseries' },
+
+  // Search
   { id: 'elasticsearch', name: 'Elasticsearch', category: 'search', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/elasticsearch/elasticsearch-original.svg' },
+  { id: 'algolia', name: 'Algolia', category: 'search', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/algolia/algolia-original.svg' },
+  { id: 'solr', name: 'Solr', category: 'search' },
+  { id: 'meilisearch', name: 'Meilisearch', category: 'search' },
+
+  // Warehouse
+  { id: 'snowflake', name: 'Snowflake', category: 'warehouse' },
+  { id: 'bigquery', name: 'BigQuery', category: 'warehouse' },
+  { id: 'redshift', name: 'Redshift', category: 'warehouse' },
+  { id: 'databricks', name: 'Databricks', category: 'warehouse' },
+  
+  // BaaS / Other
   { id: 'supabase', name: 'Supabase', category: 'other', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg' },
+  { id: 'firebase_rtdb', name: 'Realtime DB', category: 'other', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/firebase/firebase-original.svg' },
+  { id: 'realm', name: 'Realm', category: 'other' },
 ];
 
 export const DatabaseSelectorModal: React.FC<DatabaseSelectorModalProps> = ({ isOpen, onClose, onSelect }) => {
@@ -53,101 +94,163 @@ export const DatabaseSelectorModal: React.FC<DatabaseSelectorModalProps> = ({ is
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (customDbName.trim()) {
-      onSelect({ id: `custom-${Date.now()}`, name: customDbName, category: 'custom' });
+      onSelect({
+        id: `custom-${Date.now()}`,
+        name: customDbName,
+        category: 'custom'
+      });
       onClose();
     }
   };
 
+  const getCategoryIcon = (categoryId: string) => {
+    const category = CATEGORIES.find(c => c.id === categoryId);
+    return category ? category.icon : Database;
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 4, border: '2px solid #0f172a', boxShadow: '8px 8px 0px 0px #0f172a' } }}>
-      <DialogTitle sx={{ m: 0, p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Typography variant="h6" fontWeight="bold" fontFamily="Plus Jakarta Sans">Select Database</Typography>
-          <Typography variant="body2" color="textSecondary">Choose a database technology for this node.</Typography>
-        </div>
-        <IconButton onClick={onClose} sx={{ color: '#94a3b8' }}>
-          <X size={20} />
-        </IconButton>
-      </DialogTitle>
-      <Divider />
-      <DialogContent sx={{ p: 0, display: 'flex', minHeight: 400 }}>
-        {/* Sidebar */}
-        <div className="w-56 bg-slate-50 border-r border-slate-200 p-4 space-y-1 hidden md:block">
-          <Button 
-            fullWidth 
-            onClick={() => setSelectedCategory('all')} 
-            variant={selectedCategory === 'all' ? 'contained' : 'text'}
-            sx={{ justifyContent: 'flex-start', textAlign: 'left', fontWeight: 'bold', textTransform: 'none', mb: 0.5, backgroundColor: selectedCategory === 'all' ? '#0f172a' : 'transparent', '&:hover': { backgroundColor: selectedCategory === 'all' ? '#1e293b' : 'rgba(0,0,0,0.04)' } }}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div 
+        className="w-full max-w-4xl bg-white border-2 border-slate-900 rounded-2xl shadow-[8px_8px_0_0_#0f172a] flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b-2 border-slate-900 bg-white">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 font-heading">Select Database</h2>
+            <p className="text-slate-500 text-sm mt-1">Choose a database technology for this node.</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            All Categories
-          </Button>
-          {CATEGORIES.map(cat => (
-            <Button
-              key={cat.id}
-              fullWidth
-              onClick={() => setSelectedCategory(cat.id)}
-              variant={selectedCategory === cat.id ? 'contained' : 'text'}
-              startIcon={<cat.icon size={16} />}
-              sx={{ justifyContent: 'flex-start', textAlign: 'left', fontWeight: 'bold', textTransform: 'none', mb: 0.5, color: selectedCategory === cat.id ? '#fff' : '#64748b', backgroundColor: selectedCategory === cat.id ? '#0f172a' : 'transparent', '&:hover': { backgroundColor: selectedCategory === cat.id ? '#1e293b' : 'rgba(0,0,0,0.04)' } }}
-            >
-              {cat.label}
-            </Button>
-          ))}
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b border-slate-100">
-             <div className="relative flex items-center bg-slate-100 rounded-xl px-3 py-2 border-2 border-transparent focus-within:border-slate-900 focus-within:bg-white transition-all">
-               <Search size={18} className="text-slate-400 mr-2" />
-               <InputBase
-                 placeholder="Search databases..."
-                 fullWidth
-                 value={search}
-                 onChange={(e) => setSearch(e.target.value)}
-                 sx={{ fontWeight: 'bold', fontSize: '0.875rem' }}
-               />
-             </div>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar Categories */}
+          <div className="w-64 bg-slate-50 border-r-2 border-slate-100 overflow-y-auto hidden md:block">
+            <div className="p-4 space-y-1">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-colors ${
+                  selectedCategory === 'all' 
+                    ? 'bg-slate-900 text-white shadow-md' 
+                    : 'text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                }`}
+              >
+                All Categories
+              </button>
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors ${
+                    selectedCategory === cat.id 
+                      ? 'bg-slate-900 text-white shadow-md' 
+                      : 'text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                  }`}
+                >
+                  <cat.icon size={16} />
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
-             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-               {filteredDbs.map(db => (
-                 <button
-                   key={db.id}
-                   onClick={() => { onSelect(db); onClose(); }}
-                   className="flex items-center gap-3 p-3 bg-white border-2 border-slate-100 hover:border-slate-900 hover:shadow-[4px_4px_0_0_#cbd5e1] rounded-xl transition-all group text-left"
-                 >
-                   <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 p-2 border border-slate-200 overflow-hidden">
-                     {db.logo ? (
-                       <img src={db.logo} alt={db.name} className="w-full h-full object-contain" />
-                     ) : (
-                       <Database size={20} className="text-slate-400 group-hover:text-slate-900" />
-                     )}
-                   </div>
-                   <div className="min-w-0">
-                     <div className="text-sm font-bold text-slate-700 group-hover:text-slate-900 truncate">{db.name}</div>
-                     <div className="text-[10px] text-slate-400 font-bold uppercase">{CATEGORIES.find(c => c.id === db.category)?.label || 'DB'}</div>
-                   </div>
-                 </button>
-               ))}
-             </div>
-          </div>
-          <Divider />
-          <div className="p-4 bg-slate-50">
-            <form onSubmit={handleCustomSubmit} className="flex gap-2">
-               <InputBase
-                 placeholder="Add custom database..."
-                 value={customDbName}
-                 onChange={(e) => setCustomDbName(e.target.value)}
-                 sx={{ flex: 1, backgroundColor: '#fff', border: '2px solid #e2e8f0', px: 2, py: 0.5, borderRadius: 2, fontSize: '0.875rem', fontWeight: 'medium' }}
-               />
-               <Button type="submit" variant="contained" disabled={!customDbName.trim()} sx={{ backgroundColor: '#0f172a', fontWeight: 'bold', textTransform: 'none', borderRadius: 2 }}>
-                 Add
-               </Button>
-            </form>
+
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col bg-white">
+            {/* Search Bar */}
+            <div className="p-4 border-b-2 border-slate-100">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search databases..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-slate-900 focus:shadow-[2px_2px_0_0_#0f172a] placeholder:text-slate-400 font-medium transition-all"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {filteredDbs.length > 0 ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredDbs.map(db => {
+                    const CategoryIcon = getCategoryIcon(db.category);
+                    return (
+                      <button
+                        key={db.id}
+                        onClick={() => {
+                          onSelect(db);
+                          onClose();
+                        }}
+                        className="flex items-center gap-3 p-3 bg-white border-2 border-slate-100 hover:border-slate-900 hover:shadow-[4px_4px_0_0_#cbd5e1] hover:-translate-y-0.5 rounded-xl transition-all group text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 p-2 border border-slate-200 overflow-hidden">
+                          {db.logo ? (
+                            <img src={db.logo} alt={db.name} className="w-full h-full object-contain" />
+                          ) : (
+                            <CategoryIcon size={20} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-slate-700 group-hover:text-slate-900 truncate">
+                            {db.name}
+                          </div>
+                          <div className="text-xs text-slate-400 font-bold capitalize">
+                            {CATEGORIES.find(c => c.id === db.category)?.label || 'Database'}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 py-12">
+                  <Search size={48} className="mb-4 opacity-20" />
+                  <p className="text-lg font-bold">No databases found</p>
+                  <p className="text-sm">Try searching for something else or add a custom one below.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer / Custom DB */}
+            <div className="p-4 border-t-2 border-slate-100 bg-slate-50">
+              <form onSubmit={handleCustomSubmit} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
+                    Can't find it? Add Custom DB
+                  </label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="e.g. My Legacy DB"
+                      value={customDbName}
+                      onChange={(e) => setCustomDbName(e.target.value)}
+                      className="flex-1 bg-white border-2 border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-slate-900 focus:shadow-sm font-medium"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!customDbName.trim()}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-slate-900 text-white rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg"
+                    >
+                      <Plus size={16} />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
