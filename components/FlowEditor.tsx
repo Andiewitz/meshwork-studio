@@ -21,18 +21,16 @@ import type {
   NodeMouseHandler,
   EdgeMouseHandler
 } from 'reactflow';
-import { ChevronLeft, Save, Cloud, Check, Clock, AlertTriangle, Menu, Download, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, Save, Check, Clock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
-import { FlowNodeData } from '../types';
 import { ContextMenu } from './ContextMenu';
 import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
 import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
 import { EditNodeModal } from './modals/EditNodeModal';
-// Fixed: Removed unused ClientOption import that doesn't exist in ClientConfigModal
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
 import { LoadingScreen } from './LoadingScreen';
@@ -61,26 +59,20 @@ const FlowEditorContent: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Track mouse position for automatic menu placement
   const mousePos = useRef({ x: 0, y: 0 });
 
-  // Editor State
   const [flowTitle, setFlowTitle] = useState('Untitled Mesh');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'unsaved'>('idle');
   const [showGui, setShowGui] = useState(true);
   
-  // Refs for Auto-Save
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const isDirtyRef = useRef(false);
 
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  
-  // Tool State
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
 
-  // Menu State
   const [menu, setMenu] = useState<{ 
       id: string; 
       top: number; 
@@ -92,22 +84,17 @@ const FlowEditorContent: React.FC = () => {
   // Modal States
   const [dbModalOpen, setDbModalOpen] = useState(false);
   const [configuringNodeId, setConfiguringNodeId] = useState<string | null>(null);
-  
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [configuringClientId, setConfiguringClientId] = useState<string | null>(null);
   const [configuringClientData, setConfiguringClientData] = useState<{label: string, type: string}>({label: '', type: 'desktop'});
-
   const [cacheModalOpen, setCacheModalOpen] = useState(false);
   const [configuringCacheId, setConfiguringCacheId] = useState<string | null>(null);
-
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState('');
-
   const [connectionModalOpen, setConnectionModalOpen] = useState(false);
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
 
-  // Memoize node types
   const nodeTypes = useMemo<NodeTypes>(() => ({
     server: ServerNode,
     database: DatabaseNode,
@@ -120,7 +107,6 @@ const FlowEditorContent: React.FC = () => {
     external: ExternalServiceNode,
   }), []);
 
-  // Sync Refs
   useEffect(() => {
     nodesRef.current = nodes;
     edgesRef.current = edges;
@@ -132,16 +118,12 @@ const FlowEditorContent: React.FC = () => {
     }
   }, [nodes, edges, isLoading]);
 
-  // Handle mouse move to track menu position
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     mousePos.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  // Automatic Menu Trigger on Selection End
   const onSelectionEnd = useCallback(() => {
-    // Only trigger auto-menu in SELECT mode to avoid interference with movement
     if (activeTool !== 'select') return;
-
     setTimeout(() => {
         const selectedNodes = nodesRef.current.filter(n => n.selected);
         if (selectedNodes.length > 1) {
@@ -156,7 +138,6 @@ const FlowEditorContent: React.FC = () => {
     }, 50);
   }, [activeTool]);
 
-  // Load Flow Data
   useEffect(() => {
     const loadFlow = async () => {
       if (!flowId) return;
@@ -180,7 +161,6 @@ const FlowEditorContent: React.FC = () => {
     loadFlow();
   }, [flowId, setNodes, setEdges]);
 
-  // Save Function
   const handleSave = useCallback(async () => {
     if (!flowId) return;
     setSaveStatus('saving');
@@ -195,14 +175,12 @@ const FlowEditorContent: React.FC = () => {
     }
   }, [flowId]);
 
-  // Auto-Save Interval (30s)
   useEffect(() => {
     const interval = setInterval(() => {
         if (isDirtyRef.current && flowId && !isLoading) {
             handleSave();
         }
     }, 30000);
-
     return () => clearInterval(interval);
   }, [flowId, handleSave, isLoading]);
 
@@ -215,7 +193,6 @@ const FlowEditorContent: React.FC = () => {
     }, eds));
   }, [setEdges]);
 
-  // Handle Node Right Click (Context Menu)
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
       event.preventDefault();
@@ -235,7 +212,6 @@ const FlowEditorContent: React.FC = () => {
     [nodes]
   );
 
-  // Handle Edge Right Click (Context Menu)
   const onEdgeContextMenu = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.preventDefault();
@@ -260,17 +236,13 @@ const FlowEditorContent: React.FC = () => {
     [reactFlowInstance]
   );
 
-  const onPaneContextMenu = useCallback(
-    (event: React.MouseEvent) => {
+  const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
       event.preventDefault();
       setMenu(null);
-    },
-    []
-  );
+  }, []);
 
   const onPaneClick = useCallback(() => setMenu(null), []);
 
-  // Menu Handlers
   const handleMenuDelete = useCallback(() => {
     if (menu) {
       if (menu.type === 'edge') {
@@ -356,7 +328,6 @@ const FlowEditorContent: React.FC = () => {
       if (menu && menu.type === 'edge' && menu.data && menu.data.splitPosition) {
           const edgeId = menu.id;
           const { source, target, splitPosition } = menu.data;
-          
           const junctionId = `junction-${Date.now()}`;
           const junctionNode: Node = {
               id: junctionId,
@@ -367,32 +338,15 @@ const FlowEditorContent: React.FC = () => {
               },
               data: { label: '' }
           };
-
           setEdges((eds) => eds.filter(e => e.id !== edgeId));
           setNodes((nds) => nds.concat(junctionNode));
-          
           setTimeout(() => {
             setEdges((eds) => [
                 ...eds,
-                { 
-                    id: `e-${source}-${junctionId}`, 
-                    source: source, 
-                    target: junctionId, 
-                    animated: true, 
-                    style: { stroke: '#71717a', strokeWidth: 2 },
-                    type: 'default' 
-                },
-                { 
-                    id: `e-${junctionId}-${target}`, 
-                    source: junctionId, 
-                    target: target, 
-                    animated: true, 
-                    style: { stroke: '#71717a', strokeWidth: 2 },
-                    type: 'default' 
-                }
+                { id: `e-${source}-${junctionId}`, source: source, target: junctionId, animated: true, style: { stroke: '#71717a', strokeWidth: 2 }, type: 'default' },
+                { id: `e-${junctionId}-${target}`, source: junctionId, target: target, animated: true, style: { stroke: '#71717a', strokeWidth: 2 }, type: 'default' }
             ]);
           }, 10);
-          
           setMenu(null);
       }
   }, [menu, setNodes, setEdges]);
@@ -406,10 +360,7 @@ const FlowEditorContent: React.FC = () => {
           setDbModalOpen(true);
         } else if (node.type === 'client') {
             setConfiguringClientId(node.id);
-            setConfiguringClientData({
-                label: node.data.label,
-                type: (node.data.clientType as string) || 'desktop'
-            });
+            setConfiguringClientData({ label: node.data.label, type: (node.data.clientType as string) || 'desktop' });
             setClientModalOpen(true);
         } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
             setConfiguringCacheId(node.id);
@@ -426,36 +377,19 @@ const FlowEditorContent: React.FC = () => {
 
   const handleEditSave = (newLabel: string) => {
     if (editingNodeId) {
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === editingNodeId) {
-            return { ...node, data: { ...node.data, label: newLabel } };
-          }
-          return node;
-        })
-      );
+      setNodes((nds) => nds.map((node) => node.id === editingNodeId ? { ...node, data: { ...node.data, label: newLabel } } : node));
     }
   };
 
   const handleClientSave = (label: string, type: string) => {
       if (configuringClientId) {
-          setNodes((nds) => nds.map((node) => {
-              if (node.id === configuringClientId) {
-                  return { ...node, data: { ...node.data, label, clientType: type } };
-              }
-              return node;
-          }));
+          setNodes((nds) => nds.map((node) => node.id === configuringClientId ? { ...node, data: { ...node.data, label, clientType: type } } : node));
       }
   };
 
   const handleCacheSelect = (tech: CacheOption) => {
     if (configuringCacheId) {
-        setNodes((nds) => nds.map((node) => {
-            if (node.id === configuringCacheId) {
-                return { ...node, data: { ...node.data, label: node.data.label === 'Cache / CDN' || node.data.label === 'New middleware' ? tech.name : node.data.label, techName: tech.name, techLogo: tech.logo } };
-            }
-            return node;
-        }));
+        setNodes((nds) => nds.map((node) => node.id === configuringCacheId ? { ...node, data: { ...node.data, label: node.data.label === 'Cache / CDN' || node.data.label === 'New middleware' ? tech.name : node.data.label, techName: tech.name, techLogo: tech.logo } } : node));
     }
   };
 
@@ -487,19 +421,24 @@ const FlowEditorContent: React.FC = () => {
 
   const handleDbSelect = (dbInfo: DatabaseOption) => {
     if (!configuringNodeId) return;
-    setNodes((nds) => nds.map((node) => {
-      if (node.id === configuringNodeId) {
-        return { ...node, data: { ...node.data, dbType: dbInfo.id, dbName: dbInfo.name, dbCategory: dbInfo.category, dbLogo: dbInfo.logo, label: node.data.label === 'New database' ? dbInfo.name : node.data.label } };
-      }
-      return node;
-    }));
+    setNodes((nds) => nds.map((node) => node.id === configuringNodeId ? { ...node, data: { ...node.data, dbType: dbInfo.id, dbName: dbInfo.name, dbCategory: dbInfo.category, dbLogo: dbInfo.logo, label: node.data.label === 'New database' ? dbInfo.name : node.data.label } } : node));
   };
 
   const handleConnectionSave = (protocol: ConnectionOption) => {
     if (!editingEdgeId) return;
     setEdges((eds) => eds.map((edge) => {
       if (edge.id === editingEdgeId) {
-        return { ...edge, label: protocol.id, style: { ...edge.style, stroke: protocol.color, strokeWidth: 2 }, labelStyle: { fill: '#9ca3af', fontSize: 11, fontWeight: 500, fontFamily: 'monospace', letterSpacing: '0.05em' }, labelBgStyle: { fill: '#18181b', fillOpacity: 0.9, stroke: '#27272a', strokeWidth: 1 }, labelBgPadding: [6, 4], labelBgBorderRadius: 6, animated: protocol.id !== 'JDBC' && protocol.id !== 'TCP', data: { ...edge.data, protocol: protocol.id } };
+        return { 
+          ...edge, 
+          label: protocol.id, 
+          style: { ...edge.style, stroke: protocol.color, strokeWidth: 2 }, 
+          labelStyle: { fill: '#9ca3af', fontSize: 11, fontWeight: 500, fontFamily: 'monospace' }, 
+          labelBgStyle: { fill: '#18181b', fillOpacity: 0.9, stroke: '#27272a' }, 
+          labelBgPadding: [6, 4], 
+          labelBgBorderRadius: 6, 
+          animated: protocol.id !== 'JDBC' && protocol.id !== 'TCP', 
+          data: { ...edge.data, protocol: protocol.id } 
+        };
       }
       return edge;
     }));
@@ -510,31 +449,21 @@ const FlowEditorContent: React.FC = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
+  const onDrop = useCallback((event: React.DragEvent) => {
       event.preventDefault();
       const type = event.dataTransfer.getData('application/reactflow');
       const mwType = event.dataTransfer.getData('application/middlewareType');
       const label = event.dataTransfer.getData('application/label');
       const logo = event.dataTransfer.getData('application/logo');
-
-      if (typeof type === 'undefined' || !type || !reactFlowInstance) return;
-
+      if (!type || !reactFlowInstance) return;
       const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
         type,
         position,
-        data: { 
-            label: label || `New ${type}`, 
-            middlewareType: mwType || undefined, 
-            clientType: type === 'client' ? 'desktop' : undefined,
-            logo: logo || undefined
-        },
+        data: { label: label || `New ${type}`, middlewareType: mwType || undefined, clientType: type === 'client' ? 'desktop' : undefined, logo: logo || undefined },
       };
-
       setNodes((nds) => nds.concat(newNode));
-      
       if (type === 'database') {
         setTimeout(() => { setConfiguringNodeId(newNode.id); setDbModalOpen(true); }, 100);
       } else if (type === 'client') {
@@ -542,80 +471,42 @@ const FlowEditorContent: React.FC = () => {
       } else if (type === 'middleware' && mwType === 'cache') {
           setTimeout(() => { setConfiguringCacheId(newNode.id); setCacheModalOpen(true); }, 100);
       }
-    },
-    [reactFlowInstance, setNodes]
+    }, [reactFlowInstance, setNodes]
   );
 
   return (
-    <div 
-      className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden"
-      onContextMenu={(e) => e.preventDefault()}
-      onMouseMove={handleMouseMove}
-    >
-      
+    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden" onContextMenu={(e) => e.preventDefault()} onMouseMove={handleMouseMove}>
       {showGui && (
         <div className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
             <div className="flex items-center gap-4">
-                <button 
-                    onClick={() => navigate('/')}
-                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
-                    title="Back to Dashboard"
-                >
-                    <ChevronLeft size={24} strokeWidth={2.5} />
-                </button>
+                <button onClick={() => navigate('/')} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors"><ChevronLeft size={24} /></button>
                 <div className="h-6 w-px bg-slate-200"></div>
                 <div>
                     <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-                        {saveStatus === 'saving' && <span className="text-blue-500 flex items-center gap-1"><Clock size={10} /> Saving...</span>}
-                        {saveStatus === 'saved' && <span className="text-emerald-500 flex items-center gap-1"><Check size={10} /> Saved {lastSaved && `at ${lastSaved.toLocaleTimeString()}`}</span>}
-                        {saveStatus === 'unsaved' && <span className="text-amber-500 flex items-center gap-1"><AlertTriangle size={10} /> Unsaved Changes</span>}
-                        {saveStatus === 'error' && <span className="text-red-500 flex items-center gap-1"><AlertTriangle size={10} /> Save Error</span>}
+                        {saveStatus === 'saving' && <span className="text-blue-500">Saving...</span>}
+                        {saveStatus === 'saved' && <span className="text-emerald-500">Saved</span>}
+                        {saveStatus === 'unsaved' && <span className="text-amber-500">Unsaved Changes</span>}
                     </p>
                 </div>
             </div>
-
             <div className="flex items-center gap-3">
-                <button 
-                    onClick={handleSave}
-                    disabled={saveStatus === 'saving' || saveStatus === 'saved'}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all border-2 ${saveStatus === 'unsaved' || saveStatus === 'error' ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a] hover:-translate-y-0.5' : 'bg-white text-slate-400 border-slate-200 cursor-default'}`}
-                >
-                    <Save size={16} />
-                    <span>Save</span>
-                </button>
+                <button onClick={handleSave} disabled={saveStatus === 'saving' || saveStatus === 'saved'} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border-2 ${saveStatus === 'unsaved' ? 'bg-indigo-600 text-white border-slate-900 shadow-[3px_3px_0_0_#0f172a]' : 'bg-white text-slate-400 border-slate-200 cursor-default'}`}><Save size={16} /><span>Save</span></button>
             </div>
         </div>
       )}
-
       <div className="flex-1 relative overflow-hidden" ref={reactFlowWrapper}>
         <div className="absolute bottom-6 right-6 z-50">
-          <button
-            onClick={() => setShowGui(!showGui)}
-            className={`p-3 rounded-xl border-2 transition-all duration-200 font-bold flex items-center gap-2 ${showGui ? 'bg-white text-slate-900 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:shadow-[2px_2px_0_0_#0f172a] hover:translate-y-[2px]' : 'bg-indigo-600 text-white border-white shadow-[4px_4px_0_0_#000] hover:bg-indigo-700 opacity-90 hover:opacity-100'}`}
-          >
-            {showGui ? <Eye size={20} /> : <EyeOff size={20} />}
-          </button>
+          <button onClick={() => setShowGui(!showGui)} className={`p-3 rounded-xl border-2 font-bold ${showGui ? 'bg-white text-slate-900 border-slate-900' : 'bg-indigo-600 text-white border-white'}`}>{showGui ? <Eye size={20} /> : <EyeOff size={20} />}</button>
         </div>
-
-        {isLoading && (
-            <div className="absolute inset-0 z-[60] bg-zinc-900 animate-out fade-out duration-500 fill-mode-forwards pointer-events-none">
-                <LoadingScreen message="Initializing Environment..." fullScreen={false} />
-            </div>
-        )}
-
+        {isLoading && <div className="absolute inset-0 z-[60] bg-zinc-900"><LoadingScreen message="Loading Canvas..." fullScreen={false} /></div>}
         {showGui && <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />}
-        
         <DatabaseSelectorModal isOpen={dbModalOpen} onClose={() => setDbModalOpen(false)} onSelect={handleDbSelect} />
         <ClientConfigModal isOpen={clientModalOpen} onClose={() => setClientModalOpen(false)} initialLabel={configuringClientData.label} initialType={configuringClientData.type} onSave={handleClientSave} />
         <CacheSelectorModal isOpen={cacheModalOpen} onClose={() => setCacheModalOpen(false)} onSelect={handleCacheSelect} />
         <EditNodeModal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} initialLabel={editingLabel} onSave={handleEditSave} />
         <ConnectionSettingsModal isOpen={connectionModalOpen} onClose={() => setConnectionModalOpen(false)} onSave={handleConnectionSave} currentLabel={editingEdgeId ? edges.find(e => e.id === editingEdgeId)?.label as string : null} />
-
-        {menu && (
-            <ContextMenu top={menu.top} left={menu.left} onEdit={handleMenuEdit} onDuplicate={handleMenuDuplicate} onSeverConnections={handleMenuSeverConnections} onSplitConnection={handleSplitConnection} onAlign={handleMenuAlign} onDelete={handleMenuDelete} onClose={() => setMenu(null)} nodeType={menu.type} selectionCount={menu.data?.selectedCount} />
-        )}
-
+        {menu && <ContextMenu top={menu.top} left={menu.left} onEdit={handleMenuEdit} onDuplicate={handleMenuDuplicate} onSeverConnections={handleMenuSeverConnections} onSplitConnection={handleSplitConnection} onAlign={handleMenuAlign} onDelete={handleMenuDelete} onClose={() => setMenu(null)} nodeType={menu.type} selectionCount={menu.data?.selectedCount} />}
         <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -634,49 +525,23 @@ const FlowEditorContent: React.FC = () => {
             onSelectionEnd={onSelectionEnd}
             nodeTypes={nodeTypes}
             fitView
-            minZoom={0.1}
-            maxZoom={2}
-            className="touch-none"
-            connectionRadius={50}
             connectionMode={ConnectionMode.Loose}
-            
-            // Interaction logic:
-            // Mode Select: No dragging nodes, allowing the marquee box to start on top of nodes.
-            // Mode Pan: Dragging nodes and moving background.
             nodesDraggable={activeTool === 'pan'}
             panOnDrag={activeTool === 'select' ? false : true}
             selectionOnDrag={activeTool === 'select'}
             selectionMode={SelectionMode.Partial}
-            
-            panOnScroll={true}
-            zoomOnScroll={true}
-            elementsSelectable={true}
-            snapToGrid={false}
+            panOnScroll zoomOnScroll elementsSelectable
         >
             <Background color="#ffffff" variant={BackgroundVariant.Dots} gap={20} size={1.5} className="opacity-50" />
-            
-            {showGui && (
-              <CanvasNav 
-                zoomIn={zoomIn} 
-                zoomOut={zoomOut}
-                onUndo={() => console.log('undo')}
-                onRedo={() => console.log('redo')}
-                onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-                isLibraryOpen={isLibraryOpen}
-                activeTool={activeTool}
-                setActiveTool={setActiveTool}
-              />
-            )}
+            {showGui && <CanvasNav zoomIn={zoomIn} zoomOut={zoomOut} onUndo={() => {}} onRedo={() => {}} onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} isLibraryOpen={isLibraryOpen} activeTool={activeTool} setActiveTool={setActiveTool} />}
         </ReactFlow>
       </div>
     </div>
   );
 };
 
-export const FlowEditor: React.FC = () => {
-  return (
-    <ReactFlowProvider>
-      <FlowEditorContent />
-    </ReactFlowProvider>
-  );
-};
+export const FlowEditor: React.FC = () => (
+  <ReactFlowProvider>
+    <FlowEditorContent />
+  </ReactFlowProvider>
+);

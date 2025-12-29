@@ -26,6 +26,16 @@ const theme = createTheme({
   shape: {
     borderRadius: 12,
   },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 700,
+        },
+      },
+    },
+  },
 });
 
 const App: React.FC = () => {
