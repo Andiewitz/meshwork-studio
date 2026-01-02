@@ -1,20 +1,20 @@
 import { 
   collection, 
-  doc, 
   getDocs, 
   getDoc, 
-  setDoc, 
   addDoc, 
   updateDoc, 
   deleteDoc, 
   query, 
   where,
-  serverTimestamp 
+  serverTimestamp,
+  doc
 } from 'firebase/firestore';
 import { db } from './firebaseService';
 import { FlowData } from '../types';
 import type { Node, Edge } from 'reactflow';
 import { templates } from '../data/templates';
+import { safeStorage } from '../utils/storage';
 
 const COLLECTION_NAME = 'flows';
 const GUEST_ID = 'dev-guest-123';
@@ -23,7 +23,7 @@ const LOCAL_STORAGE_KEY = 'meshwork_local_flows';
 // Helper to get local flows
 const getLocalFlows = (): FlowData[] => {
   try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const stored = safeStorage.getItem(LOCAL_STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (e) {
     console.error("Failed to parse local flows", e);
@@ -33,7 +33,7 @@ const getLocalFlows = (): FlowData[] => {
 
 // Helper to save local flows
 const saveLocalFlows = (flows: FlowData[]) => {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(flows));
+  safeStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(flows));
 };
 
 // Helper to generate unique ID
@@ -165,12 +165,12 @@ export const flowService = {
     try {
         const q = query(collection(db, COLLECTION_NAME), where("ownerId", "==", userId));
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => {
-            const data = doc.data();
+        return querySnapshot.docs.map(docSnap => {
+            const data = docSnap.data();
             // Handle Firestore Timestamps if present
             const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now();
             const updatedAt = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now();
-            return { ...data, id: doc.id, createdAt, updatedAt } as FlowData;
+            return { ...data, id: docSnap.id, createdAt, updatedAt } as FlowData;
         });
     } catch (error) {
         console.error("Error fetching flows", error);
