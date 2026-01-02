@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   MousePointer2, 
@@ -32,8 +33,7 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
   activeTool,
   setActiveTool
 }) => {
-  const btnClass = "p-2 rounded-lg border-2 border-transparent transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-900";
-  // Slate-900 for neutral, professional tool selection
+  const btnClass = "p-2 rounded-lg border-2 border-transparent transition-all text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-300";
   const activeBtnClass = "p-2 rounded-lg bg-slate-900 text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000000] transition-all transform -translate-y-0.5";
 
   return (
@@ -45,27 +45,27 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
           <button 
             onClick={() => setActiveTool('select')}
             className={activeTool === 'select' ? activeBtnClass : btnClass} 
-            title="Select Mode"
+            title="Select Tool (V)"
           >
             <MousePointer2 size={18} />
           </button>
           <button 
             onClick={() => setActiveTool('pan')}
             className={activeTool === 'pan' ? activeBtnClass : btnClass} 
-            title="Pan Mode"
+            title="Pan Tool (H or Space)"
           >
             <Hand size={18} />
           </button>
           <button 
             onClick={() => setActiveTool('connect')}
             className={activeTool === 'connect' ? activeBtnClass : btnClass} 
-            title="Define Connections"
+            title="Connection Tool (C)"
           >
             <Link2 size={18} />
           </button>
         </div>
 
-        {/* Add Nodes Button - Violet for Creative Action */}
+        {/* Add Nodes Button */}
         <div className="flex items-center gap-1 px-3 border-r-2 border-slate-100">
           <button 
             onClick={onToggleLibrary}
@@ -75,6 +75,7 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
                     ? 'bg-violet-600 text-white border-violet-600 shadow-[2px_2px_0_0_#000000] -translate-y-0.5' 
                     : 'bg-white text-slate-900 border-slate-200 hover:border-slate-900 hover:shadow-[2px_2px_0_0_#cbd5e1] hover:-translate-y-0.5'}
             `}
+            title="Open Library (L)"
           >
             <Plus size={16} strokeWidth={3} />
             <span>Add Node</span>
@@ -83,30 +84,29 @@ export const CanvasNav: React.FC<CanvasNavProps> = ({
 
         {/* History Section */}
         <div className="flex items-center gap-1 px-3 border-r-2 border-slate-100">
-          <button onClick={onUndo} className={btnClass}>
+          <button onClick={onUndo} className={btnClass} title="Undo (Ctrl+Z)">
             <Undo size={18} />
           </button>
-          <button onClick={onRedo} className={btnClass}>
+          <button onClick={onRedo} className={btnClass} title="Redo (Ctrl+Y)">
             <Redo size={18} />
           </button>
         </div>
 
         {/* Zoom Section */}
         <div className="flex items-center gap-1 pl-2">
-          <button onClick={zoomOut} className={btnClass}>
+          <button onClick={zoomOut} className={btnClass} title="Zoom Out">
             <Minus size={16} />
           </button>
-          <button onClick={zoomIn} className={btnClass}>
+          <button onClick={zoomIn} className={btnClass} title="Zoom In">
             <Plus size={16} />
           </button>
         </div>
 
       </div>
       
-      {/* Tooltip for Define Connection Mode */}
       {activeTool === 'connect' && (
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-white text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 shadow-lg">
-          Click a line to define protocol
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 border-2 border-white text-white text-[10px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 shadow-lg uppercase tracking-wider">
+          Click edges to define protocols
         </div>
       )}
     </div>
