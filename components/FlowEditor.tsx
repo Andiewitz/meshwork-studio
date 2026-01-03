@@ -27,6 +27,7 @@ import { NodeLibrary } from './NodeLibrary';
 import { LoadingScreen } from './LoadingScreen';
 import { ContextMenu } from './ContextMenu';
 import { Button, Tooltip, IconButton, AppBar, Toolbar, Typography, Box } from '@mui/material';
+import { safeStorage } from '../utils/storage';
 
 // Modals
 import { AsciiExportModal } from './modals/AsciiExportModal';
@@ -98,7 +99,8 @@ const FlowEditorContent: React.FC = () => {
   // Context Menu State
   const [menu, setMenu] = useState<MenuState | null>(null);
 
-  const isAiEnabled = !!process.env.API_KEY;
+  // Check for API Key (Env OR Local)
+  const isAiEnabled = !!process.env.API_KEY || !!safeStorage.getItem('meshwork_api_key');
 
   // Load Flow Data
   useEffect(() => {
@@ -503,7 +505,7 @@ const FlowEditorContent: React.FC = () => {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Tooltip title={isAiEnabled ? "AI Docs (ASCII Art)" : "API Key Required"}>
+            <Tooltip title={isAiEnabled ? "AI Docs (ASCII Art)" : "Setup API Key in Settings"}>
               <span>
                 <Button 
                   variant="outlined"

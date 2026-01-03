@@ -4,6 +4,7 @@ import { X, Copy, Check, Sparkles, Loader2, FileText, Terminal, RefreshCw, Downl
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import type { Node, Edge } from 'reactflow';
 import { Tooltip, Button, IconButton } from '@mui/material';
+import { safeStorage } from '../../utils/storage';
 
 interface AsciiExportModalProps {
   isOpen: boolean;
@@ -19,8 +20,11 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
   const [error, setError] = useState<string | null>(null);
 
   const generateAscii = async () => {
-    if (!process.env.API_KEY) {
-      setError("AI Key missing. Please add API_KEY to your environment.");
+    // Check Env Key OR Local Key
+    const apiKey = process.env.API_KEY || safeStorage.getItem('meshwork_api_key');
+
+    if (!apiKey) {
+      setError("AI Key missing. Please add API_KEY to your environment or configure it in Settings > AI Features.");
       return;
     }
 
@@ -29,7 +33,7 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
     setOutput(''); // Clear previous output
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         You are a senior systems architect.
         Generate a high-quality, strictly ASCII/Unicode art diagram representing the provided system architecture.
@@ -137,15 +141,25 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Generation Failed</h3>
                 <p className="text-slate-500 max-w-sm mx-auto mb-6">{error}</p>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    onClick={generateAscii}
-                    startIcon={<RefreshCw size={16} />}
-                    sx={{ fontWeight: 'bold', textTransform: 'none', borderRadius: '12px' }}
-                >
-                    Retry Connection
-                </Button>
+                <div className="flex gap-3">
+                    <Button 
+                        variant="outlined" 
+                        color="inherit" 
+                        onClick={() => { window.location.hash = '/settings'; onClose(); }}
+                        sx={{ fontWeight: 'bold', textTransform: 'none', borderRadius: '12px', borderColor: '#cbd5e1' }}
+                    >
+                        Check Settings
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={generateAscii}
+                        startIcon={<RefreshCw size={16} />}
+                        sx={{ fontWeight: 'bold', textTransform: 'none', borderRadius: '12px' }}
+                    >
+                        Retry Connection
+                    </Button>
+                </div>
              </div>
           ) : (
              <div className="flex-1 flex flex-col p-6 overflow-hidden">

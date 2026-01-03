@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   User, 
@@ -13,8 +13,10 @@ import {
   ShieldCheck,
   AlertCircle,
   ExternalLink,
-  // Fix: Added missing FileText import
-  FileText
+  FileText,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
 import { useAuth } from '../hooks/useAuth';
@@ -30,7 +32,32 @@ export const SettingsPage: React.FC = () => {
   const [gridSnap, setGridSnap] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
-  const isAiKeyPresent = !!process.env.API_KEY;
+  // BYOK State
+  const [localKey, setLocalKey] = useState<string | null>(null);
+  const [keyInput, setKeyInput] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  
+  // Check Env Key
+  const isEnvKeyPresent = !!process.env.API_KEY;
+
+  useEffect(() => {
+    const stored = safeStorage.getItem('meshwork_api_key');
+    if (stored) setLocalKey(stored);
+  }, []);
+
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (keyInput.trim()) {
+        safeStorage.setItem('meshwork_api_key', keyInput.trim());
+        setLocalKey(keyInput.trim());
+        setKeyInput('');
+    }
+  };
+
+  const handleRemoveKey = () => {
+      safeStorage.removeItem('meshwork_api_key');
+      setLocalKey(null);
+  };
 
   const clearData = () => {
     if (confirm('Are you sure? This will delete all local flows and settings.')) {
@@ -91,15 +118,15 @@ export const SettingsPage: React.FC = () => {
                 </div>
 
                 <div className="p-8">
-                  {isAiKeyPresent ? (
-                    <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-4">
+                  {isEnvKeyPresent ? (
+                    <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-4 mb-8">
                       <div className="w-12 h-12 bg-white border-2 border-emerald-500 rounded-xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
                         <ShieldCheck size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-900 mb-1">BYOK Engine Ready</h4>
+                        <h4 className="font-bold text-slate-900 mb-1">Environment Key Detected</h4>
                         <p className="text-sm text-slate-600 leading-relaxed">
-                          Your Gemini API key has been detected in the environment. AI Documentation (ASCII Export) and Intelligent Layout tools are now enabled in the canvas.
+                          Your API key is securely loaded from the environment variables (`API_KEY`). No further configuration is required.
                         </p>
                         <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -108,40 +135,95 @@ export const SettingsPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-2xl flex items-start gap-4">
-                      <div className="w-12 h-12 bg-white border-2 border-amber-500 rounded-xl flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
-                        <AlertCircle size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 mb-1">API Key Required</h4>
-                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                          To enable AI Docs and Generative Mesh features, you must provide a Google Gemini API Key.
-                        </p>
-                        <a 
-                          href="https://ai.google.dev/" 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors"
-                        >
-                          Get API Key
-                          <ExternalLink size={12} />
-                        </a>
-                        <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                          Note: Add your key to the environment as `API_KEY`
-                        </p>
-                      </div>
+                    <div className="mb-8">
+                         <div className="flex items-center justify-between mb-4">
+                            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
+                                Bring Your Own Key (BYOK)
+                            </label>
+                            {localKey && (
+                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
+                                    Key Saved Locally
+                                </span>
+                            )}
+                         </div>
+                         
+                         {!localKey ? (
+                            <div className="p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl">
+                                <p className="text-sm text-slate-500 mb-4">
+                                    To enable AI features, please provide your Google Gemini API key. It will be stored securely in your browser's local storage and never sent to our servers.
+                                </p>
+                                <form onSubmit={handleSaveKey} className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Key size={16} className="text-slate-400" />
+                                        </div>
+                                        <input
+                                            type={showKey ? "text" : "password"}
+                                            value={keyInput}
+                                            onChange={(e) => setKeyInput(e.target.value)}
+                                            placeholder="Paste your Gemini API Key here..."
+                                            className="block w-full pl-10 pr-10 py-3 border-2 border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm font-mono font-bold transition-colors"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowKey(!showKey)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        >
+                                            {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={!keyInput.trim()}
+                                        className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+                                    >
+                                        Save Key
+                                    </button>
+                                </form>
+                                <div className="mt-4 flex items-center gap-1 text-xs text-slate-400">
+                                    <AlertCircle size={12} />
+                                    <span>Don't have a key?</span>
+                                    <a href="https://ai.google.dev/" target="_blank" rel="noreferrer" className="text-indigo-600 font-bold hover:underline flex items-center gap-1">
+                                        Get one from Google AI Studio <ExternalLink size={10} />
+                                    </a>
+                                </div>
+                            </div>
+                         ) : (
+                             <div className="p-6 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-between">
+                                 <div className="flex items-center gap-4">
+                                     <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                         <Key size={20} />
+                                     </div>
+                                     <div>
+                                         <div className="text-sm font-bold text-slate-900 font-mono">
+                                             ••••••••••••••••••••••••••
+                                         </div>
+                                         <div className="text-xs text-slate-500">
+                                             Stored locally
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <button 
+                                    onClick={handleRemoveKey}
+                                    className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+                                 >
+                                     <Trash2 size={14} />
+                                     Remove
+                                 </button>
+                             </div>
+                         )}
                     </div>
                   )}
 
                   <div className="mt-8 space-y-4">
                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Modules</h4>
-                     <div className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl opacity-60">
+                     <div className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                            <FileText size={18} className="text-slate-400" />
                            <span className="text-sm font-bold text-slate-700">AI Docs (ASCII Art)</span>
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isAiKeyPresent ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                           {isAiKeyPresent ? 'ENABLED' : 'DISABLED'}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isEnvKeyPresent || localKey ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                           {isEnvKeyPresent || localKey ? 'ENABLED' : 'DISABLED'}
                         </span>
                      </div>
                   </div>
