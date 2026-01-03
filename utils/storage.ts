@@ -1,63 +1,78 @@
+
 /**
  * Safe Storage Utility
- * Prevents "SecurityError: The operation is insecure" when localStorage is blocked or unavailable.
+ * Prevents "SecurityError: The operation is insecure" by catching access denied errors
+ * and falling back to in-memory storage for restricted environments.
  */
 
 class SafeStorage {
   private memoryStorage: Record<string, string> = {};
+  private _availabilityChecked: boolean = false;
+  private _isLocalStorageAvailable: boolean = false;
 
-  private get storage(): Storage | null {
+  private testLocalStorage(): boolean {
+    if (this._availabilityChecked) return this._isLocalStorageAvailable;
+    
     try {
-      // Some environments throw even when just accessing the property
-      return typeof window !== 'undefined' ? window.localStorage : null;
+      if (typeof window === 'undefined') return false;
+      
+      // Some browsers throw just by accessing window.localStorage
+      const storage = window['localStorage'];
+      if (!storage) return false;
+
+      const testKey = '__storage_test__';
+      storage.setItem(testKey, testKey);
+      storage.removeItem(testKey);
+      
+      this._isLocalStorageAvailable = true;
     } catch (e) {
-      return null;
+      console.warn("Local storage access denied. Using memory fallback.");
+      this._isLocalStorageAvailable = false;
+    } finally {
+      this._availabilityChecked = true;
     }
+    return this._isLocalStorageAvailable;
   }
 
   getItem(key: string): string | null {
-    try {
-      const s = this.storage;
-      if (!s) return this.memoryStorage[key] || null;
-      return s.getItem(key);
-    } catch (e) {
-      console.warn(`SafeStorage: Falling back to memory for key "${key}" due to security error.`);
-      return this.memoryStorage[key] || null;
+    if (this.testLocalStorage()) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (e) {
+        return this.memoryStorage[key] || null;
+      }
     }
+    return this.memoryStorage[key] || null;
   }
 
   setItem(key: string, value: string): void {
-    try {
-      const s = this.storage;
-      if (!s) {
-        this.memoryStorage[key] = value;
+    if (this.testLocalStorage()) {
+      try {
+        window.localStorage.setItem(key, value);
         return;
+      } catch (e) {
+        // Fall through to memory
       }
-      s.setItem(key, value);
-    } catch (e) {
-      console.warn(`SafeStorage: Falling back to memory for key "${key}" due to security error.`);
-      this.memoryStorage[key] = value;
     }
+    this.memoryStorage[key] = value;
   }
 
   removeItem(key: string): void {
-    try {
-      const s = this.storage;
-      if (s) s.removeItem(key);
-      delete this.memoryStorage[key];
-    } catch (e) {
-      delete this.memoryStorage[key];
+    if (this.testLocalStorage()) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {}
     }
+    delete this.memoryStorage[key];
   }
 
   clear(): void {
-    try {
-      const s = this.storage;
-      if (s) s.clear();
-      this.memoryStorage = {};
-    } catch (e) {
-      this.memoryStorage = {};
+    if (this.testLocalStorage()) {
+      try {
+        window.localStorage.clear();
+      } catch (e) {}
     }
+    this.memoryStorage = {};
   }
 }
 
