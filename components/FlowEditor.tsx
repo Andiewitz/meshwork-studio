@@ -25,6 +25,7 @@ import { flowService } from '../services/flowService';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
 import { LoadingScreen } from './LoadingScreen';
+import { ContextMenu } from './ContextMenu';
 import { Button, Tooltip } from '@mui/material';
 
 // Custom Nodes
@@ -50,6 +51,13 @@ const nodeTypes: NodeTypes = {
   external: ExternalServiceNode,
 };
 
+interface MenuState {
+  x: number;
+  y: number;
+  type: 'node' | 'edge' | 'selection' | null;
+  id?: string;
+}
+
 const FlowEditorContent: React.FC = () => {
   const navigate = useNavigate();
   const { flowId } = useParams();
@@ -58,7 +66,7 @@ const FlowEditorContent: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   
   // Interaction State
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
@@ -66,6 +74,9 @@ const FlowEditorContent: React.FC = () => {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
   const [flowTitle, setFlowTitle] = useState('Workspace');
+
+  // Context Menu State
+  const [menu, setMenu] = useState<MenuState | null>(null);
 
   // Load Flow Data
   useEffect(() => {
@@ -122,17 +133,10 @@ const FlowEditorContent: React.FC = () => {
     const isPanning = isSpacePressed || activeTool === 'pan';
 
     return {
-      // 1. Hand tool allows dragging nodes and panning canvas with left-click
       nodesDraggable: isPanning,
-      panOnDrag: isPanning ? true : [1, 2], // Only left-click pan in Pan mode
-      
-      // 2. Select tool allows marquee selection
+      panOnDrag: isPanning ? true : [1, 2],
       selectionOnDrag: activeTool === 'select' && !isSpacePressed,
-      
-      // Visual feedback
       cursor: isSpacePressed ? 'grabbing' : isPanning ? 'grab' : activeTool === 'connect' ? 'crosshair' : 'default',
-      
-      // Defaults
       elementsSelectable: true,
       zoomOnScroll: true,
       panOnScroll: true,
@@ -144,12 +148,107 @@ const FlowEditorContent: React.FC = () => {
     setSaveStatus('unsaved');
   }, [setEdges]);
 
+  // Context Menu Handlers
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      setMenu({
+        x: event.clientX,
+        y: event.clientY,
+        type: 'node',
+        id: node.id,
+      });
+    },
+    [setMenu]
+  );
+
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      event.preventDefault();
+      setMenu({
+        x: event.clientX,
+        y: event.clientY,
+        type: 'edge',
+        id: edge.id,
+      });
+    },
+    [setMenu]
+  );
+
+  const onSelectionContextMenu = useCallback(
+    (event: React.MouseEvent, selectedNodes: Node[]) => {
+      event.preventDefault();
+      if (selectedNodes.length > 0) {
+        setMenu({
+          x: event.clientX,
+          y: event.clientY,
+          type: 'selection',
+        });
+      }
+    },
+    [setMenu]
+  );
+
+  const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
+
+  // Action Implementations
+  const deleteSelected = useCallback(() => {
+    if (menu?.type === 'node' && menu.id) {
+      setNodes((nds) => nds.filter((n) => n.id !== menu.id));
+      setEdges((eds) => eds.filter((e) => e.source !== menu.id && e.target !== menu.id));
+    } else if (menu?.type === 'edge' && menu.id) {
+      setEdges((eds) => eds.filter((e) => e.id !== menu.id));
+    } else if (menu?.type === 'selection') {
+      const nodeIds = nodes.filter((n) => n.selected).map((n) => n.id);
+      setNodes((nds) => nds.filter((n) => !n.selected));
+      setEdges((eds) => eds.filter((e) => !e.selected && !nodeIds.includes(e.source) && !nodeIds.includes(e.target)));
+    }
+    setMenu(null);
+    setSaveStatus('unsaved');
+  }, [menu, nodes, edges, setNodes, setEdges]);
+
+  const duplicateSelected = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected || n.id === menu?.id);
+    if (selectedNodes.length === 0) return;
+
+    const newNodes = selectedNodes.map((node) => ({
+      ...node,
+      id: `${node.type}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      position: { x: node.position.x + 40, y: node.position.y + 40 },
+      selected: false,
+    }));
+
+    setNodes((nds) => nds.concat(newNodes));
+    setMenu(null);
+    setSaveStatus('unsaved');
+  }, [menu, nodes, setNodes]);
+
+  const alignToGrid = useCallback(() => {
+    const snapSize = 20;
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.selected || node.id === menu?.id) {
+          return {
+            ...node,
+            position: {
+              x: Math.round(node.position.x / snapSize) * snapSize,
+              y: Math.round(node.position.y / snapSize) * snapSize,
+            },
+          };
+        }
+        return node;
+      })
+    );
+    setMenu(null);
+    setSaveStatus('unsaved');
+  }, [menu, setNodes]);
+
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
-    if (!type || !reactFlowInstance) return;
+    if (!type || !rfInstance) return;
 
-    const position = reactFlowInstance.screenToFlowPosition({
+    const position = rfInstance.screenToFlowPosition({
       x: event.clientX,
       y: event.clientY,
     });
@@ -166,7 +265,7 @@ const FlowEditorContent: React.FC = () => {
 
     setNodes((nds) => nds.concat(newNode));
     setSaveStatus('unsaved');
-  }, [reactFlowInstance, setNodes]);
+  }, [rfInstance, setNodes]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -183,6 +282,8 @@ const FlowEditorContent: React.FC = () => {
       setSaveStatus('unsaved');
     }
   };
+
+  const selectionCount = useMemo(() => nodes.filter(n => n.selected).length + edges.filter(e => e.selected).length, [nodes, edges]);
 
   if (isLoading) return <LoadingScreen message="Unlocking Secure Workspace..." />;
 
@@ -245,9 +346,13 @@ const FlowEditorContent: React.FC = () => {
              setSaveStatus('unsaved');
           }}
           onConnect={onConnect}
-          onInit={setReactFlowInstance}
+          onInit={setRfInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeContextMenu={onNodeContextMenu}
+          onEdgeContextMenu={onEdgeContextMenu}
+          onSelectionContextMenu={onSelectionContextMenu}
+          onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           connectionMode={ConnectionMode.Loose}
           selectionMode={SelectionMode.Partial}
@@ -256,6 +361,20 @@ const FlowEditorContent: React.FC = () => {
         >
           <Background variant={BackgroundVariant.Dots} gap={20} color="#3f3f46" />
           
+          {menu && (
+            <ContextMenu
+              onClick={onPaneClick}
+              top={menu.y}
+              left={menu.x}
+              nodeType={menu.type || undefined}
+              selectionCount={selectionCount}
+              onDelete={deleteSelected}
+              onDuplicate={duplicateSelected}
+              onAlign={alignToGrid}
+              onClose={() => setMenu(null)}
+            />
+          )}
+
           <CanvasNav 
             zoomIn={zoomIn} 
             zoomOut={zoomOut}
