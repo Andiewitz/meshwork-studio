@@ -11,6 +11,7 @@ import ReactFlow, {
   ConnectionMode,
   SelectionMode,
 } from 'reactflow';
+import 'reactflow/dist/style.css';
 import type {
   Node,
   Edge,
@@ -81,7 +82,7 @@ const FlowEditorContent: React.FC = () => {
       } catch (err) {
         console.error("Load failed", err);
       } finally {
-        setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 800);
       }
     };
     loadData();
@@ -118,21 +119,20 @@ const FlowEditorContent: React.FC = () => {
 
   // Strict Interaction Mapping
   const interactionProps = useMemo(() => {
-    // Space always overrides to Pan (Grab) behavior
-    const currentMode = isSpacePressed ? 'pan' : activeTool;
+    const isPanning = isSpacePressed || activeTool === 'pan';
 
     return {
-      // 1. Hand tool (or Space) allows movement/panning
-      nodesDraggable: currentMode === 'pan',
-      panOnDrag: currentMode === 'pan' ? true : [1, 2], // Only pan with left-click if Hand tool active
+      // 1. Hand tool allows dragging nodes and panning canvas with left-click
+      nodesDraggable: isPanning,
+      panOnDrag: isPanning ? true : [1, 2], // Only left-click pan in Pan mode
       
-      // 2. Select tool allows marquee selection but locks movement
-      selectionOnDrag: currentMode === 'select',
+      // 2. Select tool allows marquee selection
+      selectionOnDrag: activeTool === 'select' && !isSpacePressed,
       
-      // Visual feedback via CSS cursor
-      cursor: isSpacePressed ? 'grabbing' : currentMode === 'pan' ? 'grab' : currentMode === 'connect' ? 'crosshair' : 'default',
+      // Visual feedback
+      cursor: isSpacePressed ? 'grabbing' : isPanning ? 'grab' : activeTool === 'connect' ? 'crosshair' : 'default',
       
-      // Standard behaviors
+      // Defaults
       elementsSelectable: true,
       zoomOnScroll: true,
       panOnScroll: true,
@@ -184,7 +184,7 @@ const FlowEditorContent: React.FC = () => {
     }
   };
 
-  if (isLoading) return <LoadingScreen message="Securing Workstation..." />;
+  if (isLoading) return <LoadingScreen message="Unlocking Secure Workspace..." />;
 
   return (
     <div 
@@ -193,7 +193,7 @@ const FlowEditorContent: React.FC = () => {
     >
       <header className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
         <div className="flex items-center gap-4">
-          <Tooltip title="Back to Dashboard">
+          <Tooltip title="Exit to Dashboard">
             <button onClick={() => navigate('/')} className="p-2 rounded-xl hover:bg-slate-100 transition-all border-2 border-transparent hover:border-slate-200">
               <ChevronLeft size={24} strokeWidth={3} />
             </button>
@@ -201,7 +201,7 @@ const FlowEditorContent: React.FC = () => {
           <div>
             <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
-              {saveStatus === 'saved' ? 'Mesh Synced' : saveStatus === 'unsaved' ? 'Modified' : 'Processing...'}
+              {saveStatus === 'saved' ? 'Project Synced' : saveStatus === 'unsaved' ? 'Unsaved Edits' : 'Persisting Changes...'}
             </p>
           </div>
         </div>
@@ -209,10 +209,11 @@ const FlowEditorContent: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button 
             variant="contained"
-            color="primary"
+            disableElevation
             onClick={handleSave}
             startIcon={<Save size={18} />}
             sx={{
+              backgroundColor: '#4f46e5',
               boxShadow: '4px 4px 0 0 #000',
               border: '2px solid #000',
               borderRadius: '12px',
@@ -229,7 +230,7 @@ const FlowEditorContent: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
         
         <ReactFlow

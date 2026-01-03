@@ -2,7 +2,7 @@
 /**
  * Safe Storage Utility
  * Prevents "SecurityError: The operation is insecure" by catching access denied errors
- * and falling back to in-memory storage for restricted environments.
+ * at the property access level and falling back to in-memory storage.
  */
 
 class SafeStorage {
@@ -16,9 +16,13 @@ class SafeStorage {
     try {
       if (typeof window === 'undefined') return false;
       
-      // Some browsers throw just by accessing window.localStorage
-      const storage = window['localStorage'];
-      if (!storage) return false;
+      // Crucial: Just accessing window.localStorage can throw in some sandboxes
+      const storage = window.localStorage;
+      if (!storage) {
+        this._isLocalStorageAvailable = false;
+        this._availabilityChecked = true;
+        return false;
+      }
 
       const testKey = '__storage_test__';
       storage.setItem(testKey, testKey);
@@ -26,7 +30,7 @@ class SafeStorage {
       
       this._isLocalStorageAvailable = true;
     } catch (e) {
-      console.warn("Local storage access denied. Using memory fallback.");
+      console.warn("Storage access restricted. Meshwork is running in memory-only mode.");
       this._isLocalStorageAvailable = false;
     } finally {
       this._availabilityChecked = true;
@@ -51,7 +55,7 @@ class SafeStorage {
         window.localStorage.setItem(key, value);
         return;
       } catch (e) {
-        // Fall through to memory
+        // Log error and fall through
       }
     }
     this.memoryStorage[key] = value;
