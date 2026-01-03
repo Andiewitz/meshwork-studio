@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NavigationItem } from '../types';
 import { useAuth } from '../hooks/useAuth';
+import { Tooltip, Zoom } from '@mui/material';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -62,53 +64,56 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
 
       {/* Action Button - Blue for Primary Action */}
       <div className="p-4">
-        <NavLink to="/flow/new" className={`
-            flex items-center justify-center gap-2 w-full 
-            bg-blue-600 text-white hover:bg-blue-700
-            rounded-xl p-3 transition-all 
-            shadow-[3px_3px_0_0_#000000] hover:shadow-[1px_1px_0_0_#000000] hover:translate-y-[2px]
-            border-2 border-slate-900
-            ${!isOpen && 'px-0 aspect-square'}
-        `}>
-          <Plus size={20} className="stroke-[3]" />
-          {isOpen && <span className="font-bold font-heading text-sm">New Mesh</span>}
-        </NavLink>
+        <Tooltip title={!isOpen ? "Create New Mesh" : ""} placement="right" arrow TransitionComponent={Zoom}>
+            <NavLink to="/flow/new" className={`
+                flex items-center justify-center gap-2 w-full 
+                bg-blue-600 text-white hover:bg-blue-700
+                rounded-xl p-3 transition-all 
+                shadow-[3px_3px_0_0_#000000] hover:shadow-[1px_1px_0_0_#000000] hover:translate-y-[2px]
+                border-2 border-slate-900
+                ${!isOpen && 'px-0 aspect-square'}
+            `}>
+            <Plus size={20} className="stroke-[3]" />
+            {isOpen && <span className="font-bold font-heading text-sm">New Mesh</span>}
+            </NavLink>
+        </Tooltip>
       </div>
 
       {/* Navigation Links - Rose Accent for Active State */}
       <nav className="flex-1 py-2 space-y-2 px-3">
         {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `
-              flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative border-2
-              ${isActive 
-                ? 'bg-rose-50 border-slate-900 text-rose-600 shadow-[2px_2px_0_0_#0f172a]' 
-                : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'}
-              ${!isOpen && 'justify-center px-0'}
-            `}
+          <Tooltip 
+            key={item.path} 
+            title={!isOpen ? item.label : ""} 
+            placement="right" 
+            arrow 
+            TransitionComponent={Zoom}
           >
-            {({ isActive }) => (
-              <>
-                <item.icon 
-                  size={20} 
-                  className={`
-                    ${isOpen ? "mr-3" : ""} 
-                    ${isActive ? 'text-rose-600' : 'text-slate-500 group-hover:text-slate-900'}
-                  `} 
-                />
-                
-                {isOpen && <span className={`text-sm font-bold`}>{item.label}</span>}
-                
-                {!isOpen && (
-                  <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-xs rounded border border-slate-900 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 font-bold shadow-xl">
-                    {item.label}
-                  </div>
+            <NavLink
+                to={item.path}
+                className={({ isActive }) => `
+                flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative border-2
+                ${isActive 
+                    ? 'bg-rose-50 border-slate-900 text-rose-600 shadow-[2px_2px_0_0_#0f172a]' 
+                    : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'}
+                ${!isOpen && 'justify-center px-0'}
+                `}
+            >
+                {({ isActive }) => (
+                <>
+                    <item.icon 
+                    size={20} 
+                    className={`
+                        ${isOpen ? "mr-3" : ""} 
+                        ${isActive ? 'text-rose-600' : 'text-slate-500 group-hover:text-slate-900'}
+                    `} 
+                    />
+                    
+                    {isOpen && <span className={`text-sm font-bold`}>{item.label}</span>}
+                </>
                 )}
-              </>
-            )}
-          </NavLink>
+            </NavLink>
+          </Tooltip>
         ))}
       </nav>
 
@@ -145,9 +150,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           )}
 
           {isOpen && (
-             <button onClick={logout} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-               <LogOut size={18} />
-             </button>
+            <Tooltip title="Sign Out">
+                <button onClick={logout} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <LogOut size={18} />
+                </button>
+            </Tooltip>
           )}
         </div>
       </div>

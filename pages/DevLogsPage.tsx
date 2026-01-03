@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket, Globe, Box } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket, Globe, Box, ShieldCheck, MousePointer2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface LogEntryProps {
@@ -65,26 +66,31 @@ export const DevLogsPage: React.FC = () => {
         <div className="border-l-2 border-slate-200 ml-3 space-y-0">
 
             {/* v1.4.0 */}
-            <LogEntry version="v1.4.0-alpha" date="March 15, 2024" type="major">
+            <LogEntry version="v1.4.0-alpha" date="March 18, 2024" type="major">
                 <div className="mb-4">
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <Globe className="text-emerald-500" size={20} />
-                        The Ecosystem Expansion
+                        <ShieldCheck className="text-indigo-500" size={20} />
+                        Security & Interaction Overhaul
                     </h3>
                     <p className="text-slate-600 mt-1 text-sm leading-relaxed">
-                        We've massively expanded the node library to include real-world services and tools. This update bridges the gap between abstract architecture and concrete implementation details by supporting 3rd-party vendor logos and categories.
+                        This update focuses on making the canvas interaction professional-grade while hardening the application against browser security restrictions. We've introduced a strict tool-based workflow and a bulletproof storage bridge.
                     </p>
                 </div>
 
                 <div className="space-y-4">
-                     <Section title="Integrations Library" icon={Box} colorClass="text-emerald-600">
-                        <li><strong>New Miscellaneous Category:</strong> Added a dedicated section for "Integrations & Tools" in the sidebar.</li>
-                        <li><strong>30+ New Nodes:</strong> Added specific nodes for AWS, Google Cloud, Azure, Vercel, Docker, Kubernetes, Terraform, Stripe, Auth0, and more.</li>
-                        <li><strong>Brand Assets:</strong> Integrated <code>simpleicons</code> to render authentic SVG logos for all new service nodes.</li>
+                     <Section title="Strict Tool System" icon={MousePointer2} colorClass="text-indigo-600">
+                        <li><strong>Select Mode (V):</strong> Canvas and nodes are locked for movement. Focused strictly on marquee selection and node editing.</li>
+                        <li><strong>Hand Mode (H):</strong> The "Movement" layer. Left-click dragging pans the canvas or moves selected nodes.</li>
+                        <li><strong>Spring-Loaded Pan:</strong> Holding the <code>Spacebar</code> now temporarily activates the Hand tool from any mode.</li>
+                        <li><strong>Connection Mode (C):</strong> Dedicated wiring mode with crosshair cursor for precise handle targeting.</li>
                      </Section>
-                     <Section title="Canvas & Core" icon={Layers} colorClass="text-blue-600">
-                         <li><strong>Dynamic Logo Rendering:</strong> The <code>ExternalServiceNode</code> now accepts and renders logo URLs passed via drag-and-drop data transfer.</li>
-                         <li><strong>Library Organization:</strong> Refined the Node Library layout with clear sub-headers for Cloud, Containers, DevOps, and SaaS.</li>
+                     <Section title="Security Hardening" icon={ShieldCheck} colorClass="text-emerald-600">
+                         <li><strong>Storage Bridge:</strong> Fixed "SecurityError: The operation is insecure" by implementing property-access-level checks for <code>localStorage</code>.</li>
+                         <li><strong>Memory Fallback:</strong> The app now seamlessly transitions to in-memory storage if the browser blocks third-party storage or operates in highly restricted private modes.</li>
+                     </Section>
+                     <Section title="UI Refinements" icon={Palette} colorClass="text-blue-600">
+                         <li><strong>Material UI Integration:</strong> Replaced custom tooltips and buttons with MUI components for better accessibility and native behavior.</li>
+                         <li><strong>Header Redesign:</strong> Unified the editor header with a high-contrast brutalist style and improved status indicators.</li>
                      </Section>
                 </div>
             </LogEntry>
@@ -105,12 +111,7 @@ export const DevLogsPage: React.FC = () => {
                      <Section title="Visual & UX" icon={Palette} colorClass="text-indigo-600">
                         <li>Replaced the template carousel with a focused <strong>New Project Modal</strong> featuring blurred backdrops.</li>
                         <li>Updated <strong>Node Library</strong> to use pastel backgrounds with high-contrast borders.</li>
-                        <li>Standardized all configuration modals (Database, Client, etc.) to use the consistent brutalist shadow and border style.</li>
-                        <li>Improved font rendering for 'Inter' and 'Plus Jakarta Sans'.</li>
-                    </Section>
-                     <Section title="Fixes" icon={Wrench} colorClass="text-slate-600">
-                        <li>Fixed icon visibility in the Node Library (now using dark strokes on light fills).</li>
-                        <li>Fixed text truncation issues in the Dashboard active card.</li>
+                        <li>Standardized all configuration modals to use the consistent brutalist shadow and border style.</li>
                     </Section>
                 </div>
             </LogEntry>
@@ -130,9 +131,8 @@ export const DevLogsPage: React.FC = () => {
                 <div className="space-y-4">
                      <Section title="New Features" icon={Star} colorClass="text-amber-500">
                         <li><strong>Infinite Canvas:</strong> Pan, zoom, and drag nodes with the React Flow engine.</li>
-                        <li><strong>Guest Mode:</strong> Full functionality without login (local storage persistence).</li>
+                        <li><strong>Guest Mode:</strong> Full functionality without login.</li>
                         <li><strong>Templates:</strong> Start with Blank, Airbnb, Netflix, or Uber architecture presets.</li>
-                        <li><strong>Context Menu:</strong> Right-click to edit, duplicate, or delete nodes and connections.</li>
                     </Section>
                 </div>
             </LogEntry>

@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Sparkles, Loader2, FileText, Terminal } from 'lucide-react';
-// Fix: Added proper type import GenerateContentResponse as per guidelines
+import { X, Copy, Check, Sparkles, Loader2, FileText, Terminal, RefreshCw, Download, AlertCircle } from 'lucide-react';
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import type { Node, Edge } from 'reactflow';
+import { Tooltip, Button, IconButton } from '@mui/material';
 
 interface AsciiExportModalProps {
   isOpen: boolean;
@@ -19,39 +19,47 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
   const [error, setError] = useState<string | null>(null);
 
   const generateAscii = async () => {
-    // Fix: Using process.env.API_KEY directly for initialization as per strict guidelines
     if (!process.env.API_KEY) {
-      setError("AI Key missing in environment settings.");
+      setError("AI Key missing. Please add API_KEY to your environment.");
       return;
     }
 
     setIsGenerating(true);
     setError(null);
+    setOutput(''); // Clear previous output
+
     try {
-      // Fix: Direct initialization using process.env.API_KEY in a named parameter object
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
-        Convert the following system architecture into a professional and clean ASCII art diagram for technical documentation.
-        Use standard box-drawing characters if possible, or standard text characters (-, |, +, >).
+        You are a senior systems architect.
+        Generate a high-quality, strictly ASCII/Unicode art diagram representing the provided system architecture.
         
-        ARCHITECTURE DATA:
-        Nodes: ${nodes.map(n => `[${n.data.label} (${n.type})]`).join(', ')}
-        Connections: ${edges.map(e => `${nodes.find(n => n.id === e.source)?.data.label} -> ${nodes.find(n => n.id === e.target)?.data.label} (${e.label || 'connect'})`).join(', ')}
+        GUIDELINES:
+        1. Use box-drawing characters (┌ ┐ └ ┘ │ ─) for a clean look.
+        2. Arrange the flow logically (e.g., Left-to-Right for pipelines, Top-Down for hierarchies).
+        3. Include labels inside the boxes.
+        4. Label the connections (arrows) if a label exists.
+        5. Do not output Markdown code blocks (no \`\`\`). Return raw text only.
+        6. Keep it compact but readable.
         
-        REQUIREMENT: Return ONLY the ASCII art diagram. No preamble, no explanation. Just the text block.
+        DATA:
+        Nodes: ${nodes.map(n => `[ID:${n.id} Label:"${n.data.label}" Type:${n.type}]`).join(', ')}
+        Connections: ${edges.map(e => `${e.source} --(${e.label || ''})--> ${e.target}`).join(', ')}
       `;
 
-      // Fix: Use GenerateContentResponse type for consistency with latest SDK examples
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
 
-      // Fix: accessing .text property directly (not calling as a function)
-      setOutput(response.text || 'Failed to generate diagram.');
+      let text = response.text || 'No output generated.';
+      // Clean up markdown code blocks if the model ignores the instruction
+      text = text.replace(/^```\w*\n?/, '').replace(/\n?```$/, '');
+      
+      setOutput(text);
     } catch (err) {
       console.error(err);
-      setError("Failed to reach Gemini AI. Check your connection or API key.");
+      setError("Failed to connect to AI service. Please check your API key and network.");
     } finally {
       setIsGenerating(false);
     }
@@ -69,77 +77,190 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const downloadTxt = () => {
+    const element = document.createElement("a");
+    const file = new Blob([output], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `architecture-${Date.now()}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-3xl bg-white border-2 border-slate-900 rounded-2xl shadow-[12px_12px_0_0_#0f172a] flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden"
+        className="w-full max-w-4xl bg-white border-2 border-slate-900 rounded-2xl shadow-[12px_12px_0_0_#0f172a] flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b-2 border-slate-900 flex items-center justify-between shrink-0">
+        <div className="p-5 border-b-2 border-slate-900 flex items-center justify-between shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 border-2 border-slate-900 rounded-xl flex items-center justify-center text-white shadow-sm">
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 font-heading">AI Documentation Export</h2>
-              <p className="text-xs font-bold text-slate-500 mt-0.5 uppercase tracking-wider">ASCII Architecture Diagram</p>
+              <h2 className="text-xl font-bold text-slate-900 font-heading leading-none">AI Architecture Export</h2>
+              <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">Generative ASCII Diagram</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+          <button 
+            onClick={onClose} 
+            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 relative">
+          
           {isGenerating ? (
-            <div className="h-64 flex flex-col items-center justify-center gap-4 text-slate-400">
-              <Loader2 size={40} className="animate-spin text-indigo-600" />
-              <div className="text-center">
-                 <p className="font-bold text-slate-900">Consulting Architect...</p>
-                 <p className="text-sm">Gemini is rendering your mesh into text.</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="p-8 bg-red-50 border-2 border-red-200 rounded-2xl text-center">
-              <p className="font-bold text-red-600 mb-2">{error}</p>
-              <button onClick={generateAscii} className="text-sm font-bold text-red-700 underline underline-offset-4">Try Again</button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
-                    <Terminal size={14} />
-                    <span>Diagram Output</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-white/80 backdrop-blur-sm">
+              <div className="relative mb-4">
+                 <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-75"></div>
+                 <div className="relative p-4 bg-indigo-50 border-2 border-indigo-100 rounded-full text-indigo-600">
+                    <Loader2 size={32} className="animate-spin" />
                  </div>
-                 <button 
-                  onClick={copyToClipboard}
-                  className={`
-                    flex items-center gap-2 px-4 py-1.5 rounded-lg border-2 font-bold text-xs transition-all
-                    ${copied ? 'bg-emerald-500 border-slate-900 text-white' : 'bg-white border-slate-900 text-slate-900 hover:bg-slate-100'}
-                  `}
-                 >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? 'Copied!' : 'Copy to Clipboard'}
-                 </button>
               </div>
-              <pre className="p-6 bg-slate-900 text-emerald-400 rounded-xl border-2 border-slate-900 shadow-inner overflow-x-auto font-mono text-sm leading-relaxed min-h-[300px]">
-                {output}
-              </pre>
+              <p className="font-bold text-slate-900 text-lg">Analyzing Architecture...</p>
+              <p className="text-slate-500 text-sm font-mono">Consulting Gemini Model</p>
             </div>
+          ) : null}
+
+          {error ? (
+             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div className="p-4 bg-red-100 text-red-600 rounded-full mb-4 border-2 border-red-200">
+                    <AlertCircle size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Generation Failed</h3>
+                <p className="text-slate-500 max-w-sm mx-auto mb-6">{error}</p>
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={generateAscii}
+                    startIcon={<RefreshCw size={16} />}
+                    sx={{ fontWeight: 'bold', textTransform: 'none', borderRadius: '12px' }}
+                >
+                    Retry Connection
+                </Button>
+             </div>
+          ) : (
+             <div className="flex-1 flex flex-col p-6 overflow-hidden">
+                {/* Terminal Toolbar */}
+                <div className="flex items-center justify-between bg-slate-800 rounded-t-xl border-x-2 border-t-2 border-slate-900 p-3 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div className="flex gap-1.5 px-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                        </div>
+                        <span className="text-slate-400 text-xs font-mono ml-2 border-l border-slate-700 pl-3">
+                            bash — export.txt
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Tooltip title="Regenerate">
+                            <IconButton 
+                                size="small" 
+                                onClick={generateAscii}
+                                sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                            >
+                                <RefreshCw size={14} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Copy Text">
+                            <IconButton 
+                                size="small" 
+                                onClick={copyToClipboard}
+                                sx={{ color: copied ? '#4ade80' : 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                            >
+                                {copied ? <Check size={14} /> : <Copy size={14} />}
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Download File">
+                            <IconButton 
+                                size="small" 
+                                onClick={downloadTxt}
+                                sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                            >
+                                <Download size={14} />
+                            </IconButton>
+                        </Tooltip>
+                    </div>
+                </div>
+                
+                {/* Terminal Content */}
+                <div className="flex-1 bg-slate-900 border-x-2 border-b-2 border-slate-900 rounded-b-xl overflow-auto p-4 shadow-inner relative group">
+                    <pre className="font-mono text-xs md:text-sm text-emerald-400 leading-relaxed whitespace-pre font-medium">
+                        {output}
+                    </pre>
+                    {/* Floating Copy Button for easy access */}
+                    <button 
+                        onClick={copyToClipboard}
+                        className={`
+                            absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shadow-lg
+                            ${copied 
+                                ? 'bg-emerald-500 border-emerald-600 text-white translate-y-0 opacity-100' 
+                                : 'bg-slate-800 border-slate-700 text-slate-300 opacity-0 group-hover:opacity-100 hover:bg-slate-700 translate-y-1 group-hover:translate-y-0'}
+                        `}
+                    >
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                        {copied ? 'Copied' : 'Copy'}
+                    </button>
+                </div>
+             </div>
           )}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t-2 border-slate-100 bg-white flex justify-between items-center shrink-0">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Powered by Gemini 3 Flash</p>
-          <button 
-            onClick={onClose}
-            className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold border-2 border-slate-200 hover:border-slate-900 transition-all"
-          >
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">System Ready</span>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+                onClick={onClose}
+                variant="outlined"
+                sx={{ 
+                    color: 'text.primary', 
+                    borderColor: 'divider',
+                    borderWidth: 2,
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    '&:hover': { borderWidth: 2, borderColor: 'text.primary', bgcolor: 'action.hover' }
+                }}
+            >
+                Close
+            </Button>
+            <Button 
+                onClick={downloadTxt}
+                disabled={!output || isGenerating}
+                variant="contained"
+                startIcon={<Download size={18} />}
+                sx={{ 
+                    bgcolor: '#0f172a',
+                    color: 'white',
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    px: 3,
+                    boxShadow: '4px 4px 0 0 #94a3b8',
+                    border: '2px solid #0f172a',
+                    '&:hover': {
+                        bgcolor: '#1e293b',
+                        boxShadow: '2px 2px 0 0 #94a3b8',
+                        transform: 'translate(2px, 2px)'
+                    }
+                }}
+            >
+                Download .txt
+            </Button>
+          </div>
         </div>
       </div>
     </div>

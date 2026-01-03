@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Layout } from './components/Layout';
 import { FlowEditor } from './components/FlowEditor';
@@ -10,6 +11,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { CommandPalette } from './components/CommandPalette';
 
 const App: React.FC = () => {
   // Define a brutalist-inspired theme to match the app aesthetic
@@ -58,6 +60,9 @@ const App: React.FC = () => {
       <CssBaseline />
       <AuthProvider>
         <HashRouter>
+          {/* Global Command Palette available on all routes */}
+          <CommandPalette />
+          
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             
