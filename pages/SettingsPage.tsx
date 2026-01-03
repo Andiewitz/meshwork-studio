@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Sparkles, 
@@ -9,7 +10,11 @@ import {
   Download,
   Moon,
   Grid3X3,
-  ShieldCheck
+  ShieldCheck,
+  AlertCircle,
+  ExternalLink,
+  // Fix: Added missing FileText import
+  FileText
 } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
 import { useAuth } from '../hooks/useAuth';
@@ -24,6 +29,8 @@ export const SettingsPage: React.FC = () => {
   // Preference State
   const [gridSnap, setGridSnap] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  const isAiKeyPresent = !!process.env.API_KEY;
 
   const clearData = () => {
     if (confirm('Are you sure? This will delete all local flows and settings.')) {
@@ -79,25 +86,64 @@ export const SettingsPage: React.FC = () => {
                   </div>
                   <h2 className="text-xl font-bold text-slate-900 font-heading">AI Features</h2>
                   <p className="text-slate-500 text-sm mt-1 max-w-lg">
-                    Meshwork Studio utilizes Google Gemini to power generative architecture suggestions, auto-documentation, and infrastructure optimization.
+                    Meshwork Studio utilizes Google Gemini to power generative architecture suggestions and documentation.
                   </p>
                 </div>
 
                 <div className="p-8">
-                  <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-4">
-                    <div className="w-12 h-12 bg-white border-2 border-emerald-500 rounded-xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
-                      <ShieldCheck size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 mb-1">AI Engine Ready</h4>
-                      <p className="text-sm text-slate-600 leading-relaxed">
-                        The platform is currently connected to the Google Gemini API using an enterprise-grade service key. All AI-powered features like "Design Suggest" and "Auto-Docs" are active and available for use in the canvas.
-                      </p>
-                      <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Status: Connected
+                  {isAiKeyPresent ? (
+                    <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-4">
+                      <div className="w-12 h-12 bg-white border-2 border-emerald-500 rounded-xl flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
+                        <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 mb-1">BYOK Engine Ready</h4>
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                          Your Gemini API key has been detected in the environment. AI Documentation (ASCII Export) and Intelligent Layout tools are now enabled in the canvas.
+                        </p>
+                        <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Status: Active
+                        </div>
                       </div>
                     </div>
+                  ) : (
+                    <div className="p-6 bg-amber-50 border-2 border-amber-200 rounded-2xl flex items-start gap-4">
+                      <div className="w-12 h-12 bg-white border-2 border-amber-500 rounded-xl flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
+                        <AlertCircle size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-900 mb-1">API Key Required</h4>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                          To enable AI Docs and Generative Mesh features, you must provide a Google Gemini API Key.
+                        </p>
+                        <a 
+                          href="https://ai.google.dev/" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors"
+                        >
+                          Get API Key
+                          <ExternalLink size={12} />
+                        </a>
+                        <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          Note: Add your key to the environment as `API_KEY`
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-8 space-y-4">
+                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Modules</h4>
+                     <div className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl opacity-60">
+                        <div className="flex items-center gap-3">
+                           <FileText size={18} className="text-slate-400" />
+                           <span className="text-sm font-bold text-slate-700">AI Docs (ASCII Art)</span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isAiKeyPresent ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                           {isAiKeyPresent ? 'ENABLED' : 'DISABLED'}
+                        </span>
+                     </div>
                   </div>
                 </div>
               </div>

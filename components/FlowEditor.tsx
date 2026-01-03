@@ -19,7 +19,7 @@ import type {
   NodeTypes,
   ReactFlowInstance,
 } from 'reactflow';
-import { ChevronLeft, Save } from 'lucide-react';
+import { ChevronLeft, Save, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { CanvasNav, CanvasTool } from './CanvasNav';
@@ -27,6 +27,7 @@ import { NodeLibrary } from './NodeLibrary';
 import { LoadingScreen } from './LoadingScreen';
 import { ContextMenu } from './ContextMenu';
 import { Button, Tooltip } from '@mui/material';
+import { AsciiExportModal } from './modals/AsciiExportModal';
 
 // Custom Nodes
 import { ServerNode } from './nodes/ServerNode';
@@ -74,9 +75,12 @@ const FlowEditorContent: React.FC = () => {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
   const [flowTitle, setFlowTitle] = useState('Workspace');
+  const [isAsciiModalOpen, setIsAsciiModalOpen] = useState(false);
 
   // Context Menu State
   const [menu, setMenu] = useState<MenuState | null>(null);
+
+  const isAiEnabled = !!process.env.API_KEY;
 
   // Load Flow Data
   useEffect(() => {
@@ -308,6 +312,38 @@ const FlowEditorContent: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Tooltip title={isAiEnabled ? "Generate ASCII Documentation" : "API Key Required in Settings"}>
+            <span className="inline-block">
+              <Button 
+                variant="outlined"
+                color="primary"
+                disabled={!isAiEnabled}
+                onClick={() => setIsAsciiModalOpen(true)}
+                startIcon={<Sparkles size={18} />}
+                sx={{
+                  border: '2px solid #000',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  color: '#000',
+                  padding: '8px 20px',
+                  boxShadow: isAiEnabled ? '4px 4px 0 0 #000' : 'none',
+                  '&:hover': {
+                    border: '2px solid #000',
+                    backgroundColor: '#f8fafc',
+                    boxShadow: '2px 2px 0 0 #000',
+                    transform: 'translate(2px, 2px)'
+                  },
+                  '&.Mui-disabled': {
+                    border: '2px solid #e2e8f0',
+                    color: '#94a3b8'
+                  }
+                }}
+              >
+                AI Docs
+              </Button>
+            </span>
+          </Tooltip>
+
           <Button 
             variant="contained"
             disableElevation
@@ -334,6 +370,13 @@ const FlowEditorContent: React.FC = () => {
       <div className="flex-1 relative overflow-hidden">
         <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
         
+        <AsciiExportModal 
+          isOpen={isAsciiModalOpen} 
+          onClose={() => setIsAsciiModalOpen(false)} 
+          nodes={nodes} 
+          edges={edges} 
+        />
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
