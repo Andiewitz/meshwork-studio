@@ -19,14 +19,14 @@ import type {
   NodeTypes,
   ReactFlowInstance,
 } from 'reactflow';
-import { ChevronLeft, Save, Sparkles } from 'lucide-react';
+import { ChevronLeft, Save, Sparkles, Share2, Download } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
 import { LoadingScreen } from './LoadingScreen';
 import { ContextMenu } from './ContextMenu';
-import { Button, Tooltip } from '@mui/material';
+import { Button, Tooltip, IconButton, AppBar, Toolbar, Typography, Box } from '@mui/material';
 import { AsciiExportModal } from './modals/AsciiExportModal';
 
 // Custom Nodes
@@ -296,76 +296,100 @@ const FlowEditorContent: React.FC = () => {
       className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden"
       style={{ cursor: interactionProps.cursor }}
     >
-      <header className="h-16 flex-none bg-white border-b-2 border-slate-900 px-4 flex items-center justify-between z-50">
-        <div className="flex items-center gap-4">
-          <Tooltip title="Exit to Dashboard">
-            <button onClick={() => navigate('/')} className="p-2 rounded-xl hover:bg-slate-100 transition-all border-2 border-transparent hover:border-slate-200">
-              <ChevronLeft size={24} strokeWidth={3} />
-            </button>
-          </Tooltip>
-          <div>
-            <h1 className="text-lg font-bold font-heading text-slate-900 leading-none">{flowTitle}</h1>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
-              {saveStatus === 'saved' ? 'Project Synced' : saveStatus === 'unsaved' ? 'Unsaved Edits' : 'Persisting Changes...'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Tooltip title={isAiEnabled ? "Generate ASCII Documentation" : "API Key Required in Settings"}>
-            <span className="inline-block">
-              <Button 
-                variant="outlined"
-                color="primary"
-                disabled={!isAiEnabled}
-                onClick={() => setIsAsciiModalOpen(true)}
-                startIcon={<Sparkles size={18} />}
-                sx={{
-                  border: '2px solid #000',
-                  borderRadius: '12px',
-                  fontWeight: 800,
-                  color: '#000',
-                  padding: '8px 20px',
-                  boxShadow: isAiEnabled ? '4px 4px 0 0 #000' : 'none',
-                  '&:hover': {
-                    border: '2px solid #000',
-                    backgroundColor: '#f8fafc',
-                    boxShadow: '2px 2px 0 0 #000',
-                    transform: 'translate(2px, 2px)'
-                  },
-                  '&.Mui-disabled': {
-                    border: '2px solid #e2e8f0',
-                    color: '#94a3b8'
-                  }
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{ 
+          bgcolor: 'white', 
+          borderBottom: '2px solid #0f172a',
+          zIndex: 50
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Tooltip title="Exit to Dashboard">
+              <IconButton 
+                onClick={() => navigate('/')} 
+                sx={{ 
+                  color: 'slate.900', 
+                  bgcolor: 'transparent',
+                  '&:hover': { bgcolor: 'slate.50' },
+                  border: '2px solid transparent'
                 }}
               >
-                AI Docs
-              </Button>
-            </span>
-          </Tooltip>
+                <ChevronLeft size={24} strokeWidth={3} />
+              </IconButton>
+            </Tooltip>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: 'slate.900', lineHeight: 1, fontFamily: 'Plus Jakarta Sans' }}>
+                {flowTitle}
+              </Typography>
+              <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'slate.400', mt: 0.5, display: 'block' }}>
+                {saveStatus === 'saved' ? 'Project Synced' : saveStatus === 'unsaved' ? 'Unsaved Edits' : 'Persisting...'}
+              </Typography>
+            </Box>
+          </Box>
 
-          <Button 
-            variant="contained"
-            disableElevation
-            onClick={handleSave}
-            startIcon={<Save size={18} />}
-            sx={{
-              backgroundColor: '#4f46e5',
-              boxShadow: '4px 4px 0 0 #000',
-              border: '2px solid #000',
-              borderRadius: '12px',
-              padding: '8px 24px',
-              '&:hover': {
-                backgroundColor: '#4338ca',
-                boxShadow: '2px 2px 0 0 #000',
-                transform: 'translate(2px, 2px)'
-              }
-            }}
-          >
-            Save Mesh
-          </Button>
-        </div>
-      </header>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Tooltip title={isAiEnabled ? "AI Docs (ASCII Art)" : "API Key Required"}>
+              <span>
+                <Button 
+                  variant="outlined"
+                  disabled={!isAiEnabled}
+                  onClick={() => setIsAsciiModalOpen(true)}
+                  startIcon={<Download size={18} />}
+                  sx={{
+                    border: '2px solid #0f172a',
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    px: { xs: 1.5, sm: 2.5 },
+                    py: 1,
+                    boxShadow: isAiEnabled ? '3px 3px 0 0 #0f172a' : 'none',
+                    '&:hover': {
+                      border: '2px solid #0f172a',
+                      backgroundColor: 'slate.50',
+                      boxShadow: '1px 1px 0 0 #0f172a',
+                      transform: 'translate(2px, 2px)'
+                    },
+                    '&.Mui-disabled': {
+                      border: '2px solid #e2e8f0',
+                      color: '#94a3b8'
+                    }
+                  }}
+                >
+                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>AI Docs</Box>
+                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>AI</Box>
+                </Button>
+              </span>
+            </Tooltip>
+
+            <Button 
+              variant="contained"
+              disableElevation
+              onClick={handleSave}
+              startIcon={<Save size={18} />}
+              sx={{
+                backgroundColor: '#4f46e5',
+                boxShadow: '4px 4px 0 0 #000',
+                border: '2px solid #000',
+                borderRadius: '12px',
+                fontWeight: 800,
+                px: { xs: 2, sm: 3 },
+                py: 1,
+                '&:hover': {
+                  backgroundColor: '#4338ca',
+                  boxShadow: '2px 2px 0 0 #000',
+                  transform: 'translate(2px, 2px)'
+                }
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Save Mesh</Box>
+              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Save</Box>
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
       <div className="flex-1 relative overflow-hidden">
         <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />

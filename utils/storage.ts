@@ -16,8 +16,14 @@ class SafeStorage {
     try {
       if (typeof window === 'undefined') return false;
       
-      // Crucial: Just accessing window.localStorage can throw in some sandboxes
-      const storage = window.localStorage;
+      // In some restricted environments, merely accessing window.localStorage throws
+      let storage: Storage | undefined;
+      try {
+        storage = window.localStorage;
+      } catch (e) {
+        // Access denied
+      }
+
       if (!storage) {
         this._isLocalStorageAvailable = false;
         this._availabilityChecked = true;
@@ -55,7 +61,7 @@ class SafeStorage {
         window.localStorage.setItem(key, value);
         return;
       } catch (e) {
-        // Log error and fall through
+        // Fall through
       }
     }
     this.memoryStorage[key] = value;
