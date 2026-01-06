@@ -15,6 +15,7 @@ import { ClientNode } from '../nodes/ClientNode';
 import { JunctionNode } from '../nodes/JunctionNode';
 import { ExternalServiceNode } from '../nodes/ExternalServiceNode';
 import { BoundaryNode } from '../nodes/BoundaryNode';
+import { PipelineNode } from '../nodes/PipelineNode';
 
 const { Background, addEdge, useNodesState, useEdgesState, ReactFlowProvider, BackgroundVariant, ConnectionMode } = ReactFlowRenderer;
 
@@ -29,6 +30,7 @@ const nodeTypes: ReactFlowRenderer.NodeTypes = {
   junction: JunctionNode,
   external: ExternalServiceNode,
   boundary: BoundaryNode,
+  pipeline: PipelineNode,
 };
 
 interface SubFlowEditorModalProps {
@@ -41,7 +43,7 @@ interface SubFlowEditorModalProps {
   onSave: (nodes: ReactFlowRenderer.Node[], edges: ReactFlowRenderer.Edge[]) => void;
 }
 
-const GRID_SIZE = 20;
+const GRID_SIZE = 10;
 
 export const SubFlowEditorModal: React.FC<SubFlowEditorModalProps> = ({
   isOpen,
@@ -92,6 +94,7 @@ export const SubFlowEditorModal: React.FC<SubFlowEditorModalProps> = ({
         middlewareType: event.dataTransfer.getData('application/middlewareType'),
         clientType: event.dataTransfer.getData('application/clientType'),
         subType: event.dataTransfer.getData('application/subType'),
+        status: event.dataTransfer.getData('application/status'),
       },
       style: type === 'boundary' ? { width: 400, height: 300 } : undefined
     };

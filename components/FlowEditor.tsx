@@ -31,6 +31,7 @@ import { ClientNode } from './nodes/ClientNode';
 import { JunctionNode } from './nodes/JunctionNode';
 import { ExternalServiceNode } from './nodes/ExternalServiceNode';
 import { BoundaryNode } from './nodes/BoundaryNode';
+import { PipelineNode } from './nodes/PipelineNode'; // New Node
 
 const { Background, addEdge, useNodesState, useEdgesState, ReactFlowProvider, BackgroundVariant, useReactFlow, ConnectionMode, SelectionMode } = ReactFlowRenderer;
 const { useNavigate, useParams } = ReactRouterDOM;
@@ -46,6 +47,7 @@ const nodeTypes: ReactFlowRenderer.NodeTypes = {
   junction: JunctionNode,
   external: ExternalServiceNode,
   boundary: BoundaryNode,
+  pipeline: PipelineNode,
 };
 
 interface MenuState {
@@ -55,7 +57,7 @@ interface MenuState {
   id?: string;
 }
 
-const GRID_SIZE = 20;
+const GRID_SIZE = 10;
 
 const FlowEditorContent: React.FC = () => {
   const navigate = useNavigate();
@@ -400,6 +402,7 @@ const FlowEditorContent: React.FC = () => {
         middlewareType: event.dataTransfer.getData('application/middlewareType'),
         clientType: event.dataTransfer.getData('application/clientType'),
         subType: event.dataTransfer.getData('application/subType'),
+        status: event.dataTransfer.getData('application/status'),
         layer: activeLayer
       },
       style: type === 'boundary' ? { width: 400, height: 300 } : undefined

@@ -3,7 +3,8 @@ import {
     Server, Database, Cpu, Globe, Zap, Shield, Lock, Smartphone, 
     Monitor, Network, Router, ScrollText, X, Box, Search, Split, 
     LayoutGrid, Activity, Cloud, Layers, Binary, Square,
-    ChevronDown, ChevronRight, Terminal, MessageSquare
+    ChevronDown, ChevronRight, Terminal, MessageSquare,
+    GitBranch, GitCommit, FileCode, Play, BarChart
 } from 'lucide-react';
 import { CanvasLayer } from '../types';
 
@@ -62,7 +63,8 @@ interface NodeCategory {
 // Helper for SimpleIcons
 const iconUrl = (slug: string, color: string = 'white') => `https://cdn.simpleicons.org/${slug}/${color}`;
 
-const LIBRARY_DATA: NodeCategory[] = [
+// BACKEND CATEGORIES (Standard Arch)
+const BACKEND_CATEGORIES: NodeCategory[] = [
     {
         id: 'compute',
         label: 'Compute & Containers',
@@ -74,8 +76,6 @@ const LIBRARY_DATA: NodeCategory[] = [
             { type: 'server', label: 'K8s Pod', variant: 'blue', logo: iconUrl('kubernetes', '326CE5'), keywords: ['kubernetes', 'orchestration', 'cluster', 'deployment', 'replica'] },
             { type: 'service', label: 'AWS Lambda', variant: 'orange', logo: iconUrl('amazonaws', 'FF9900'), data: { subType: 'serverless' }, keywords: ['serverless', 'function', 'faas', 'compute'] },
             { type: 'service', label: 'Google Cloud Run', variant: 'blue', logo: iconUrl('googlecloud', '4285F4'), keywords: ['gcp', 'serverless', 'container', 'scale'] },
-            { type: 'server', label: 'Bare Metal', variant: 'slate', description: 'Physical Hardware', keywords: ['physical', 'on-premise', 'rack'] },
-            { type: 'service', label: 'App Service', variant: 'cyan', keywords: ['paas', 'platform', 'hosting', 'heroku'] },
         ]
     },
     {
@@ -83,18 +83,11 @@ const LIBRARY_DATA: NodeCategory[] = [
         label: 'Databases & Storage',
         icon: Database,
         items: [
-            { type: 'database', label: 'PostgreSQL', variant: 'blue', logo: iconUrl('postgresql', '4169E1'), data: { dbType: 'sql' }, keywords: ['sql', 'relational', 'pg', 'postgres', 'elephantsql'] },
-            { type: 'database', label: 'MySQL', variant: 'blue', logo: iconUrl('mysql', '4479A1'), data: { dbType: 'sql' }, keywords: ['sql', 'relational', 'mariadb', 'lamp'] },
-            { type: 'database', label: 'MongoDB', variant: 'emerald', logo: iconUrl('mongodb', '47A248'), data: { dbType: 'nosql' }, keywords: ['nosql', 'document', 'json', 'bson', 'atlas'] },
-            { type: 'database', label: 'Redis Cache', variant: 'red', logo: iconUrl('redis', 'DC382D'), data: { dbType: 'cache' }, keywords: ['kv', 'key-value', 'store', 'memory', 'fast'] },
-            { type: 'database', label: 'S3 Bucket', variant: 'orange', logo: iconUrl('amazonaws', 'FF9900'), data: { dbType: 'blob' }, keywords: ['object', 'storage', 'file', 'upload', 'bucket', 'blob'] },
-            { type: 'database', label: 'Cassandra', variant: 'cyan', logo: iconUrl('apachecassandra', '1287B1'), keywords: ['wide-column', 'nosql', 'scale'] },
-            { type: 'database', label: 'Elasticsearch', variant: 'teal', logo: iconUrl('elasticsearch', '005571'), keywords: ['search', 'index', 'lucene', 'elk'] },
-            { type: 'database', label: 'Snowflake', variant: 'blue', logo: iconUrl('snowflake', '29B5E8'), keywords: ['warehouse', 'analytics', 'olap'] },
-            { type: 'database', label: 'DynamoDB', variant: 'blue', logo: iconUrl('amazonaws', 'FF9900'), keywords: ['aws', 'nosql', 'key-value'] },
-            { type: 'database', label: 'Supabase', variant: 'emerald', logo: iconUrl('supabase', '3ECF8E'), keywords: ['firebase', 'alternative', 'postgres', 'realtime'] },
-            { type: 'database', label: 'Firebase', variant: 'amber', logo: iconUrl('firebase', 'FFCA28'), keywords: ['google', 'realtime', 'firestore', 'nosql'] },
-            { type: 'database', label: 'Neo4j', variant: 'indigo', logo: iconUrl('neo4j', '008CC1'), keywords: ['graph', 'network', 'relationship'] },
+            { type: 'database', label: 'PostgreSQL', variant: 'blue', logo: iconUrl('postgresql', '4169E1'), data: { dbType: 'sql' }, keywords: ['sql', 'relational', 'pg', 'postgres'] },
+            { type: 'database', label: 'MySQL', variant: 'blue', logo: iconUrl('mysql', '4479A1'), data: { dbType: 'sql' }, keywords: ['sql', 'relational', 'mariadb'] },
+            { type: 'database', label: 'MongoDB', variant: 'emerald', logo: iconUrl('mongodb', '47A248'), data: { dbType: 'nosql' }, keywords: ['nosql', 'document', 'json'] },
+            { type: 'database', label: 'Redis Cache', variant: 'red', logo: iconUrl('redis', 'DC382D'), data: { dbType: 'cache' }, keywords: ['kv', 'key-value', 'store'] },
+            { type: 'database', label: 'S3 Bucket', variant: 'orange', logo: iconUrl('amazonaws', 'FF9900'), data: { dbType: 'blob' }, keywords: ['object', 'storage', 'file'] },
         ]
     },
     {
@@ -103,16 +96,9 @@ const LIBRARY_DATA: NodeCategory[] = [
         icon: Network,
         items: [
             { type: 'loadBalancer', label: 'Load Balancer', variant: 'violet', keywords: ['traffic', 'distribution', 'elb', 'alb'] },
-            { type: 'loadBalancer', label: 'Nginx', variant: 'emerald', logo: iconUrl('nginx', '009639'), keywords: ['web server', 'proxy', 'reverse proxy'] },
-            { type: 'middleware', label: 'CDN', variant: 'orange', logo: iconUrl('cloudflare', 'F38020'), data: { middlewareType: 'cache' }, keywords: ['content', 'delivery', 'edge', 'cache', 'static'] },
-            { type: 'middleware', label: 'API Gateway', variant: 'rose', data: { middlewareType: 'gateway' }, keywords: ['rest', 'endpoint', 'router', 'management'] },
-            { type: 'middleware', label: 'Kong Gateway', variant: 'emerald', logo: iconUrl('kong', '0033A0'), keywords: ['api', 'management', 'proxy'] },
-            { type: 'junction', label: 'Router / Switch', variant: 'slate', keywords: ['network', 'path', 'split'] },
-            { type: 'boundary', label: 'VPC Network', variant: 'indigo', data: { subType: 'vpc' }, keywords: ['cloud', 'virtual', 'private', 'network', 'aws'] },
-            { type: 'boundary', label: 'Private Subnet', variant: 'slate', data: { subType: 'subnet' }, keywords: ['segment', 'isolation', 'ip', 'range'] },
-            { type: 'boundary', label: 'Public Internet', variant: 'blue', data: { subType: 'internet' }, keywords: ['www', 'world', 'external'] },
-            { type: 'middleware', label: 'DNS', variant: 'amber', data: { middlewareType: 'dns' }, keywords: ['route53', 'domain', 'name', 'lookup'] },
-            { type: 'middleware', label: 'VPN / Tunnel', variant: 'slate', data: { middlewareType: 'vpn' }, keywords: ['secure', 'connection', 'tunnel', 'remote'] },
+            { type: 'loadBalancer', label: 'Nginx', variant: 'emerald', logo: iconUrl('nginx', '009639'), keywords: ['web server', 'proxy'] },
+            { type: 'middleware', label: 'CDN', variant: 'orange', logo: iconUrl('cloudflare', 'F38020'), data: { middlewareType: 'cache' }, keywords: ['content', 'delivery', 'edge'] },
+            { type: 'middleware', label: 'API Gateway', variant: 'rose', data: { middlewareType: 'gateway' }, keywords: ['rest', 'endpoint', 'router'] },
         ]
     },
     {
@@ -120,25 +106,9 @@ const LIBRARY_DATA: NodeCategory[] = [
         label: 'Queues & Streaming',
         icon: MessageSquare,
         items: [
-            { type: 'queue', label: 'Kafka', variant: 'slate', logo: iconUrl('apachekafka', '231F20'), keywords: ['stream', 'event', 'broker', 'producer', 'consumer'] },
-            { type: 'queue', label: 'RabbitMQ', variant: 'orange', logo: iconUrl('rabbitmq', 'FF6600'), keywords: ['message', 'broker', 'amqp'] },
-            { type: 'queue', label: 'AWS SQS', variant: 'violet', logo: iconUrl('amazonaws', 'FF9900'), keywords: ['queue', 'message', 'simple'] },
-            { type: 'queue', label: 'ActiveMQ', variant: 'slate', keywords: ['apache', 'jms', 'message'] },
-            { type: 'queue', label: 'Pub/Sub', variant: 'blue', logo: iconUrl('googlecloud', '4285F4'), keywords: ['publish', 'subscribe', 'google', 'gcp'] },
-            { type: 'queue', label: 'Event Bus', variant: 'emerald', keywords: ['event', 'driven', 'architecture'] },
-        ]
-    },
-    {
-        id: 'ai_ml',
-        label: 'AI & Machine Learning',
-        icon: Zap,
-        items: [
-            { type: 'external', label: 'OpenAI API', variant: 'emerald', logo: iconUrl('openai', '412991'), keywords: ['gpt', 'chatgpt', 'llm', 'generative'] },
-            { type: 'external', label: 'Hugging Face', variant: 'amber', logo: iconUrl('huggingface', 'FFD21E'), keywords: ['model', 'transformer', 'nlp'] },
-            { type: 'database', label: 'Vector DB', variant: 'violet', data: { dbType: 'vector' }, keywords: ['embedding', 'similarity', 'search'] },
-            { type: 'database', label: 'Pinecone', variant: 'cyan', logo: iconUrl('pinecone', '000000'), keywords: ['vector', 'index', 'search'] },
-            { type: 'service', label: 'ML Model', variant: 'indigo', keywords: ['training', 'inference', 'prediction'] },
-            { type: 'service', label: 'Inference Engine', variant: 'slate', keywords: ['gpu', 'tpu', 'compute'] },
+            { type: 'queue', label: 'Kafka', variant: 'slate', logo: iconUrl('apachekafka', '231F20'), keywords: ['stream', 'event', 'broker'] },
+            { type: 'queue', label: 'RabbitMQ', variant: 'orange', logo: iconUrl('rabbitmq', 'FF6600'), keywords: ['message', 'broker'] },
+            { type: 'queue', label: 'AWS SQS', variant: 'violet', logo: iconUrl('amazonaws', 'FF9900'), keywords: ['queue', 'message'] },
         ]
     },
     {
@@ -146,39 +116,57 @@ const LIBRARY_DATA: NodeCategory[] = [
         label: 'Clients & Devices',
         icon: Monitor,
         items: [
-            { type: 'client', label: 'Web Browser', variant: 'blue', data: { clientType: 'desktop' }, keywords: ['chrome', 'firefox', 'safari', 'user', 'frontend'] },
-            { type: 'client', label: 'Mobile App', variant: 'rose', data: { clientType: 'phone' }, keywords: ['ios', 'android', 'tablet', 'phone'] },
-            { type: 'client', label: 'IoT Device', variant: 'emerald', data: { clientType: 'iot' }, keywords: ['sensor', 'embedded', 'hardware'] },
-            { type: 'client', label: 'CLI / Terminal', variant: 'slate', data: { clientType: 'terminal' }, keywords: ['console', 'command', 'shell'] },
-            { type: 'external', label: 'External User', variant: 'slate', data: {}, keywords: ['customer', 'human', 'actor'] },
+            { type: 'client', label: 'Web Browser', variant: 'blue', data: { clientType: 'desktop' }, keywords: ['chrome', 'firefox', 'frontend'] },
+            { type: 'client', label: 'Mobile App', variant: 'rose', data: { clientType: 'phone' }, keywords: ['ios', 'android'] },
+            { type: 'external', label: 'External User', variant: 'slate', data: {}, keywords: ['customer', 'human'] },
+        ]
+    }
+];
+
+// DEVOPS CATEGORIES (Pipelines, IaC) - UPDATED TO REMOVE STATUS
+const DEVOPS_CATEGORIES: NodeCategory[] = [
+    {
+        id: 'cicd',
+        label: 'CI/CD & Automation',
+        icon: GitBranch,
+        items: [
+            { type: 'pipeline', label: 'GitHub Workflow', variant: 'slate', logo: iconUrl('githubactions', '2088FF'), data: { subType: 'Workflow', techName: 'GitHub Actions' }, keywords: ['ci', 'cd', 'build', 'yaml'] },
+            { type: 'pipeline', label: 'Jenkins Pipeline', variant: 'slate', logo: iconUrl('jenkins', 'D24939'), data: { subType: 'Pipeline', techName: 'Jenkins' }, keywords: ['automation', 'server', 'groovy'] },
+            { type: 'pipeline', label: 'GitLab CI', variant: 'slate', logo: iconUrl('gitlab', 'FC6D26'), data: { subType: 'CI Job', techName: 'GitLab' }, keywords: ['devops', 'runner', 'yml'] },
+            { type: 'pipeline', label: 'Build Step', variant: 'slate', data: { subType: 'Step', techName: 'Compiler' }, keywords: ['compile', 'make', 'docker build'] },
+            { type: 'pipeline', label: 'Test Suite', variant: 'slate', data: { subType: 'Test', techName: 'Jest/PyTest' }, keywords: ['unit', 'integration', 'e2e'] },
+            { type: 'pipeline', label: 'Deploy Action', variant: 'slate', data: { subType: 'Deploy', techName: 'Release' }, keywords: ['release', 'prod', 'k8s'] },
         ]
     },
     {
-        id: 'saas',
-        label: 'SaaS & Integrations',
-        icon: Globe,
+        id: 'iac',
+        label: 'Infrastructure as Code',
+        icon: FileCode,
         items: [
-            { type: 'external', label: 'Stripe', variant: 'violet', logo: iconUrl('stripe', '008CDD'), keywords: ['payment', 'money', 'card', 'checkout'] },
-            { type: 'external', label: 'Auth0', variant: 'orange', logo: iconUrl('auth0', 'EB5424'), keywords: ['authentication', 'login', 'identity', 'oauth'] },
-            { type: 'external', label: 'Twilio', variant: 'red', logo: iconUrl('twilio', 'F22F46'), keywords: ['sms', 'email', 'communication'] },
-            { type: 'external', label: 'SendGrid', variant: 'blue', logo: iconUrl('sendgrid', '1A82E2'), keywords: ['email', 'marketing', 'smtp'] },
-            { type: 'external', label: 'Slack', variant: 'emerald', logo: iconUrl('slack', '4A154B'), keywords: ['chat', 'notification', 'bot'] },
-            { type: 'external', label: 'Discord', variant: 'indigo', logo: iconUrl('discord', '5865F2'), keywords: ['chat', 'voice', 'community'] },
-            { type: 'external', label: 'GitHub', variant: 'slate', logo: iconUrl('github', '181717'), keywords: ['repo', 'code', 'version', 'control'] },
+            { type: 'pipeline', label: 'Terraform Resource', variant: 'violet', logo: iconUrl('terraform', '7B42BC'), data: { subType: 'Resource', techName: 'Terraform' }, keywords: ['hcl', 'provision', 'tf'] },
+            { type: 'pipeline', label: 'Ansible Task', variant: 'slate', logo: iconUrl('ansible', 'EE0000'), data: { subType: 'Task', techName: 'Ansible' }, keywords: ['playbook', 'automation', 'yaml'] },
+            { type: 'pipeline', label: 'Helm Chart', variant: 'blue', logo: iconUrl('helm', '0F1689'), data: { subType: 'Chart', techName: 'Helm' }, keywords: ['k8s', 'package'] },
+            { type: 'pipeline', label: 'K8s Manifest', variant: 'blue', logo: iconUrl('kubernetes', '326CE5'), data: { subType: 'Manifest', techName: 'Kubernetes' }, keywords: ['yaml', 'deployment', 'service'] },
         ]
     },
     {
-        id: 'devops',
-        label: 'DevOps & Tools',
-        icon: Terminal,
+        id: 'observability',
+        label: 'Observability Stack',
+        icon: BarChart,
         items: [
-            { type: 'external', label: 'Jenkins', variant: 'red', logo: iconUrl('jenkins', 'D24939'), keywords: ['ci', 'cd', 'build', 'pipeline'] },
-            { type: 'external', label: 'GitHub Actions', variant: 'blue', logo: iconUrl('githubactions', '2088FF'), keywords: ['workflow', 'ci', 'automation'] },
-            { type: 'external', label: 'Terraform', variant: 'violet', logo: iconUrl('terraform', '7B42BC'), keywords: ['iac', 'infrastructure', 'provisioning'] },
-            { type: 'service', label: 'Prometheus', variant: 'orange', logo: iconUrl('prometheus', 'E6522C'), keywords: ['metrics', 'monitoring', 'alerting'] },
-            { type: 'service', label: 'Grafana', variant: 'orange', logo: iconUrl('grafana', 'F46800'), keywords: ['dashboard', 'visualization', 'observability'] },
-            { type: 'service', label: 'Datadog', variant: 'violet', logo: iconUrl('datadog', '632CA6'), keywords: ['apm', 'logs', 'monitoring'] },
-            { type: 'external', label: 'Sentry', variant: 'rose', logo: iconUrl('sentry', '362D59'), keywords: ['error', 'tracking', 'bugs'] },
+            { type: 'service', label: 'Prometheus', variant: 'orange', logo: iconUrl('prometheus', 'E6522C'), keywords: ['metrics', 'tsdb'] },
+            { type: 'service', label: 'Grafana', variant: 'orange', logo: iconUrl('grafana', 'F46800'), keywords: ['dashboard', 'viz'] },
+            { type: 'service', label: 'Datadog Agent', variant: 'violet', logo: iconUrl('datadog', '632CA6'), keywords: ['apm', 'logs', 'agent'] },
+            { type: 'external', label: 'PagerDuty', variant: 'emerald', logo: iconUrl('pagerduty', '005C29'), keywords: ['alert', 'incident', 'oncall'] },
+        ]
+    },
+    {
+        id: 'registries',
+        label: 'Artifacts & Packages',
+        icon: Box,
+        items: [
+            { type: 'database', label: 'Docker Registry', variant: 'blue', logo: iconUrl('docker', '2496ED'), data: { dbType: 'blob' }, keywords: ['image', 'store', 'hub'] },
+            { type: 'database', label: 'Artifactory', variant: 'emerald', logo: iconUrl('jfrog', '40BE46'), data: { dbType: 'blob' }, keywords: ['maven', 'npm', 'repo'] },
         ]
     }
 ];
@@ -247,7 +235,7 @@ const NodeItem: React.FC<{ item: NodePreset }> = ({ item }) => {
             {item.label}
           </div>
           <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-             {item.description || item.type.toUpperCase()}
+             {item.description || (item.data?.subType || item.type.toUpperCase())}
           </div>
       </div>
     </div>
@@ -256,9 +244,15 @@ const NodeItem: React.FC<{ item: NodePreset }> = ({ item }) => {
 
 export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activeLayer }) => {
   const [search, setSearch] = useState('');
-  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({
-      'compute': true,
-      'storage': true
+  
+  // Select dataset based on active layer
+  const activeDataset = activeLayer === 'devops' ? DEVOPS_CATEGORIES : BACKEND_CATEGORIES;
+
+  // Initialize expanded categories
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>(() => {
+     const initial: Record<string, boolean> = {};
+     activeDataset.forEach(c => initial[c.id] = true);
+     return initial;
   });
 
   const toggleCat = (id: string) => {
@@ -267,11 +261,11 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
 
   // Filter logic with Keyword guessing and Fuzzy Search
   const filteredLibrary = useMemo(() => {
-    if (!search.trim()) return LIBRARY_DATA;
+    if (!search.trim()) return activeDataset;
     
     const lowerSearch = search.toLowerCase();
     
-    return LIBRARY_DATA.map(cat => ({
+    return activeDataset.map(cat => ({
         ...cat,
         items: cat.items.filter(item => {
             // 1. Direct label match
@@ -284,19 +278,15 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
             if (item.keywords && item.keywords.some(k => k.includes(lowerSearch))) return true;
 
             // 4. Fuzzy Match (Typo Tolerance)
-            // Only apply fuzzy search if search term is > 3 chars to avoid noise
             if (lowerSearch.length > 3) {
-                // Check Label
                 if (getLevenshteinDistance(item.label.toLowerCase(), lowerSearch) <= 2) return true;
-                
-                // Check Keywords
                 if (item.keywords && item.keywords.some(k => getLevenshteinDistance(k, lowerSearch) <= 2)) return true;
             }
 
             return false;
         })
     })).filter(cat => cat.items.length > 0);
-  }, [search]);
+  }, [search, activeDataset]);
 
   return (
     <div 
@@ -311,12 +301,12 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950">
         <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white border border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white border shadow-[0_0_15px_rgba(79,70,229,0.4)] ${activeLayer === 'devops' ? 'bg-indigo-600 border-indigo-400' : 'bg-blue-600 border-blue-400'}`}>
                  <LayoutGrid size={18} />
              </div>
              <div>
                 <h2 className="text-lg font-bold font-heading text-white leading-none">
-                    Components
+                    {activeLayer === 'devops' ? 'DevOps Toolbox' : 'Components'}
                 </h2>
                 <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider">
                     {filteredLibrary.reduce((acc, cat) => acc + cat.items.length, 0)} Nodes Available
@@ -337,7 +327,7 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
               <input 
                   type="text" 
-                  placeholder="Type to search or guess..." 
+                  placeholder={activeLayer === 'devops' ? "Search pipelines, tools..." : "Type to search or guess..."}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 text-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600 transition-all"
