@@ -1,48 +1,38 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
-import { Network, Split } from 'lucide-react';
+import { Network, ArrowLeftRight } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const LoadBalancerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
   return (
-    <div className={`
-      relative group w-36 h-36 rounded-full
-      transition-all duration-300 ease-in-out
-      ${selected ? 'scale-105' : 'hover:scale-102'}
-    `}>
-      {/* Selection Glow */}
+    <div className={`relative group w-36 h-36 transition-all duration-200 ${selected ? '-translate-y-1' : ''}`}>
+      <div className={`absolute inset-0 bg-slate-900 rounded-[1.5rem] transition-transform duration-200 ${selected ? 'translate-x-2.5 translate-y-2.5' : 'translate-x-1.5 translate-y-1.5'}`} />
+      
       <div className={`
-        absolute -inset-1 bg-violet-500 rounded-full blur-md opacity-0 transition-opacity duration-300
-        ${selected ? 'opacity-40' : 'group-hover:opacity-20'}
-      `} />
-
-      {/* Main Container - Circular for LB distinction */}
-      <div className={`
-        relative w-full h-full flex flex-col items-center justify-center p-4 rounded-full
-        bg-zinc-900 border-[3px]
-        ${selected ? 'border-violet-500' : 'border-zinc-800 group-hover:border-zinc-700'}
-        shadow-xl transition-colors
+        relative w-full h-full flex flex-col bg-white border-[3px] border-slate-900 rounded-[1.5rem] overflow-hidden
+        ${selected ? 'bg-violet-50' : ''}
       `}>
-        <div className="absolute top-3 text-slate-600">
-            <Split size={14} />
+        <div className="bg-violet-600 px-3 py-2 flex items-center justify-between text-white shrink-0">
+          <Network size={14} strokeWidth={3} />
+          <span className="text-[8px] font-black uppercase tracking-widest">Router</span>
         </div>
 
-        <div className="mb-1 text-violet-500 p-2.5 rounded-full bg-violet-500/10">
-           <Network size={24} />
-        </div>
-        
-        <div className="text-center w-full">
-             <div className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">Load Balancer</div>
-             <div className="text-xs font-bold text-white font-heading px-3 truncate">{data.label}</div>
+        <div className="flex-1 flex flex-col items-center justify-center p-3 text-center">
+            <div className="w-10 h-10 mb-2 bg-violet-100 rounded-lg flex items-center justify-center text-violet-600 border-2 border-slate-900">
+               <ArrowLeftRight size={20} strokeWidth={3} />
+            </div>
+            <div className="text-xs font-black text-slate-900 font-heading leading-tight uppercase px-1">
+              {data.label}
+            </div>
+            <div className="mt-1 text-[8px] font-bold text-slate-400">L7 PROXY</div>
         </div>
       </div>
 
-      {/* Handles - 4 directions for maximum connectivity */}
-      <Handle id="top" type="target" position={Position.Top} className="!w-3 !h-3 !bg-violet-500 !border-4 !border-zinc-900" />
-      <Handle id="bottom" type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-violet-500 !border-4 !border-zinc-900" />
-      <Handle id="left" type="target" position={Position.Left} className="!w-3 !h-3 !bg-violet-500 !border-4 !border-zinc-900" />
-      <Handle id="right" type="source" position={Position.Right} className="!w-3 !h-3 !bg-violet-500 !border-4 !border-zinc-900" />
+      <Handle id="t" type="target" position={Position.Top} className="!w-3 !h-3 !bg-white !border-[3px] !border-slate-900" />
+      <Handle id="b" type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-white !border-[3px] !border-slate-900" />
+      <Handle id="l" type="target" position={Position.Left} className="!w-3 !h-3 !bg-white !border-[3px] !border-slate-900" />
+      <Handle id="r" type="source" position={Position.Right} className="!w-3 !h-3 !bg-white !border-[3px] !border-slate-900" />
     </div>
   );
 });

@@ -13,7 +13,7 @@ export const BoundaryNode = memo(({ data, selected, xPos, yPos }: NodeProps<Flow
           icon: Globe,
           label: 'Public Internet',
           borderColor: 'border-blue-500',
-          bgColor: 'bg-blue-50/50',
+          bgColor: 'bg-blue-50/20',
           headerColor: 'bg-blue-500',
           borderStyle: 'border-solid'
         };
@@ -22,7 +22,7 @@ export const BoundaryNode = memo(({ data, selected, xPos, yPos }: NodeProps<Flow
           icon: Lock,
           label: 'Subnet / DMZ',
           borderColor: 'border-slate-400',
-          bgColor: 'bg-slate-50/30',
+          bgColor: 'bg-slate-50/10',
           headerColor: 'bg-slate-600',
           borderStyle: 'border-dashed'
         };
@@ -32,7 +32,7 @@ export const BoundaryNode = memo(({ data, selected, xPos, yPos }: NodeProps<Flow
           icon: Shield,
           label: 'VPC / Network Zone',
           borderColor: 'border-indigo-600',
-          bgColor: 'bg-indigo-50/40',
+          bgColor: 'bg-indigo-50/15',
           headerColor: 'bg-indigo-600',
           borderStyle: 'border-solid'
         };
@@ -43,45 +43,46 @@ export const BoundaryNode = memo(({ data, selected, xPos, yPos }: NodeProps<Flow
   const Icon = theme.icon;
 
   return (
-    <div className={`relative w-full h-full min-w-[300px] min-h-[200px]`}>
+    <div className="relative w-full h-full min-w-[300px] min-h-[200px]">
       <NodeResizer 
         color="#0f172a" 
         isVisible={selected} 
         minWidth={250} 
         minHeight={150} 
-        lineStyle={{ border: '2px solid #0f172a' }}
-        handleStyle={{ width: 12, height: 12, border: '3px solid #0f172a', backgroundColor: 'white' }}
+        lineStyle={{ border: '3px solid #0f172a', borderRadius: '2rem' }}
+        handleStyle={{ width: 14, height: 14, border: '4px solid #0f172a', backgroundColor: 'white', borderRadius: '4px' }}
       />
       
-      {/* Background with subtle grid/pattern to show it's a zone */}
+      {/* Background with pattern */}
       <div 
         className={`
-          w-full h-full rounded-3xl border-[3px] shadow-[8px_8px_0_0_#0f172a]
+          w-full h-full rounded-[2.5rem] border-[4px] shadow-[10px_10px_0_0_#0f172a]
           ${theme.borderColor} ${theme.bgColor} ${theme.borderStyle}
-          transition-colors duration-200 pointer-events-none
+          transition-all duration-200 pointer-events-none
         `}
         style={{
-          backgroundImage: subType === 'vpc' ? 'radial-gradient(#6366f1 1px, transparent 1px)' : 'none',
-          backgroundSize: '20px 20px',
+          backgroundImage: 'radial-gradient(#0f172a 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
           opacity: 0.8
         }}
       />
 
-      {/* Label Tab */}
+      {/* Industrial Label Tab */}
       <div className={`
-        absolute -top-4 left-6 px-4 py-1.5 rounded-xl border-2 border-slate-900 
-        ${theme.headerColor} text-white shadow-[4px_4px_0_0_#0f172a]
-        flex items-center gap-2 z-10
+        absolute -top-5 left-10 px-5 py-2 rounded-2xl border-[3px] border-slate-900 
+        ${theme.headerColor} text-white shadow-[5px_5px_0_0_#0f172a]
+        flex items-center gap-3 z-10
       `}>
-        <Icon size={14} strokeWidth={3} />
-        <span className="text-[10px] font-black uppercase tracking-widest">
+        <Icon size={16} strokeWidth={3} />
+        <span className="text-[11px] font-black uppercase tracking-widest">
           {data.label || theme.label}
         </span>
       </div>
 
-      {/* Coordinate Indicator (Optional, but looks pro) */}
-      <div className="absolute bottom-3 right-5 text-[8px] font-mono font-bold text-slate-400 select-none">
-        ZONE_LOC: {Math.round(xPos)}, {Math.round(yPos)}
+      {/* Meta Indicators */}
+      <div className="absolute bottom-5 left-8 flex items-center gap-4 text-[9px] font-mono font-black text-slate-400 select-none opacity-40 uppercase tracking-tighter">
+        <span>ZONE_ACTIVE</span>
+        <span>ID: 0x{Math.abs(xPos + yPos).toString(16).substring(0,4)}</span>
       </div>
     </div>
   );
