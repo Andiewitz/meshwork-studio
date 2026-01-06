@@ -30,7 +30,9 @@ import { ClientNode } from './nodes/ClientNode';
 import { JunctionNode } from './nodes/JunctionNode';
 import { ExternalServiceNode } from './nodes/ExternalServiceNode';
 import { BoundaryNode } from './nodes/BoundaryNode';
-import { PipelineNode } from './nodes/PipelineNode'; // New Node
+import { PipelineNode } from './nodes/PipelineNode';
+import { CodeNode } from './nodes/CodeNode';
+import { NoteNode } from './nodes/NoteNode';
 
 const { Background, addEdge, useNodesState, useEdgesState, ReactFlowProvider, BackgroundVariant, useReactFlow, ConnectionMode, SelectionMode } = ReactFlowRenderer;
 const { useNavigate, useParams } = ReactRouterDOM;
@@ -47,6 +49,8 @@ const nodeTypes: ReactFlowRenderer.NodeTypes = {
   external: ExternalServiceNode,
   boundary: BoundaryNode,
   pipeline: PipelineNode,
+  code: CodeNode,
+  note: NoteNode,
 };
 
 interface MenuState {
@@ -214,7 +218,8 @@ const FlowEditorContent: React.FC = () => {
     else if (node.type === 'database') setIsDbModalOpen(true);
     else if (node.type === 'client') setIsClientModalOpen(true);
     else if (node.type === 'middleware' && node.data.middlewareType === 'cache') setIsCacheModalOpen(true);
-    else {
+    // Skip inline editing trigger for code/note nodes as they have their own internal UI
+    else if (node.type !== 'code' && node.type !== 'note') {
       // Trigger Inline Editing for generic nodes
       setNodes((nds) => nds.map((n) => {
         if (n.id === node.id) {
@@ -402,7 +407,8 @@ const FlowEditorContent: React.FC = () => {
         clientType: event.dataTransfer.getData('application/clientType'),
         subType: event.dataTransfer.getData('application/subType'),
         status: event.dataTransfer.getData('application/status'),
-        layer: activeLayer
+        layer: activeLayer,
+        code: event.dataTransfer.getData('application/code'), // Ensure code data carries over
       },
       style: type === 'boundary' ? { width: 400, height: 300 } : undefined
     };

@@ -4,7 +4,8 @@ import {
     Monitor, Network, Router, ScrollText, X, Box, Search, Split, 
     LayoutGrid, Activity, Cloud, Layers, Binary, Square,
     ChevronDown, ChevronRight, Terminal, MessageSquare,
-    GitBranch, GitCommit, FileCode, Play, BarChart
+    GitBranch, GitCommit, FileCode, Play, BarChart, Code2, StickyNote,
+    Component
 } from 'lucide-react';
 import { CanvasLayer } from '../types';
 
@@ -41,7 +42,7 @@ const getLevenshteinDistance = (a: string, b: string): number => {
 
 // --- CONFIGURATION ---
 
-type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal' | 'red';
+type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal' | 'red' | 'yellow';
 
 interface NodePreset {
     type: string;
@@ -120,6 +121,15 @@ const BACKEND_CATEGORIES: NodeCategory[] = [
             { type: 'client', label: 'Mobile App', variant: 'rose', data: { clientType: 'phone' }, keywords: ['ios', 'android'] },
             { type: 'external', label: 'External User', variant: 'slate', data: {}, keywords: ['customer', 'human'] },
         ]
+    },
+    {
+        id: 'misc',
+        label: 'Utilities & Misc',
+        icon: Component,
+        items: [
+            { type: 'code', label: 'Code Block', variant: 'slate', logo: iconUrl('javascript', 'F7DF1E'), description: 'Embed code snippets', keywords: ['script', 'snippet', 'monaco', 'js', 'function'] },
+            { type: 'note', label: 'Sticky Note', variant: 'yellow', description: 'Add documentation', keywords: ['text', 'comment', 'doc', 'postit'] },
+        ]
     }
 ];
 
@@ -168,6 +178,15 @@ const DEVOPS_CATEGORIES: NodeCategory[] = [
             { type: 'database', label: 'Docker Registry', variant: 'blue', logo: iconUrl('docker', '2496ED'), data: { dbType: 'blob' }, keywords: ['image', 'store', 'hub'] },
             { type: 'database', label: 'Artifactory', variant: 'emerald', logo: iconUrl('jfrog', '40BE46'), data: { dbType: 'blob' }, keywords: ['maven', 'npm', 'repo'] },
         ]
+    },
+    {
+        id: 'misc',
+        label: 'Utilities & Misc',
+        icon: Component,
+        items: [
+            { type: 'code', label: 'Code Block', variant: 'slate', logo: iconUrl('javascript', 'F7DF1E'), description: 'Embed code snippets', keywords: ['script', 'snippet', 'monaco', 'js', 'function'] },
+            { type: 'note', label: 'Sticky Note', variant: 'yellow', description: 'Add documentation', keywords: ['text', 'comment', 'doc', 'postit'] },
+        ]
     }
 ];
 
@@ -185,6 +204,7 @@ const VARIANTS: Record<Variant, { border: string, text: string, bg: string, glow
     indigo: { border: 'border-indigo-500',  text: 'text-indigo-400',  bg: 'bg-indigo-500/10',  glow: 'shadow-indigo-500/20' },
     teal:   { border: 'border-teal-500',    text: 'text-teal-400',    bg: 'bg-teal-500/10',    glow: 'shadow-teal-500/20' },
     red:    { border: 'border-red-500',     text: 'text-red-400',     bg: 'bg-red-500/10',     glow: 'shadow-red-500/20' },
+    yellow: { border: 'border-yellow-400',  text: 'text-yellow-800',  bg: 'bg-yellow-400/20',  glow: 'shadow-yellow-400/20' },
 };
 
 const NodeItem: React.FC<{ item: NodePreset }> = ({ item }) => {
@@ -226,7 +246,9 @@ const NodeItem: React.FC<{ item: NodePreset }> = ({ item }) => {
         {item.logo ? (
             <img src={item.logo} alt={item.label} className="w-6 h-6 object-contain" />
         ) : (
-            <Box size={20} strokeWidth={2} />
+             item.type === 'code' ? <Code2 size={20} strokeWidth={2} /> : 
+             item.type === 'note' ? <StickyNote size={20} strokeWidth={2} /> :
+             <Box size={20} strokeWidth={2} />
         )}
       </div>
       
