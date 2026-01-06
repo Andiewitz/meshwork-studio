@@ -280,7 +280,7 @@ const FlowEditorContent: React.FC = () => {
   }, [menu, nodes, setNodes]);
 
   const alignToGrid = useCallback(() => {
-    const snapSize = 20;
+    const snapSize = 10;
     setNodes((nds) => nds.map((node) => {
       if (node.selected || node.id === menu?.id) {
         return { ...node, position: { x: Math.round(node.position.x / snapSize) * snapSize, y: Math.round(node.position.y / snapSize) * snapSize } };
@@ -526,6 +526,8 @@ const FlowEditorContent: React.FC = () => {
           selectionMode={SelectionMode.Partial}
           {...interactionProps}
           fitView
+          snapToGrid={true}
+          snapGrid={[10, 10]}
         >
           {/* Dark Dots Background */}
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#334155" />
