@@ -1,53 +1,34 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
-import { Layers, Activity, ShieldCheck, Zap } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const MiddlewareNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
-  const mwType = (data.middlewareType as string) || 'generic';
-  const techLogo = data.techLogo as string | undefined;
-  const techName = data.techName as string | undefined;
-
-  const getTheme = () => {
-    switch(mwType) {
-      case 'auth': return { icon: ShieldCheck, color: 'text-rose-500', bg: 'bg-rose-50' };
-      case 'cache': return { icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' };
-      default: return { icon: Layers, color: 'text-sky-500', bg: 'bg-sky-50' };
-    }
-  };
-
-  const theme = getTheme();
-  const Icon = theme.icon;
-
+  const techLogo = data.techLogo as string;
   return (
-    <div className={`relative group w-44 h-20 transition-all duration-200 ${selected ? '-translate-y-1' : ''}`}>
-      <div className={`absolute inset-0 bg-slate-900 rounded-2xl transition-transform duration-200 ${selected ? 'translate-x-2 translate-y-2' : 'translate-x-1 translate-y-1'}`} />
-      
+    <div className="relative w-44 h-16 group">
+      <div className="absolute inset-0 bg-slate-900 rounded-lg translate-x-1 translate-y-1" />
       <div className={`
-        relative w-full h-full flex items-center bg-white border-[3px] border-slate-900 rounded-2xl p-3
-        ${selected ? theme.bg : ''}
+        relative h-full w-full bg-white border-2 border-slate-900 rounded-lg px-4 flex items-center gap-3
+        ${selected ? 'border-amber-500 ring-2 ring-amber-500/20' : ''}
       `}>
-        <div className={`w-10 h-10 rounded-xl border-2 border-slate-900 flex items-center justify-center shrink-0 overflow-hidden ${techLogo ? 'bg-white p-1' : 'bg-slate-50'}`}>
+        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
           {techLogo ? (
             <img src={techLogo} alt="" className="w-full h-full object-contain" />
           ) : (
-            <Icon size={18} strokeWidth={3} className={theme.color} />
+            <div className="p-1.5 bg-slate-50 text-slate-400 rounded-md border border-slate-100">
+              <Layers size={14} />
+            </div>
           )}
         </div>
-
-        <div className="ml-3 min-w-0">
-          <div className="text-[8px] font-black uppercase text-slate-400 tracking-widest truncate">
-            {techName || mwType}
-          </div>
-          <div className="text-[11px] font-black text-slate-900 font-heading leading-none truncate">
-            {data.label}
-          </div>
+        <div className="min-w-0">
+          <div className="text-xs font-bold text-slate-900 font-heading truncate leading-tight">{data.label}</div>
+          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{String(data.middlewareType || 'logic')}</div>
         </div>
       </div>
-
-      <Handle id="l" type="target" position={Position.Left} className="!w-2.5 !h-2.5 !bg-white !border-2 !border-slate-900" />
-      <Handle id="r" type="source" position={Position.Right} className="!w-2.5 !h-2.5 !bg-white !border-2 !border-slate-900" />
+      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-white !border-2 !border-slate-900" />
+      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-white !border-2 !border-slate-900" />
     </div>
   );
 });
