@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Layout } from './components/Layout';
 import { FlowEditor } from './components/FlowEditor';
@@ -14,18 +13,24 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { CommandPalette } from './components/CommandPalette';
 
 const App: React.FC = () => {
-  // Define a brutalist-inspired theme to match the app aesthetic
+  // Dark mode theme configuration
   const theme = useMemo(() => createTheme({
     palette: {
+      mode: 'dark',
       primary: {
-        main: '#4f46e5', // Indigo 600
+        main: '#6366f1', // Indigo 500
       },
       secondary: {
         main: '#f43f5e', // Rose 500
       },
       background: {
-        default: '#fdfbf7',
+        default: '#020617', // Slate 950
+        paper: '#0f172a',   // Slate 900
       },
+      text: {
+        primary: '#f8fafc',
+        secondary: '#94a3b8',
+      }
     },
     typography: {
       fontFamily: '"Inter", "Plus Jakarta Sans", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -37,7 +42,7 @@ const App: React.FC = () => {
       h6: { fontFamily: 'Plus Jakarta Sans' },
     },
     shape: {
-      borderRadius: 12,
+      borderRadius: 16,
     },
     components: {
       MuiButton: {
@@ -45,13 +50,17 @@ const App: React.FC = () => {
           root: {
             textTransform: 'none',
             fontWeight: 700,
-            borderWidth: '2px',
-            '&:hover': {
-              borderWidth: '2px',
-            },
           },
         },
       },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: '#0f172a',
+            backgroundImage: 'none',
+          }
+        }
+      }
     },
   }), []);
 

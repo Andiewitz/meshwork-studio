@@ -9,39 +9,36 @@ export const MiddlewareNode = memo(({ data, selected }: NodeProps<FlowNodeData>)
   const mwType = data.middlewareType || 'Middleware';
 
   return (
-    <div className={`relative w-64 h-16 group transition-all duration-200 ${selected ? 'scale-[1.02]' : ''}`}>
+    <div className={`
+      relative w-52 h-16 rounded-xl border-2 transition-all duration-300
+      bg-slate-950 group
+      ${selected 
+        ? 'border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.3)]' 
+        : 'border-fuchsia-500/30 hover:border-fuchsia-500/60'}
+    `}>
+      {/* Side Pill Label */}
       <div className={`
-        relative w-full h-full bg-white rounded-lg overflow-hidden flex items-center
-        border border-slate-200 shadow-sm transition-all duration-200
-        ${selected ? 'ring-2 ring-amber-500 shadow-xl' : 'hover:shadow-md hover:border-amber-300'}
+        absolute -top-2.5 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-950 border
+        ${selected ? 'text-fuchsia-400 border-fuchsia-500' : 'text-fuchsia-500/70 border-fuchsia-500/30'}
       `}>
-        {/* Side Indicator */}
-        <div className="w-1.5 h-full bg-amber-500 shrink-0" />
+        {mwType}
+      </div>
 
-        <div className="flex-1 flex items-center px-4 gap-3">
-             <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                {techLogo ? (
-                    <img src={techLogo} alt="" className="w-full h-full object-contain" />
-                ) : (
-                    <div className="bg-amber-100 p-1.5 rounded text-amber-600">
-                        <Layers size={16} />
-                    </div>
-                )}
-             </div>
-             
-             <div className="min-w-0">
-                <div className="text-xs font-bold text-slate-900 font-heading truncate">
-                    {data.label}
-                </div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    {mwType}
-                </div>
-             </div>
+      <div className="flex items-center h-full px-3 gap-3">
+        <div className="w-8 h-8 flex items-center justify-center rounded bg-fuchsia-500/10">
+             {techLogo ? (
+                 <img src={techLogo} alt="" className="w-5 h-5 object-contain" />
+             ) : (
+                 <Layers size={16} className="text-fuchsia-500" />
+             )}
+        </div>
+        <div className="min-w-0">
+             <div className="text-xs font-bold text-white font-heading truncate">{data.label}</div>
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-amber-500 !border-2 !border-white transition-all hover:scale-150" />
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-amber-500 !border-2 !border-white transition-all hover:scale-150" />
+      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-fuchsia-500" />
+      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-fuchsia-500" />
     </div>
   );
 });

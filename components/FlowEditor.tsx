@@ -32,7 +32,6 @@ import { CanvasLayer } from '../types';
 import { AsciiExportModal } from './modals/AsciiExportModal';
 import { EditNodeModal } from './modals/EditNodeModal';
 import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
-/* Fix: Removed non-existent ClientOption member from import */
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
 import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
@@ -157,7 +156,6 @@ const FlowEditorContent: React.FC = () => {
   // Handle layer switching
   const handleLayerChange = (event: React.MouseEvent<HTMLElement>, newLayer: CanvasLayer | null) => {
     if (newLayer !== null && newLayer !== activeLayer) {
-      // 1. Store current layer state explicitly
       if (activeLayer === 'backend') {
         setBackendNodes(nodes);
         setBackendEdges(edges);
@@ -166,10 +164,8 @@ const FlowEditorContent: React.FC = () => {
         setDevopsEdges(edges);
       }
 
-      // 2. Switch
       setActiveLayer(newLayer);
       
-      // 3. Update React Flow state with the new layer's content
       if (newLayer === 'backend') {
         setNodes(backendNodes);
         setEdges(backendEdges);
@@ -214,7 +210,7 @@ const FlowEditorContent: React.FC = () => {
   }, [activeTool, isSpacePressed]);
 
   const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds));
+    setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2, stroke: '#94a3b8' } }, eds));
     setSaveStatus('unsaved');
   }, [setEdges]);
 
@@ -234,7 +230,6 @@ const FlowEditorContent: React.FC = () => {
     setMenu(null);
   }, []);
 
-  // --- Context Menu Handlers ---
   const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
     setMenu({ x: event.clientX, y: event.clientY, type: 'node', id: node.id });
@@ -369,7 +364,6 @@ const FlowEditorContent: React.FC = () => {
     }
   };
 
-  // Drag & Drop
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
@@ -385,11 +379,10 @@ const FlowEditorContent: React.FC = () => {
         logo: event.dataTransfer.getData('application/logo'),
         middlewareType: event.dataTransfer.getData('application/middlewareType'),
         clientType: event.dataTransfer.getData('application/clientType'),
-        subType: event.dataTransfer.getData('application/subType'), // For boundaries
+        subType: event.dataTransfer.getData('application/subType'),
         layer: activeLayer
       },
-      // If it's a boundary node, make it default to a larger size
-      style: type === 'boundary' ? { width: 500, height: 350 } : undefined
+      style: type === 'boundary' ? { width: 400, height: 300 } : undefined
     };
     setNodes((nds) => nds.concat(newNode));
     setSaveStatus('unsaved');
@@ -401,7 +394,6 @@ const FlowEditorContent: React.FC = () => {
     if (!flowId) return;
     setSaveStatus('saving');
     try {
-      // Ensure we have current layer data up to date
       const finalBackendNodes = activeLayer === 'backend' ? nodes : backendNodes;
       const finalBackendEdges = activeLayer === 'backend' ? edges : backendEdges;
       const finalDevopsNodes = activeLayer === 'devops' ? nodes : devopsNodes;
@@ -416,125 +408,97 @@ const FlowEditorContent: React.FC = () => {
 
   const selectionCount = useMemo(() => nodes.filter(n => n.selected).length + edges.filter(e => e.selected).length, [nodes, edges]);
 
-  if (isLoading) return <LoadingScreen message="Unlocking Secure Workspace..." />;
+  if (isLoading) return <LoadingScreen message="Loading Canvas..." />;
 
   return (
-    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden" style={{ cursor: interactionProps.cursor }}>
-      <AppBar position="static" elevation={0} sx={{ bgcolor: 'white', borderBottom: '2px solid #0f172a', zIndex: 50 }}>
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>
+    <div className="w-full h-screen bg-slate-950 flex flex-col overflow-hidden" style={{ cursor: interactionProps.cursor }}>
+      {/* Dark Mode Header */}
+      <AppBar position="static" elevation={0} sx={{ borderBottom: '1px solid #1e293b', zIndex: 50 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 }, minHeight: '64px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Tooltip title="Exit to Dashboard">
-              <IconButton onClick={() => navigate('/')} sx={{ color: 'slate.900', bgcolor: 'transparent', '&:hover': { bgcolor: 'slate.50' }, border: '2px solid transparent' }}>
-                <ChevronLeft size={24} strokeWidth={3} />
+              <IconButton onClick={() => navigate('/')} sx={{ color: '#94a3b8', '&:hover': { color: '#f8fafc', bgcolor: '#1e293b' } }}>
+                <ChevronLeft size={24} strokeWidth={2.5} />
               </IconButton>
             </Tooltip>
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: 'slate.900', lineHeight: 1, fontFamily: 'Plus Jakarta Sans' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#f8fafc', lineHeight: 1, fontFamily: 'Plus Jakarta Sans', fontSize: '1.1rem' }}>
                 {flowTitle}
               </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'slate.400', mt: 0.5, display: 'block' }}>
-                {saveStatus === 'saved' ? 'Project Synced' : saveStatus === 'unsaved' ? 'Unsaved Edits' : 'Persisting...'}
+              <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: '#64748b', mt: 0.5, display: 'block' }}>
+                {saveStatus === 'saved' ? 'Synced' : saveStatus === 'unsaved' ? 'Unsaved' : 'Saving...'}
               </Typography>
             </Box>
           </Box>
 
-          {/* Layer Switcher - Center Header */}
           <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <ToggleButtonGroup
               value={activeLayer}
               exclusive
               onChange={handleLayerChange}
-              aria-label="canvas layer"
               sx={{
-                bgcolor: '#f1f5f9',
+                bgcolor: '#020617',
                 p: 0.5,
                 borderRadius: '12px',
-                border: '2px solid #0f172a',
+                border: '1px solid #1e293b',
                 '& .MuiToggleButton-root': {
                   px: 2,
                   py: 0.5,
                   borderRadius: '8px',
                   border: 'none',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '0.75rem',
                   textTransform: 'uppercase',
                   color: '#64748b',
                   '&.Mui-selected': {
-                    bgcolor: '#0f172a',
-                    color: 'white',
-                    '&:hover': { bgcolor: '#1e293b' }
+                    bgcolor: '#1e293b',
+                    color: '#f8fafc',
+                    '&:hover': { bgcolor: '#334155' }
                   }
                 }
               }}
             >
-              <ToggleButton value="backend" aria-label="backend logic">
+              <ToggleButton value="backend">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Cpu size={14} />
-                  Backend Logic
+                  Logic
                 </Box>
               </ToggleButton>
-              <ToggleButton value="devops" aria-label="devops orchestration">
+              <ToggleButton value="devops">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <InfinityIcon size={14} />
-                  DevOps
+                  Ops
                 </Box>
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Tooltip title={isAiEnabled ? "AI Docs (ASCII Art)" : "Setup API Key in Settings"}>
-              <span>
-                <Button 
-                  variant="outlined"
-                  disabled={!isAiEnabled}
-                  onClick={() => setIsAsciiModalOpen(true)}
-                  startIcon={<Download size={18} />}
-                  sx={{
-                    border: '2px solid #0f172a',
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    color: '#0f172a',
-                    px: { xs: 1.5, sm: 2.5 },
-                    py: 1,
-                    boxShadow: isAiEnabled ? '3px 3px 0 0 #0f172a' : 'none',
-                    '&:hover': { border: '2px solid #0f172a', backgroundColor: 'slate.50', boxShadow: '1px 1px 0 0 #0f172a', transform: 'translate(2px, 2px)' },
-                    '&.Mui-disabled': { border: '2px solid #e2e8f0', color: '#94a3b8' }
-                  }}
-                >
-                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>AI Docs</Box>
-                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>AI</Box>
-                </Button>
-              </span>
-            </Tooltip>
-
             <Button 
               variant="contained"
               disableElevation
               onClick={handleSave}
-              startIcon={<Save size={18} />}
+              startIcon={<Save size={16} />}
               sx={{
-                backgroundColor: '#4f46e5',
-                boxShadow: '4px 4px 0_0 #000',
-                border: '2px solid #000',
-                borderRadius: '12px',
-                fontWeight: 800,
-                px: { xs: 2, sm: 3 },
-                py: 1,
-                '&:hover': { backgroundColor: '#4338ca', boxShadow: '2px 2px 0_0 #000', transform: 'translate(2px, 2px)' }
+                backgroundColor: '#6366f1',
+                borderRadius: '10px',
+                fontWeight: 700,
+                textTransform: 'none',
+                px: 2.5,
+                py: 0.8,
+                '&:hover': { backgroundColor: '#4f46e5' }
               }}
             >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Save Mesh</Box>
-              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Save</Box>
+              Save
             </Button>
           </Box>
         </Toolbar>
       </AppBar>
 
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden bg-slate-950">
         <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} activeLayer={activeLayer} />
         
-        {/* --- Modals --- */}
+        {/* Modals remain the same structure but update internal styles if needed in their own files */}
         <AsciiExportModal isOpen={isAsciiModalOpen} onClose={() => setIsAsciiModalOpen(false)} nodes={nodes} edges={edges} />
         <EditNodeModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} onSave={handleNodeSave} />
         <DatabaseSelectorModal isOpen={isDbModalOpen} onClose={() => setIsDbModalOpen(false)} onSelect={handleDbSelect} />
@@ -563,7 +527,9 @@ const FlowEditorContent: React.FC = () => {
           {...interactionProps}
           fitView
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} color="#3f3f46" />
+          {/* Dark Dots Background */}
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#334155" />
+          
           {menu && (
             <ContextMenu
               top={menu.y}

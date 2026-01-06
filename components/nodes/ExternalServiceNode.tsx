@@ -8,35 +8,33 @@ export const ExternalServiceNode = memo(({ data, selected }: NodeProps<FlowNodeD
   const logo = data.logo as string;
   
   return (
-    <div className={`relative w-56 h-20 group transition-all duration-200 ${selected ? 'scale-[1.02]' : ''}`}>
-      <div className={`
-        relative w-full h-full bg-slate-50/50 rounded-lg overflow-hidden flex items-center
-        border-2 border-dashed border-slate-300 shadow-sm transition-all duration-200
-        ${selected ? 'border-sky-500 bg-sky-50/30 shadow-lg' : 'hover:border-slate-400 hover:bg-white'}
-      `}>
-         <div className="flex-1 flex items-center px-4 gap-3">
-             <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-slate-200 p-1.5 shadow-sm">
-                {logo ? (
-                    <img src={logo} alt="" className="w-full h-full object-contain" />
-                ) : (
-                    <Cloud size={20} className="text-slate-400" />
-                )}
-             </div>
-             
-             <div className="min-w-0">
-                <div className="text-xs font-bold text-slate-700 font-heading truncate">
-                    {data.label}
-                </div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                    <Globe size={10} />
-                    External API
-                </div>
-             </div>
-         </div>
+    <div className={`
+      relative w-52 h-24 rounded-2xl border-2 border-dashed transition-all duration-300
+      bg-slate-950 group
+      ${selected 
+        ? 'border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]' 
+        : 'border-slate-700 hover:border-slate-500'}
+    `}>
+      <div className="absolute -top-3 left-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-950 border border-slate-700 text-slate-400">
+        External
       </div>
 
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-slate-400 !border-2 !border-white transition-all hover:scale-150" />
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-slate-400 !border-2 !border-white transition-all hover:scale-150" />
+      <div className="flex items-center h-full px-5 gap-4">
+        <div className="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-800 bg-slate-900">
+            {logo ? (
+                <img src={logo} alt="" className="w-6 h-6 object-contain" />
+            ) : (
+                <Globe size={20} className="text-slate-500" />
+            )}
+        </div>
+        <div className="min-w-0">
+            <div className="text-sm font-bold text-slate-200 font-heading truncate">{data.label}</div>
+            <div className="text-[10px] text-slate-600 font-bold uppercase">SaaS / API</div>
+        </div>
+      </div>
+
+      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-slate-600" />
+      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-slate-600" />
     </div>
   );
 });

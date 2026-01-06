@@ -1,53 +1,51 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
-import { Server, Activity } from 'lucide-react';
+import { Server } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const ServerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
   return (
-    <div className={`relative w-64 group transition-all duration-200 ${selected ? 'scale-[1.02]' : ''}`}>
+    <div className={`
+      relative w-56 h-32 rounded-2xl border-2 transition-all duration-300
+      bg-slate-950 group
+      ${selected 
+        ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]' 
+        : 'border-indigo-500/30 hover:border-indigo-500/60'}
+    `}>
+      {/* HUD Label */}
       <div className={`
-        relative w-full bg-white rounded-lg overflow-hidden flex flex-col
-        border border-slate-200 shadow-sm transition-all duration-200
-        ${selected ? 'ring-2 ring-indigo-500 shadow-xl' : 'hover:shadow-md hover:border-indigo-300'}
+        absolute -top-3 left-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-950 border
+        ${selected ? 'text-indigo-400 border-indigo-500' : 'text-indigo-500/70 border-indigo-500/30'}
       `}>
-        {/* Professional Header */}
-        <div className="bg-indigo-600 px-3 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white">
-            <Server size={14} />
-            <span className="text-[10px] font-bold uppercase tracking-wider opacity-90">Compute</span>
-          </div>
-          <div className="flex gap-1">
-             <div className="w-2 h-2 rounded-full bg-indigo-400/50" />
-             <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
-          </div>
-        </div>
+        Compute
+      </div>
 
-        {/* Main Body */}
-        <div className="p-4 bg-white">
-           <div className="text-sm font-bold text-slate-900 font-heading leading-tight mb-1">
-             {data.label}
-           </div>
-           <div className="text-xs text-slate-500 font-medium truncate">
-             Standard Instance • 4vCPU
-           </div>
+      <div className="p-5 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between">
+            <div className={`p-2 rounded-lg border bg-indigo-500/10 ${selected ? 'border-indigo-500/50 text-indigo-400' : 'border-indigo-500/20 text-indigo-500/60'}`}>
+                <Server size={20} />
+            </div>
+            <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            </div>
         </div>
-
-        {/* Technical Footer */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-           <span className="flex items-center gap-1.5">
-             <Activity size={10} />
-             <span>ID: {Math.floor(Math.random() * 9999)}</span>
-           </span>
-           <span className="uppercase text-slate-500 font-bold">Linux</span>
+        
+        <div>
+            <div className="text-lg font-bold text-white font-heading leading-tight truncate">
+                {data.label}
+            </div>
+            <div className="text-[10px] text-slate-500 font-mono mt-1">
+                4vCPU • 16GB
+            </div>
         </div>
       </div>
 
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-indigo-600 !border-2 !border-white transition-all hover:scale-150" />
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-indigo-600 !border-2 !border-white transition-all hover:scale-150" />
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-indigo-600 !border-2 !border-white transition-all hover:scale-150" />
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-indigo-600 !border-2 !border-white transition-all hover:scale-150" />
+      {/* Wireframe Handles */}
+      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
+      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
+      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
     </div>
   );
 });

@@ -15,23 +15,22 @@ export const BoundaryNode = memo(({ data, selected }: NodeProps<FlowNodeData>) =
         minWidth={200} 
         minHeight={150} 
         lineStyle={{ border: '1px solid #6366f1' }}
-        handleStyle={{ width: 8, height: 8, border: '1px solid #6366f1', borderRadius: '2px' }}
+        handleStyle={{ width: 8, height: 8, border: '1px solid #6366f1', borderRadius: '2px', backgroundColor: '#0f172a' }}
       />
       
       {/* Container Frame */}
       <div 
         className={`
-          w-full h-full rounded-lg border-2
-          ${isSubnet ? 'border-dashed border-slate-300 bg-slate-50/30' : 'border-indigo-100 bg-indigo-50/20'}
+          w-full h-full rounded-2xl border-[2px]
+          ${isSubnet ? 'border-dashed border-slate-700 bg-slate-900/30' : 'border-slate-800 bg-slate-900/20'}
           transition-all duration-200 pointer-events-none
         `}
       />
 
-      {/* Professional Label Tag */}
+      {/* Label Tag */}
       <div className={`
-        absolute -top-3 left-4 px-3 py-1 rounded border shadow-sm
-        bg-white flex items-center gap-2 z-10
-        ${isSubnet ? 'border-slate-300 text-slate-600' : 'border-indigo-200 text-indigo-700'}
+        absolute -top-3 left-6 px-3 py-1 rounded-lg border bg-slate-950 flex items-center gap-2 z-10
+        ${isSubnet ? 'border-slate-700 text-slate-500' : 'border-indigo-900 text-indigo-400'}
       `}>
         {isSubnet ? <Network size={12} /> : <Shield size={12} />}
         <span className="text-[10px] font-bold uppercase tracking-widest">

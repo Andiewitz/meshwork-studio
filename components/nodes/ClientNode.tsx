@@ -10,27 +10,28 @@ export const ClientNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => 
   const Icon = isPhone ? Smartphone : Monitor;
 
   return (
-    <div className={`relative ${size} group transition-all duration-200 ${selected ? 'scale-[1.02]' : ''}`}>
+    <div className={`
+      relative ${size} rounded-2xl border-2 transition-all duration-300
+      bg-slate-950 group
+      ${selected 
+        ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]' 
+        : 'border-rose-500/30 hover:border-rose-500/60'}
+    `}>
       <div className={`
-        relative w-full h-full bg-white rounded-lg overflow-hidden flex flex-col
-        border border-slate-200 shadow-sm transition-all duration-200
-        ${selected ? 'ring-2 ring-sky-500 shadow-xl' : 'hover:shadow-md hover:border-sky-300'}
+        absolute -top-3 left-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-950 border
+        ${selected ? 'text-rose-400 border-rose-500' : 'text-rose-500/70 border-rose-500/30'}
       `}>
-        <div className="bg-slate-100 h-6 flex items-center justify-center border-b border-slate-200">
-             <div className="w-12 h-1 bg-slate-300 rounded-full" />
-        </div>
-        
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-            <Icon size={32} className="text-sky-500 mb-2 opacity-80" strokeWidth={1.5} />
-            <div className="text-sm font-bold text-slate-900 font-heading leading-tight">
-              {data.label}
-            </div>
-            <span className="mt-1 text-[9px] font-bold text-slate-400 uppercase">
-               User Endpoint
-            </span>
+        Client
+      </div>
+
+      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+        <Icon size={32} className={`mb-3 ${selected ? 'text-rose-400' : 'text-rose-600'}`} strokeWidth={1.5} />
+        <div className="text-sm font-bold text-white font-heading">
+            {data.label}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-sky-500 !border-2 !border-white transition-all hover:scale-150" />
+
+      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-rose-500" />
     </div>
   );
 });
