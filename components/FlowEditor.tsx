@@ -55,6 +55,8 @@ interface MenuState {
   id?: string;
 }
 
+const GRID_SIZE = 20;
+
 const FlowEditorContent: React.FC = () => {
   const navigate = useNavigate();
   const { flowId } = useParams();
@@ -273,10 +275,16 @@ const FlowEditorContent: React.FC = () => {
   }, [menu, nodes, setNodes]);
 
   const alignToGrid = useCallback(() => {
-    const snapSize = 10;
     setNodes((nds) => nds.map((node) => {
-      if (node.selected || node.id === menu?.id) {
-        return { ...node, position: { x: Math.round(node.position.x / snapSize) * snapSize, y: Math.round(node.position.y / snapSize) * snapSize } };
+      // Logic: Align if selected OR if it's the target of the context menu
+      if (node.selected || (menu?.id && node.id === menu.id)) {
+        return { 
+            ...node, 
+            position: { 
+                x: Math.round(node.position.x / GRID_SIZE) * GRID_SIZE, 
+                y: Math.round(node.position.y / GRID_SIZE) * GRID_SIZE 
+            } 
+        };
       }
       return node;
     }));
@@ -376,10 +384,16 @@ const FlowEditorContent: React.FC = () => {
     if (!type || !rfInstance) return;
     const position = rfInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     
+    // Snap to grid on drop
+    const snappedPos = {
+        x: Math.round(position.x / GRID_SIZE) * GRID_SIZE,
+        y: Math.round(position.y / GRID_SIZE) * GRID_SIZE
+    };
+
     const newNode: ReactFlowRenderer.Node = {
       id: `${type}-${Date.now()}`,
       type,
-      position,
+      position: snappedPos,
       data: { 
         label: event.dataTransfer.getData('application/label') || `New ${type}`,
         logo: event.dataTransfer.getData('application/logo'),
@@ -497,6 +511,13 @@ const FlowEditorContent: React.FC = () => {
             >
               Save
             </Button>
+            {isAiEnabled && (
+                <Tooltip title="AI Export">
+                    <IconButton onClick={() => setIsAsciiModalOpen(true)} sx={{ color: '#f8fafc', bgcolor: '#1e293b', borderRadius: '10px', '&:hover': { bgcolor: '#334155' } }}>
+                        <Download size={20} />
+                    </IconButton>
+                </Tooltip>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
@@ -545,10 +566,10 @@ const FlowEditorContent: React.FC = () => {
           {...interactionProps}
           fitView
           snapToGrid={true}
-          snapGrid={[10, 10]}
+          snapGrid={[GRID_SIZE, GRID_SIZE]}
         >
-          {/* Dark Dots Background */}
-          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#334155" />
+          {/* Dark Dots Background with Correct Gap */}
+          <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} size={1} color="#334155" />
           
           {menu && (
             <ContextMenu

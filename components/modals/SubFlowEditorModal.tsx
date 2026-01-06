@@ -41,6 +41,8 @@ interface SubFlowEditorModalProps {
   onSave: (nodes: ReactFlowRenderer.Node[], edges: ReactFlowRenderer.Edge[]) => void;
 }
 
+const GRID_SIZE = 20;
+
 export const SubFlowEditorModal: React.FC<SubFlowEditorModalProps> = ({
   isOpen,
   onClose,
@@ -74,10 +76,16 @@ export const SubFlowEditorModal: React.FC<SubFlowEditorModalProps> = ({
     if (!type || !rfInstance) return;
     
     const position = rfInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    
+    const snappedPos = {
+        x: Math.round(position.x / GRID_SIZE) * GRID_SIZE,
+        y: Math.round(position.y / GRID_SIZE) * GRID_SIZE
+    };
+
     const newNode: ReactFlowRenderer.Node = {
       id: `${type}-${Date.now()}`,
       type,
-      position,
+      position: snappedPos,
       data: { 
         label: event.dataTransfer.getData('application/label') || `New ${type}`,
         logo: event.dataTransfer.getData('application/logo'),
@@ -187,9 +195,10 @@ export const SubFlowEditorModal: React.FC<SubFlowEditorModalProps> = ({
                   connectionMode={ConnectionMode.Loose}
                   fitView
                   snapToGrid
+                  snapGrid={[GRID_SIZE, GRID_SIZE]}
                   className="bg-slate-950"
                 >
-                  <Background variant={BackgroundVariant.Lines} color="#1e293b" gap={20} />
+                  <Background variant={BackgroundVariant.Lines} color="#1e293b" gap={GRID_SIZE} />
                 </ReactFlow>
               </ReactFlowProvider>
 
