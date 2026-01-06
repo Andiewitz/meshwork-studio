@@ -1,4 +1,3 @@
-
 {
   "name": "meshwork-studio",
   "version": "1.4.0",
@@ -13,6 +12,7 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.15.11",
+    "@monaco-editor/react": "^4.6.0",
     "firebase": "^10.8.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
