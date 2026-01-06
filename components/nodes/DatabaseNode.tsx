@@ -12,22 +12,22 @@ export const DatabaseNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNo
 
   return (
     <div className={`
-      relative w-40 h-40 rounded-2xl border-2 transition-all duration-300
-      bg-slate-950 group
+      relative min-w-[10rem] max-w-[16rem] h-auto min-h-[10rem] rounded-2xl border-2 transition-all duration-300
+      bg-slate-950 group flex flex-col
       ${selected 
         ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' 
         : 'border-emerald-500/30 hover:border-emerald-500/60'}
     `}>
       <div className={`
-        absolute -top-3 left-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-950 border
+        absolute -top-3 left-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-slate-950 border z-10
         ${selected ? 'text-emerald-400 border-emerald-500' : 'text-emerald-500/70 border-emerald-500/30'}
       `}>
         Storage
       </div>
 
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+      <div className="flex flex-col items-center justify-center flex-1 p-5 text-center gap-3">
         <div className={`
-            w-12 h-12 mb-3 rounded-xl border flex items-center justify-center bg-emerald-500/5
+            w-12 h-12 rounded-xl border flex items-center justify-center bg-emerald-500/5 shrink-0
             ${selected ? 'border-emerald-500/50' : 'border-emerald-500/20'}
         `}>
             {logo ? (
@@ -36,7 +36,7 @@ export const DatabaseNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNo
                 <Database size={24} className={selected ? 'text-emerald-400' : 'text-emerald-600'} />
             )}
         </div>
-        <div className="text-sm font-bold text-white font-heading leading-tight line-clamp-2">
+        <div className="text-sm font-bold text-white font-heading leading-tight whitespace-normal break-words w-full">
             {dbName}
         </div>
       </div>

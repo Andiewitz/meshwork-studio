@@ -13,7 +13,6 @@ import { CanvasLayer } from '../types';
 
 // Modals
 import { AsciiExportModal } from './modals/AsciiExportModal';
-import { EditNodeModal } from './modals/EditNodeModal';
 import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
@@ -89,7 +88,6 @@ const FlowEditorContent: React.FC = () => {
   
   // Modal States
   const [isAsciiModalOpen, setIsAsciiModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDbModalOpen, setIsDbModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isCacheModalOpen, setIsCacheModalOpen] = useState(false);
@@ -216,10 +214,18 @@ const FlowEditorContent: React.FC = () => {
     else if (node.type === 'database') setIsDbModalOpen(true);
     else if (node.type === 'client') setIsClientModalOpen(true);
     else if (node.type === 'middleware' && node.data.middlewareType === 'cache') setIsCacheModalOpen(true);
-    else setIsEditModalOpen(true);
+    else {
+      // Trigger Inline Editing for generic nodes
+      setNodes((nds) => nds.map((n) => {
+        if (n.id === node.id) {
+          return { ...n, data: { ...n.data, isEditing: true } };
+        }
+        return n;
+      }));
+    }
     
     setMenu(null);
-  }, []);
+  }, [setNodes]);
 
   const onEdgeDoubleClick = useCallback((event: React.MouseEvent, edge: ReactFlowRenderer.Edge) => {
     setSelectedEdgeData({ id: edge.id, label: edge.label as string });
@@ -332,13 +338,6 @@ const FlowEditorContent: React.FC = () => {
   }, [menu, nodes, onNodeDoubleClick]);
 
   // --- Modal Saves ---
-  const handleNodeSave = (newLabel: string) => {
-    if (selectedNodeData) {
-      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: newLabel } } : n)));
-      setSaveStatus('unsaved');
-    }
-  };
-
   const handleDbSelect = (db: DatabaseOption) => {
     if (selectedNodeData) {
       setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: db.name, dbType: db.id, dbName: db.name, dbCategory: db.category, dbLogo: db.logo } } : n)));
@@ -528,9 +527,8 @@ const FlowEditorContent: React.FC = () => {
       <div className="flex-1 relative overflow-hidden bg-slate-950">
         <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} activeLayer={activeLayer} />
         
-        {/* Modals remain the same structure but update internal styles if needed in their own files */}
+        {/* Modals */}
         <AsciiExportModal isOpen={isAsciiModalOpen} onClose={() => setIsAsciiModalOpen(false)} nodes={nodes} edges={edges} />
-        <EditNodeModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} onSave={handleNodeSave} />
         <DatabaseSelectorModal isOpen={isDbModalOpen} onClose={() => setIsDbModalOpen(false)} onSelect={handleDbSelect} />
         <ClientConfigModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} initialType={selectedNodeData?.data?.clientType || 'desktop'} onSave={handleClientSave} />
         <CacheSelectorModal isOpen={isCacheModalOpen} onClose={() => setIsCacheModalOpen(false)} onSelect={handleCacheSelect} />

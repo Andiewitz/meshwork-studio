@@ -17,6 +17,7 @@ export interface FlowNodeData extends Record<string, unknown> {
   config?: Record<string, unknown>;
   layer?: 'backend' | 'devops';
   subType?: 'vpc' | 'subnet' | 'internet'; // Specific styling for boundaries
+  isEditing?: boolean; // UI state for inline renaming
   // Nested Flow Data
   subFlow?: {
     nodes: ReactFlow.Node[];
