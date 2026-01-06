@@ -1,32 +1,9 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-    Server, 
-    Database, 
-    Cpu, 
-    Globe, 
-    Zap, 
-    Shield, 
-    Lock, 
-    Smartphone, 
-    Monitor, 
-    Network,
-    Router,
-    ScrollText,
-    X,
-    Box,
-    Search,
-    Split,
-    LayoutGrid,
-    Clock,
-    HardDrive,
-    Anchor,
-    Workflow,
-    Activity,
-    Cloud,
-    Container,
-    Layers,
-    Binary,
-    Square
+    Server, Database, Cpu, Globe, Zap, Shield, Lock, Smartphone, 
+    Monitor, Network, Router, ScrollText, X, Box, Search, Split, 
+    LayoutGrid, Activity, Cloud, Layers, Binary, Square,
+    ChevronDown, ChevronRight, Terminal, MessageSquare
 } from 'lucide-react';
 import { CanvasLayer } from '../types';
 
@@ -36,214 +13,333 @@ interface NodeLibraryProps {
   activeLayer: CanvasLayer;
 }
 
-type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal';
+// --- CONFIGURATION ---
 
-interface NodeItemProps {
+type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal' | 'red';
+
+interface NodePreset {
     type: string;
     label: string;
-    icon?: any;
-    logo?: string;
+    description?: string;
+    logo?: string; // URL for simpleicons or other assets
     variant: Variant;
-    middlewareType?: string;
-    clientType?: string;
-    subType?: string; // For Boundary styling
+    data?: Record<string, any>; // Preset data to inject
 }
 
-const VARIANTS: Record<Variant, { bg: string, border: string, text: string, shadow: string, isLight: boolean }> = {
-    blue:   { bg: 'bg-blue-500',   border: 'border-blue-600',   text: 'text-white', shadow: 'shadow-blue-900', isLight: false },
-    emerald:{ bg: 'bg-emerald-400', border: 'border-emerald-500', text: 'text-black', shadow: 'shadow-emerald-900', isLight: true },
-    rose:   { bg: 'bg-rose-500',    border: 'border-rose-600',    text: 'text-white', shadow: 'shadow-rose-900', isLight: false },
-    amber:  { bg: 'bg-amber-400',   border: 'border-amber-500',   text: 'text-black', shadow: 'shadow-amber-900', isLight: true },
-    violet: { bg: 'bg-violet-500',  border: 'border-violet-600',  text: 'text-white', shadow: 'shadow-violet-900', isLight: false },
-    slate:  { bg: 'bg-slate-800',   border: 'border-slate-900',   text: 'text-white', shadow: 'shadow-slate-900', isLight: false },
-    pink:   { bg: 'bg-pink-500',    border: 'border-pink-600',    text: 'text-white', shadow: 'shadow-pink-900', isLight: false },
-    cyan:   { bg: 'bg-cyan-400',    border: 'border-cyan-500',    text: 'text-black', shadow: 'shadow-cyan-900', isLight: true },
-    orange: { bg: 'bg-orange-500',  border: 'border-orange-600',  text: 'text-white', shadow: 'shadow-orange-900', isLight: false },
-    lime:   { bg: 'bg-lime-400',    border: 'border-lime-500',    text: 'text-black', shadow: 'shadow-lime-900', isLight: true },
-    indigo: { bg: 'bg-indigo-600',  border: 'border-indigo-700',  text: 'text-white', shadow: 'shadow-indigo-900', isLight: false },
-    teal:   { bg: 'bg-teal-400',    border: 'border-teal-500',    text: 'text-black', shadow: 'shadow-teal-900', isLight: true },
+interface NodeCategory {
+    id: string;
+    label: string;
+    icon: any;
+    items: NodePreset[];
+}
+
+// Helper for SimpleIcons
+const iconUrl = (slug: string, color: string = 'white') => `https://cdn.simpleicons.org/${slug}/${color}`;
+
+const LIBRARY_DATA: NodeCategory[] = [
+    {
+        id: 'compute',
+        label: 'Compute & Containers',
+        icon: Server,
+        items: [
+            { type: 'server', label: 'Server', variant: 'slate', data: {} },
+            { type: 'server', label: 'Virtual Machine', variant: 'indigo', data: { subType: 'vm' } },
+            { type: 'service', label: 'Docker Container', variant: 'blue', logo: iconUrl('docker', '2496ED') },
+            { type: 'server', label: 'K8s Pod', variant: 'blue', logo: iconUrl('kubernetes', '326CE5') },
+            { type: 'service', label: 'AWS Lambda', variant: 'orange', logo: iconUrl('amazonaws', 'FF9900'), data: { subType: 'serverless' } },
+            { type: 'service', label: 'Google Cloud Run', variant: 'blue', logo: iconUrl('googlecloud', '4285F4') },
+            { type: 'server', label: 'Bare Metal', variant: 'slate', description: 'Physical Hardware' },
+            { type: 'service', label: 'App Service', variant: 'cyan' },
+        ]
+    },
+    {
+        id: 'storage',
+        label: 'Databases & Storage',
+        icon: Database,
+        items: [
+            { type: 'database', label: 'PostgreSQL', variant: 'blue', logo: iconUrl('postgresql', '4169E1'), data: { dbType: 'sql' } },
+            { type: 'database', label: 'MySQL', variant: 'blue', logo: iconUrl('mysql', '4479A1'), data: { dbType: 'sql' } },
+            { type: 'database', label: 'MongoDB', variant: 'emerald', logo: iconUrl('mongodb', '47A248'), data: { dbType: 'nosql' } },
+            { type: 'database', label: 'Redis Cache', variant: 'red', logo: iconUrl('redis', 'DC382D'), data: { dbType: 'cache' } },
+            { type: 'database', label: 'S3 Bucket', variant: 'orange', logo: iconUrl('amazonaws', 'FF9900'), data: { dbType: 'blob' } },
+            { type: 'database', label: 'Cassandra', variant: 'cyan', logo: iconUrl('apachecassandra', '1287B1') },
+            { type: 'database', label: 'Elasticsearch', variant: 'teal', logo: iconUrl('elasticsearch', '005571') },
+            { type: 'database', label: 'Snowflake', variant: 'blue', logo: iconUrl('snowflake', '29B5E8') },
+            { type: 'database', label: 'DynamoDB', variant: 'blue', logo: iconUrl('amazonaws', 'FF9900') },
+            { type: 'database', label: 'Supabase', variant: 'emerald', logo: iconUrl('supabase', '3ECF8E') },
+            { type: 'database', label: 'Firebase', variant: 'amber', logo: iconUrl('firebase', 'FFCA28') },
+            { type: 'database', label: 'Neo4j', variant: 'indigo', logo: iconUrl('neo4j', '008CC1') },
+        ]
+    },
+    {
+        id: 'networking',
+        label: 'Networking & Content',
+        icon: Network,
+        items: [
+            { type: 'loadBalancer', label: 'Load Balancer', variant: 'violet' },
+            { type: 'loadBalancer', label: 'Nginx', variant: 'emerald', logo: iconUrl('nginx', '009639') },
+            { type: 'middleware', label: 'CDN', variant: 'orange', logo: iconUrl('cloudflare', 'F38020'), data: { middlewareType: 'cache' } },
+            { type: 'middleware', label: 'API Gateway', variant: 'rose', data: { middlewareType: 'gateway' } },
+            { type: 'middleware', label: 'Kong Gateway', variant: 'emerald', logo: iconUrl('kong', '0033A0') },
+            { type: 'junction', label: 'Router / Switch', variant: 'slate' },
+            { type: 'boundary', label: 'VPC Network', variant: 'indigo', data: { subType: 'vpc' } },
+            { type: 'boundary', label: 'Private Subnet', variant: 'slate', data: { subType: 'subnet' } },
+            { type: 'boundary', label: 'Public Internet', variant: 'blue', data: { subType: 'internet' } },
+            { type: 'middleware', label: 'DNS', variant: 'amber', data: { middlewareType: 'dns' } },
+            { type: 'middleware', label: 'VPN / Tunnel', variant: 'slate', data: { middlewareType: 'vpn' } },
+        ]
+    },
+    {
+        id: 'messaging',
+        label: 'Queues & Streaming',
+        icon: MessageSquare,
+        items: [
+            { type: 'queue', label: 'Kafka', variant: 'slate', logo: iconUrl('apachekafka', '231F20') },
+            { type: 'queue', label: 'RabbitMQ', variant: 'orange', logo: iconUrl('rabbitmq', 'FF6600') },
+            { type: 'queue', label: 'AWS SQS', variant: 'violet', logo: iconUrl('amazonaws', 'FF9900') },
+            { type: 'queue', label: 'ActiveMQ', variant: 'slate' },
+            { type: 'queue', label: 'Pub/Sub', variant: 'blue', logo: iconUrl('googlecloud', '4285F4') },
+            { type: 'queue', label: 'Event Bus', variant: 'emerald' },
+        ]
+    },
+    {
+        id: 'ai_ml',
+        label: 'AI & Machine Learning',
+        icon: Zap,
+        items: [
+            { type: 'external', label: 'OpenAI API', variant: 'emerald', logo: iconUrl('openai', '412991') },
+            { type: 'external', label: 'Hugging Face', variant: 'amber', logo: iconUrl('huggingface', 'FFD21E') },
+            { type: 'database', label: 'Vector DB', variant: 'violet', data: { dbType: 'vector' } },
+            { type: 'database', label: 'Pinecone', variant: 'cyan', logo: iconUrl('pinecone', '000000') },
+            { type: 'service', label: 'ML Model', variant: 'indigo' },
+            { type: 'service', label: 'Inference Engine', variant: 'slate' },
+        ]
+    },
+    {
+        id: 'clients',
+        label: 'Clients & Devices',
+        icon: Monitor,
+        items: [
+            { type: 'client', label: 'Web Browser', variant: 'blue', data: { clientType: 'desktop' } },
+            { type: 'client', label: 'Mobile App', variant: 'rose', data: { clientType: 'phone' } },
+            { type: 'client', label: 'IoT Device', variant: 'emerald', data: { clientType: 'iot' } },
+            { type: 'client', label: 'CLI / Terminal', variant: 'slate', data: { clientType: 'terminal' } },
+            { type: 'external', label: 'External User', variant: 'slate', data: {} },
+        ]
+    },
+    {
+        id: 'saas',
+        label: 'SaaS & Integrations',
+        icon: Globe,
+        items: [
+            { type: 'external', label: 'Stripe', variant: 'violet', logo: iconUrl('stripe', '008CDD') },
+            { type: 'external', label: 'Auth0', variant: 'orange', logo: iconUrl('auth0', 'EB5424') },
+            { type: 'external', label: 'Twilio', variant: 'red', logo: iconUrl('twilio', 'F22F46') },
+            { type: 'external', label: 'SendGrid', variant: 'blue', logo: iconUrl('sendgrid', '1A82E2') },
+            { type: 'external', label: 'Slack', variant: 'emerald', logo: iconUrl('slack', '4A154B') },
+            { type: 'external', label: 'Discord', variant: 'indigo', logo: iconUrl('discord', '5865F2') },
+            { type: 'external', label: 'GitHub', variant: 'slate', logo: iconUrl('github', '181717') },
+        ]
+    },
+    {
+        id: 'devops',
+        label: 'DevOps & Tools',
+        icon: Terminal,
+        items: [
+            { type: 'external', label: 'Jenkins', variant: 'red', logo: iconUrl('jenkins', 'D24939') },
+            { type: 'external', label: 'GitHub Actions', variant: 'blue', logo: iconUrl('githubactions', '2088FF') },
+            { type: 'external', label: 'Terraform', variant: 'violet', logo: iconUrl('terraform', '7B42BC') },
+            { type: 'service', label: 'Prometheus', variant: 'orange', logo: iconUrl('prometheus', 'E6522C') },
+            { type: 'service', label: 'Grafana', variant: 'orange', logo: iconUrl('grafana', 'F46800') },
+            { type: 'service', label: 'Datadog', variant: 'violet', logo: iconUrl('datadog', '632CA6') },
+            { type: 'external', label: 'Sentry', variant: 'rose', logo: iconUrl('sentry', '362D59') },
+        ]
+    }
+];
+
+const VARIANTS: Record<Variant, { border: string, text: string, bg: string, glow: string }> = {
+    blue:   { border: 'border-blue-500',   text: 'text-blue-400',   bg: 'bg-blue-500/10',   glow: 'shadow-blue-500/20' },
+    emerald:{ border: 'border-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-500/10', glow: 'shadow-emerald-500/20' },
+    rose:   { border: 'border-rose-500',    text: 'text-rose-400',    bg: 'bg-rose-500/10',    glow: 'shadow-rose-500/20' },
+    amber:  { border: 'border-amber-500',   text: 'text-amber-400',   bg: 'bg-amber-500/10',   glow: 'shadow-amber-500/20' },
+    violet: { border: 'border-violet-500',  text: 'text-violet-400',  bg: 'bg-violet-500/10',  glow: 'shadow-violet-500/20' },
+    slate:  { border: 'border-slate-500',   text: 'text-slate-400',   bg: 'bg-slate-500/10',   glow: 'shadow-slate-500/20' },
+    pink:   { border: 'border-pink-500',    text: 'text-pink-400',    bg: 'bg-pink-500/10',    glow: 'shadow-pink-500/20' },
+    cyan:   { border: 'border-cyan-500',    text: 'text-cyan-400',    bg: 'bg-cyan-500/10',    glow: 'shadow-cyan-500/20' },
+    orange: { border: 'border-orange-500',  text: 'text-orange-400',  bg: 'bg-orange-500/10',  glow: 'shadow-orange-500/20' },
+    lime:   { border: 'border-lime-500',    text: 'text-lime-400',    bg: 'bg-lime-500/10',    glow: 'shadow-lime-500/20' },
+    indigo: { border: 'border-indigo-500',  text: 'text-indigo-400',  bg: 'bg-indigo-500/10',  glow: 'shadow-indigo-500/20' },
+    teal:   { border: 'border-teal-500',    text: 'text-teal-400',    bg: 'bg-teal-500/10',    glow: 'shadow-teal-500/20' },
+    red:    { border: 'border-red-500',     text: 'text-red-400',     bg: 'bg-red-500/10',     glow: 'shadow-red-500/20' },
 };
 
-const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clientType, subType }: NodeItemProps) => {
-  const styles = VARIANTS[variant];
-  const imgFilterClass = styles.isLight ? 'brightness-0' : 'brightness-0 invert';
+const NodeItem: React.FC<{ item: NodePreset }> = ({ item }) => {
+  const styles = VARIANTS[item.variant];
 
   const onDragStart = (event: React.DragEvent) => {
-    event.dataTransfer.setData('application/reactflow', type);
-    event.dataTransfer.setData('application/label', label);
-    if (middlewareType) event.dataTransfer.setData('application/middlewareType', middlewareType);
-    if (clientType) event.dataTransfer.setData('application/clientType', clientType);
-    if (subType) event.dataTransfer.setData('application/subType', subType);
-    if (logo) event.dataTransfer.setData('application/logo', logo);
+    event.dataTransfer.setData('application/reactflow', item.type);
+    event.dataTransfer.setData('application/label', item.label);
+    
+    // Flatten specific data into transfer
+    if (item.data) {
+        Object.entries(item.data).forEach(([key, value]) => {
+            event.dataTransfer.setData(`application/${key}`, value);
+        });
+    }
+    if (item.logo) event.dataTransfer.setData('application/logo', item.logo);
+    
     event.dataTransfer.effectAllowed = 'move';
   };
 
   return (
     <div 
       className={`
-        relative flex flex-col items-center gap-2 p-3 
-        bg-white border-2 border-black rounded-xl 
-        shadow-[4px_4px_0_0_#000] 
+        relative flex items-center gap-3 p-3
+        bg-slate-900 border border-slate-800 rounded-xl
         cursor-grab active:cursor-grabbing 
         transition-all duration-200
-        hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] hover:bg-slate-50
-        active:translate-y-0 active:shadow-[2px_2px_0_0_#000]
-        group
+        hover:border-slate-600 hover:bg-slate-800 hover:shadow-lg
+        group select-none
       `}
       onDragStart={onDragStart}
       draggable
     >
       <div className={`
-        w-10 h-10 flex items-center justify-center rounded-lg border-2 border-black
-        ${styles.bg} ${styles.text}
-        transition-transform group-hover:scale-110
+        w-10 h-10 flex items-center justify-center rounded-lg border
+        ${styles.bg} ${styles.border} ${styles.text} ${styles.glow} shadow-sm
+        transition-transform group-hover:scale-105
       `}>
-        {logo ? (
-            <img src={logo} alt={label} className={`w-6 h-6 object-contain drop-shadow-sm filter ${imgFilterClass}`} />
+        {item.logo ? (
+            <img src={item.logo} alt={item.label} className="w-6 h-6 object-contain" />
         ) : (
-            Icon && <Icon size={20} strokeWidth={2.5} />
+            <Box size={20} strokeWidth={2} />
         )}
       </div>
-      <span className="text-[10px] font-bold text-black text-center leading-tight uppercase tracking-tight">
-        {label}
-      </span>
+      
+      <div className="flex-1 min-w-0">
+          <div className="text-xs font-bold text-slate-200 leading-tight truncate">
+            {item.label}
+          </div>
+          <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+             {item.description || item.type.toUpperCase()}
+          </div>
+      </div>
     </div>
   );
 };
 
 export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activeLayer }) => {
+  const [search, setSearch] = useState('');
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({
+      'compute': true,
+      'storage': true
+  });
+
+  const toggleCat = (id: string) => {
+      setExpandedCats(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Filter logic
+  const filteredLibrary = useMemo(() => {
+    if (!search.trim()) return LIBRARY_DATA;
+    
+    const lowerSearch = search.toLowerCase();
+    return LIBRARY_DATA.map(cat => ({
+        ...cat,
+        items: cat.items.filter(item => item.label.toLowerCase().includes(lowerSearch))
+    })).filter(cat => cat.items.length > 0);
+  }, [search]);
+
   return (
     <div 
       className={`
-        absolute top-4 bottom-4 right-4 w-[400px]
-        bg-[#fdfbf7] border-2 border-black rounded-2xl shadow-[12px_12px_0_0_#000] z-50
+        absolute top-0 bottom-0 left-0 w-[360px]
+        bg-slate-950 border-r border-slate-800 z-40
         transform transition-transform duration-300 ease-in-out flex flex-col
-        ${isOpen ? 'translate-x-0' : 'translate-x-[120%]'}
+        shadow-2xl shadow-black
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b-2 border-black bg-white rounded-t-2xl">
+      <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950">
         <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-indigo-600 border-2 border-black rounded-lg flex items-center justify-center text-white">
-                 {activeLayer === 'backend' ? <Cpu size={18} /> : <Workflow size={18} />}
+             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white border border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+                 <LayoutGrid size={18} />
              </div>
              <div>
-                <h2 className="text-xl font-bold font-heading text-black leading-none">
-                    {activeLayer === 'backend' ? 'Backend Logic' : 'DevOps Orchestration'}
+                <h2 className="text-lg font-bold font-heading text-white leading-none">
+                    Components
                 </h2>
-                <p className="text-xs font-bold text-slate-500 mt-1">Drag components to your mesh</p>
+                <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider">
+                    {filteredLibrary.reduce((acc, cat) => acc + cat.items.length, 0)} Nodes Available
+                </p>
              </div>
         </div>
         <button 
             onClick={onClose} 
-            className="p-2 bg-white border-2 border-black rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-[2px]"
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
         >
-          <X size={20} strokeWidth={3} />
+          <X size={20} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-8 scroll-smooth no-scrollbar">
-        
-        {/* Shared / Global Categories: Boundaries & Zones */}
-        <div>
-            <div className="flex items-center gap-2 mb-4">
-                <span className="w-3 h-3 bg-indigo-600 rounded-full border-2 border-black"></span>
-                <h3 className="text-sm font-black text-black uppercase tracking-wider">Boundaries & Zones</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-                <NodeItem type="boundary" subType="vpc" label="VPC" icon={Shield} variant="indigo" />
-                <NodeItem type="boundary" subType="subnet" label="Subnet" icon={Lock} variant="slate" />
-                <NodeItem type="boundary" subType="internet" label="Public Internet" icon={Globe} variant="blue" />
-            </div>
-        </div>
+      {/* Search */}
+      <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+          <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <input 
+                  type="text" 
+                  placeholder="Search 60+ components..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600 transition-all"
+              />
+          </div>
+      </div>
 
-        {activeLayer === 'backend' ? (
-          <>
-            {/* Backend Logic Canvas Nodes */}
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Compute & Services</h3>
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 scroll-smooth no-scrollbar">
+        {filteredLibrary.map(category => {
+            const isExpanded = expandedCats[category.id] || search.length > 0;
+            const Icon = category.icon;
+            
+            return (
+                <div key={category.id} className="border border-slate-800 bg-slate-900/30 rounded-xl overflow-hidden">
+                    <button 
+                        onClick={() => toggleCat(category.id)}
+                        className="w-full flex items-center justify-between p-3 hover:bg-slate-800/50 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Icon size={16} className="text-slate-400" />
+                            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{category.label}</span>
+                        </div>
+                        {isExpanded ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+                    </button>
+                    
+                    {isExpanded && (
+                        <div className="p-3 pt-0 grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-200">
+                            {category.items.map((item, idx) => (
+                                <NodeItem key={`${category.id}-${idx}`} item={item} />
+                            ))}
+                        </div>
+                    )}
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="client" label="User Client" icon={Monitor} variant="cyan" />
-                    <NodeItem type="loadBalancer" label="Load Balancer" icon={Split} variant="pink" />
-                    <NodeItem type="server" label="App Server" icon={Server} variant="indigo" />
-                    <NodeItem type="service" label="Microservice" icon={Cpu} variant="emerald" />
-                    <NodeItem type="external" label="SaaS API" icon={Globe} variant="orange" />
-                </div>
-            </div>
+            );
+        })}
 
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-amber-400 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Data & Storage</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="database" label="Database" icon={Database} variant="blue" />
-                    <NodeItem type="database" label="Cache" icon={Zap} variant="amber" />
-                    <NodeItem type="queue" label="Queue" icon={ScrollText} variant="violet" />
-                    <NodeItem type="database" label="Search Index" icon={Search} variant="blue" />
-                </div>
+        {filteredLibrary.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-600">
+                <Search size={32} className="mb-2 opacity-20" />
+                <p className="text-sm font-medium">No components found.</p>
             </div>
-
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-rose-500 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Logic & Routing</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="middleware" middlewareType="gateway" label="Gateway" icon={Globe} variant="orange" />
-                    <NodeItem type="middleware" middlewareType="auth" label="Auth Guard" icon={Shield} variant="rose" />
-                    <NodeItem type="middleware" middlewareType="mesh" label="Service Mesh" icon={Network} variant="teal" />
-                    <NodeItem type="junction" label="Router" icon={Split} variant="slate" />
-                </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* DevOps Canvas Nodes */}
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-violet-500 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Infrastructure</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="external" label="Cloud Provider" icon={Cloud} variant="slate" />
-                    <NodeItem type="external" label="Region / VPC" icon={Globe} variant="indigo" />
-                    <NodeItem type="external" label="Availability Zone" icon={Layers} variant="cyan" />
-                    <NodeItem type="server" label="K8s Node" icon={Server} variant="violet" />
-                </div>
-            </div>
-
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Orchestration</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="external" label="Cluster" logo="https://cdn.simpleicons.org/kubernetes" variant="blue" />
-                    <NodeItem type="external" label="Namespace" icon={Box} variant="emerald" />
-                    <NodeItem type="external" label="Container / Pod" logo="https://cdn.simpleicons.org/docker" variant="blue" />
-                    <NodeItem type="queue" label="Message Bus" icon={Network} variant="amber" />
-                </div>
-            </div>
-
-            <div>
-                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                    <span className="w-3 h-3 bg-orange-500 rounded-full border-2 border-black"></span>
-                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Pipeline & Logs</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                    <NodeItem type="external" label="CI/CD Pipeline" icon={Binary} variant="orange" />
-                    <NodeItem type="service" label="Log Aggregator" icon={Activity} variant="rose" />
-                    <NodeItem type="service" label="Monitor / Alert" icon={Activity} variant="rose" />
-                    <NodeItem type="database" label="Secrets / Vault" icon={Lock} variant="slate" />
-                </div>
-            </div>
-          </>
         )}
-
+      </div>
+      
+      {/* Footer Hint */}
+      <div className="p-3 border-t border-slate-800 bg-slate-950 text-center">
+          <p className="text-[10px] text-slate-500">
+              Drag and drop nodes to canvas
+          </p>
       </div>
     </div>
   );

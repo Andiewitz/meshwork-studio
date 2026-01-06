@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
-import { Network } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const JunctionNode = memo(({ selected }: NodeProps<FlowNodeData>) => {
@@ -19,13 +18,12 @@ export const JunctionNode = memo(({ selected }: NodeProps<FlowNodeData>) => {
 
       {/* The Dot */}
       <div className={`
-        w-4 h-4 rounded-full border-2 
+        w-3 h-3 rounded-full border-2 
         ${selected ? 'bg-blue-500 border-white' : 'bg-zinc-800 border-zinc-600 group-hover:border-blue-500 group-hover:bg-blue-500/50'}
         transition-colors z-10
       `} />
 
-      {/* Handles - Single center handle doesn't work well for all directions, 
-          so we overlay transparent handles for all directions */}
+      {/* 4-way handles allowed for routing nodes */}
       <Handle id="top" type="target" position={Position.Top} className="!w-2 !h-2 !opacity-0" />
       <Handle id="bottom" type="source" position={Position.Bottom} className="!w-2 !h-2 !opacity-0" />
       <Handle id="left" type="target" position={Position.Left} className="!w-2 !h-2 !opacity-0" />

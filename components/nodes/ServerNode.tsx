@@ -41,11 +41,19 @@ export const ServerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => 
         </div>
       </div>
 
-      {/* Wireframe Handles */}
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-slate-950 !border-2 !border-indigo-500" />
+      {/* Inputs (Left) */}
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="!w-3 !h-3 !bg-slate-950 !border-2 !border-indigo-500 hover:!bg-indigo-500 hover:!scale-125 transition-all !-left-[7px] z-50" 
+      />
+      
+      {/* Outputs (Right) */}
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="!w-3 !h-3 !bg-slate-950 !border-2 !border-indigo-500 hover:!bg-indigo-500 hover:!scale-125 transition-all !-right-[7px] z-50" 
+      />
     </div>
   );
 });
