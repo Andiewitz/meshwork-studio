@@ -1,37 +1,41 @@
 import React, { memo } from 'react';
 import { NodeResizer, NodeProps } from 'reactflow';
-import { Network } from 'lucide-react';
+import { Network, Shield } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
 export const BoundaryNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
   const isSubnet = data.subType === 'subnet';
+  const label = data.label || (isSubnet ? 'Private Subnet' : 'VPC Network');
+  
   return (
     <div className="relative w-full h-full min-w-[200px] min-h-[150px]">
       <NodeResizer 
-        color="#0f172a" 
+        color={selected ? "#6366f1" : "transparent"}
         isVisible={selected} 
         minWidth={200} 
         minHeight={150} 
-        lineStyle={{ border: '2px solid #0f172a' }}
-        handleStyle={{ width: 10, height: 10, border: '2px solid #0f172a', backgroundColor: 'white', borderRadius: '2px' }}
+        lineStyle={{ border: '1px solid #6366f1' }}
+        handleStyle={{ width: 8, height: 8, border: '1px solid #6366f1', borderRadius: '2px' }}
       />
       
+      {/* Container Frame */}
       <div 
         className={`
-          w-full h-full rounded-xl border-2 shadow-[4px_4px_0_0_#0f172a]
-          ${isSubnet ? 'border-dashed border-slate-400 bg-slate-50/20' : 'border-slate-900 bg-slate-50/50'}
+          w-full h-full rounded-lg border-2
+          ${isSubnet ? 'border-dashed border-slate-300 bg-slate-50/30' : 'border-indigo-100 bg-indigo-50/20'}
           transition-all duration-200 pointer-events-none
         `}
       />
 
+      {/* Professional Label Tag */}
       <div className={`
-        absolute -top-3 left-4 px-3 py-1 rounded-lg border-2 border-slate-900 
-        bg-white text-slate-900 shadow-[2px_2px_0_0_#0f172a]
-        flex items-center gap-2 z-10
+        absolute -top-3 left-4 px-3 py-1 rounded border shadow-sm
+        bg-white flex items-center gap-2 z-10
+        ${isSubnet ? 'border-slate-300 text-slate-600' : 'border-indigo-200 text-indigo-700'}
       `}>
-        <Network size={12} strokeWidth={3} className="text-indigo-500" />
-        <span className="text-[9px] font-black uppercase tracking-widest">
-          {data.label || 'Network Zone'}
+        {isSubnet ? <Network size={12} /> : <Shield size={12} />}
+        <span className="text-[10px] font-bold uppercase tracking-widest">
+          {label}
         </span>
       </div>
     </div>
