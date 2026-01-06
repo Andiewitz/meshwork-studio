@@ -16,6 +16,7 @@ export interface FlowNodeData extends Record<string, unknown> {
   status?: 'idle' | 'running' | 'success' | 'error';
   config?: Record<string, unknown>;
   layer?: 'backend' | 'devops';
+  subType?: 'vpc' | 'subnet' | 'internet'; // Specific styling for boundaries
 }
 
 export type CanvasLayer = 'backend' | 'devops';

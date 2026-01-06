@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -33,6 +32,7 @@ import { CanvasLayer } from '../types';
 import { AsciiExportModal } from './modals/AsciiExportModal';
 import { EditNodeModal } from './modals/EditNodeModal';
 import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelectorModal';
+/* Fix: Removed non-existent ClientOption member from import */
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
 import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
@@ -47,6 +47,7 @@ import { MiddlewareNode } from './nodes/MiddlewareNode';
 import { ClientNode } from './nodes/ClientNode';
 import { JunctionNode } from './nodes/JunctionNode';
 import { ExternalServiceNode } from './nodes/ExternalServiceNode';
+import { BoundaryNode } from './nodes/BoundaryNode';
 
 const nodeTypes: NodeTypes = {
   server: ServerNode,
@@ -58,6 +59,7 @@ const nodeTypes: NodeTypes = {
   client: ClientNode,
   junction: JunctionNode,
   external: ExternalServiceNode,
+  boundary: BoundaryNode,
 };
 
 interface MenuState {
@@ -373,6 +375,7 @@ const FlowEditorContent: React.FC = () => {
     const type = event.dataTransfer.getData('application/reactflow');
     if (!type || !rfInstance) return;
     const position = rfInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    
     const newNode: Node = {
       id: `${type}-${Date.now()}`,
       type,
@@ -382,8 +385,11 @@ const FlowEditorContent: React.FC = () => {
         logo: event.dataTransfer.getData('application/logo'),
         middlewareType: event.dataTransfer.getData('application/middlewareType'),
         clientType: event.dataTransfer.getData('application/clientType'),
+        subType: event.dataTransfer.getData('application/subType'), // For boundaries
         layer: activeLayer
       },
+      // If it's a boundary node, make it default to a larger size
+      style: type === 'boundary' ? { width: 500, height: 350 } : undefined
     };
     setNodes((nds) => nds.concat(newNode));
     setSaveStatus('unsaved');

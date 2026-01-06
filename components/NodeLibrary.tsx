@@ -25,7 +25,8 @@ import {
     Cloud,
     Container,
     Layers,
-    Binary
+    Binary,
+    Square
 } from 'lucide-react';
 import { CanvasLayer } from '../types';
 
@@ -45,6 +46,7 @@ interface NodeItemProps {
     variant: Variant;
     middlewareType?: string;
     clientType?: string;
+    subType?: string; // For Boundary styling
 }
 
 const VARIANTS: Record<Variant, { bg: string, border: string, text: string, shadow: string, isLight: boolean }> = {
@@ -62,15 +64,16 @@ const VARIANTS: Record<Variant, { bg: string, border: string, text: string, shad
     teal:   { bg: 'bg-teal-400',    border: 'border-teal-500',    text: 'text-black', shadow: 'shadow-teal-900', isLight: true },
 };
 
-const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clientType }: NodeItemProps) => {
+const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clientType, subType }: NodeItemProps) => {
   const styles = VARIANTS[variant];
   const imgFilterClass = styles.isLight ? 'brightness-0' : 'brightness-0 invert';
 
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
+  const onDragStart = (event: React.DragEvent) => {
+    event.dataTransfer.setData('application/reactflow', type);
     event.dataTransfer.setData('application/label', label);
     if (middlewareType) event.dataTransfer.setData('application/middlewareType', middlewareType);
     if (clientType) event.dataTransfer.setData('application/clientType', clientType);
+    if (subType) event.dataTransfer.setData('application/subType', subType);
     if (logo) event.dataTransfer.setData('application/logo', logo);
     event.dataTransfer.effectAllowed = 'move';
   };
@@ -87,7 +90,7 @@ const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clie
         active:translate-y-0 active:shadow-[2px_2px_0_0_#000]
         group
       `}
-      onDragStart={(event) => onDragStart(event, type)}
+      onDragStart={onDragStart}
       draggable
     >
       <div className={`
@@ -141,11 +144,24 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
 
       <div className="flex-1 overflow-y-auto p-5 space-y-8 scroll-smooth no-scrollbar">
         
+        {/* Shared / Global Categories: Boundaries & Zones */}
+        <div>
+            <div className="flex items-center gap-2 mb-4">
+                <span className="w-3 h-3 bg-indigo-600 rounded-full border-2 border-black"></span>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Boundaries & Zones</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+                <NodeItem type="boundary" subType="vpc" label="VPC" icon={Shield} variant="indigo" />
+                <NodeItem type="boundary" subType="subnet" label="Subnet" icon={Lock} variant="slate" />
+                <NodeItem type="boundary" subType="internet" label="Public Internet" icon={Globe} variant="blue" />
+            </div>
+        </div>
+
         {activeLayer === 'backend' ? (
           <>
             {/* Backend Logic Canvas Nodes */}
             <div>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
                     <span className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black"></span>
                     <h3 className="text-sm font-black text-black uppercase tracking-wider">Compute & Services</h3>
                 </div>
@@ -188,7 +204,7 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activ
           <>
             {/* DevOps Canvas Nodes */}
             <div>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
                     <span className="w-3 h-3 bg-violet-500 rounded-full border-2 border-black"></span>
                     <h3 className="text-sm font-black text-black uppercase tracking-wider">Infrastructure</h3>
                 </div>
