@@ -8,9 +8,11 @@ import { SettingsPage } from './pages/SettingsPage';
 import { TemplateSelectorPage } from './pages/TemplateSelectorPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { CommandPalette } from './components/CommandPalette';
+
+const { HashRouter, Routes, Route, Navigate } = ReactRouterDOM;
 
 const App: React.FC = () => {
   // Dark mode theme configuration

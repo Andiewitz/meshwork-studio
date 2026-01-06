@@ -1,10 +1,13 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Split } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const LoadBalancerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const LoadBalancerNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
+  const logo = data.logo as string;
+  
   return (
     <div className={`
       relative w-32 h-32 rounded-2xl border-2 transition-all duration-300
@@ -22,7 +25,11 @@ export const LoadBalancerNode = memo(({ data, selected }: NodeProps<FlowNodeData
 
       <div className="flex flex-col items-center justify-center h-full p-3 text-center">
         <div className={`mb-2 ${selected ? 'text-sky-400' : 'text-sky-600'}`}>
-             <Split size={24} />
+             {logo ? (
+                 <img src={logo} alt="" className="w-6 h-6 object-contain" />
+             ) : (
+                 <Split size={24} />
+             )}
         </div>
         <div className="text-xs font-bold text-white font-heading leading-tight">
             {data.label}

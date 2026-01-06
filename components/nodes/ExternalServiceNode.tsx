@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Globe, Cloud } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ExternalServiceNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ExternalServiceNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   const logo = data.logo as string;
   
   return (

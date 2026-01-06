@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Settings, MoreHorizontal } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ActionNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ActionNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   return (
     <div className={`
       relative group min-w-[200px] rounded-xl

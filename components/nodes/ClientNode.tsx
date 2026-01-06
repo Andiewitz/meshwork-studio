@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { User, Smartphone, Monitor } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ClientNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ClientNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   const isPhone = data.clientType === 'phone';
   const size = isPhone ? "w-32 h-48" : "w-48 h-32";
   const Icon = isPhone ? Smartphone : Monitor;

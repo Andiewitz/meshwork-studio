@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Play, Zap } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const TriggerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const TriggerNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   return (
     <div className={`
       relative group min-w-[180px]

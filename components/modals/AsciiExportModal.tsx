@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { X, Copy, Check, Sparkles, Loader2, RefreshCw, Download, AlertCircle } from 'lucide-react';
 // Correct import from @google/genai
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
-import type { Node, Edge } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Tooltip, Button, IconButton } from '@mui/material';
 
 interface AsciiExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  nodes: Node[];
-  edges: Edge[];
+  nodes: ReactFlow.Node[];
+  edges: ReactFlow.Edge[];
 }
 
 export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onClose, nodes, edges }) => {

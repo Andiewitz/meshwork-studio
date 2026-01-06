@@ -1,25 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import ReactFlow, {
-  Background,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  ReactFlowProvider,
-  BackgroundVariant,
-  useReactFlow,
-  ConnectionMode,
-  SelectionMode,
-} from 'reactflow';
+import ReactFlow, * as ReactFlowRenderer from 'reactflow';
 import 'reactflow/dist/style.css';
-import type {
-  Node,
-  Edge,
-  Connection,
-  NodeTypes,
-  ReactFlowInstance,
-} from 'reactflow';
 import { ChevronLeft, Save, Download, Cpu, Infinity as InfinityIcon } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
@@ -35,6 +18,7 @@ import { DatabaseSelectorModal, DatabaseOption } from './modals/DatabaseSelector
 import { ClientConfigModal } from './modals/ClientConfigModal';
 import { CacheSelectorModal, CacheOption } from './modals/CacheSelectorModal';
 import { ConnectionSettingsModal, ConnectionOption } from './modals/ConnectionSettingsModal';
+import { SubFlowEditorModal } from './modals/SubFlowEditorModal';
 
 // Custom Nodes
 import { ServerNode } from './nodes/ServerNode';
@@ -48,7 +32,10 @@ import { JunctionNode } from './nodes/JunctionNode';
 import { ExternalServiceNode } from './nodes/ExternalServiceNode';
 import { BoundaryNode } from './nodes/BoundaryNode';
 
-const nodeTypes: NodeTypes = {
+const { Background, addEdge, useNodesState, useEdgesState, ReactFlowProvider, BackgroundVariant, useReactFlow, ConnectionMode, SelectionMode } = ReactFlowRenderer;
+const { useNavigate, useParams } = ReactRouterDOM;
+
+const nodeTypes: ReactFlowRenderer.NodeTypes = {
   server: ServerNode,
   database: DatabaseNode,
   queue: QueueNode,
@@ -77,17 +64,17 @@ const FlowEditorContent: React.FC = () => {
   const [activeLayer, setActiveLayer] = useState<CanvasLayer>('backend');
   
   // Storage for both canvases
-  const [backendNodes, setBackendNodes] = useState<Node[]>([]);
-  const [backendEdges, setBackendEdges] = useState<Edge[]>([]);
-  const [devopsNodes, setDevopsNodes] = useState<Node[]>([]);
-  const [devopsEdges, setDevopsEdges] = useState<Edge[]>([]);
+  const [backendNodes, setBackendNodes] = useState<ReactFlowRenderer.Node[]>([]);
+  const [backendEdges, setBackendEdges] = useState<ReactFlowRenderer.Edge[]>([]);
+  const [devopsNodes, setDevopsNodes] = useState<ReactFlowRenderer.Node[]>([]);
+  const [devopsEdges, setDevopsEdges] = useState<ReactFlowRenderer.Edge[]>([]);
 
   // Current Active State for React Flow hooks
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
   const [isLoading, setIsLoading] = useState(true);
-  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [rfInstance, setRfInstance] = useState<ReactFlowRenderer.ReactFlowInstance | null>(null);
   
   // Interaction State
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
@@ -103,9 +90,10 @@ const FlowEditorContent: React.FC = () => {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isCacheModalOpen, setIsCacheModalOpen] = useState(false);
   const [isConnectionModalOpen, setIsConnectionModalOpen] = useState(false);
+  const [isSubFlowModalOpen, setIsSubFlowModalOpen] = useState(false);
   
   // Selection Data for Modals
-  const [selectedNodeData, setSelectedNodeData] = useState<{ id: string, data: any } | null>(null);
+  const [selectedNodeData, setSelectedNodeData] = useState<{ id: string, data: any, type?: string } | null>(null);
   const [selectedEdgeData, setSelectedEdgeData] = useState<{ id: string, label?: string } | null>(null);
 
   // Context Menu State
@@ -209,33 +197,38 @@ const FlowEditorContent: React.FC = () => {
     };
   }, [activeTool, isSpacePressed]);
 
-  const onConnect = useCallback((params: Connection) => {
+  const onConnect = useCallback((params: ReactFlowRenderer.Connection) => {
     setEdges((eds) => addEdge({ ...params, animated: true, style: { strokeWidth: 2, stroke: '#94a3b8' } }, eds));
     setSaveStatus('unsaved');
   }, [setEdges]);
 
   // --- Double Click Handlers ---
-  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNodeData({ id: node.id, data: node.data });
-    if (node.type === 'database') setIsDbModalOpen(true);
+  const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: ReactFlowRenderer.Node) => {
+    setSelectedNodeData({ id: node.id, data: node.data, type: node.type });
+    
+    if (node.type === 'boundary') {
+      setIsSubFlowModalOpen(true);
+    }
+    else if (node.type === 'database') setIsDbModalOpen(true);
     else if (node.type === 'client') setIsClientModalOpen(true);
     else if (node.type === 'middleware' && node.data.middlewareType === 'cache') setIsCacheModalOpen(true);
     else setIsEditModalOpen(true);
+    
     setMenu(null);
   }, []);
 
-  const onEdgeDoubleClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+  const onEdgeDoubleClick = useCallback((event: React.MouseEvent, edge: ReactFlowRenderer.Edge) => {
     setSelectedEdgeData({ id: edge.id, label: edge.label as string });
     setIsConnectionModalOpen(true);
     setMenu(null);
   }, []);
 
-  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: ReactFlowRenderer.Node) => {
     event.preventDefault();
     setMenu({ x: event.clientX, y: event.clientY, type: 'node', id: node.id });
   }, [setMenu]);
 
-  const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
+  const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: ReactFlowRenderer.Edge) => {
     event.preventDefault();
     setMenu({ x: event.clientX, y: event.clientY, type: 'edge', id: edge.id });
   }, [setMenu]);
@@ -309,7 +302,7 @@ const FlowEditorContent: React.FC = () => {
           const midX = (source.position.x + target.position.x) / 2;
           const midY = (source.position.y + target.position.y) / 2;
           const junctionId = `junction-${Date.now()}`;
-          const junctionNode: Node = { id: junctionId, type: 'junction', position: { x: midX, y: midY }, data: { label: '' } };
+          const junctionNode: ReactFlowRenderer.Node = { id: junctionId, type: 'junction', position: { x: midX, y: midY }, data: { label: '' } };
           const edge1 = { ...edge, id: `${edge.source}-${junctionId}`, target: junctionId };
           const edge2 = { ...edge, id: `${junctionId}-${edge.target}`, source: junctionId, sourceHandle: undefined, targetHandle: edge.targetHandle };
           setNodes(nds => nds.concat(junctionNode));
@@ -364,13 +357,26 @@ const FlowEditorContent: React.FC = () => {
     }
   };
 
+  const handleSubFlowSave = (subNodes: ReactFlowRenderer.Node[], subEdges: ReactFlowRenderer.Edge[]) => {
+    if (selectedNodeData) {
+      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { 
+        ...n, 
+        data: { 
+          ...n.data, 
+          subFlow: { nodes: subNodes, edges: subEdges } 
+        } 
+      } : n)));
+      setSaveStatus('unsaved');
+    }
+  };
+
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
     if (!type || !rfInstance) return;
     const position = rfInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     
-    const newNode: Node = {
+    const newNode: ReactFlowRenderer.Node = {
       id: `${type}-${Date.now()}`,
       type,
       position,
@@ -505,6 +511,18 @@ const FlowEditorContent: React.FC = () => {
         <ClientConfigModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} initialType={selectedNodeData?.data?.clientType || 'desktop'} onSave={handleClientSave} />
         <CacheSelectorModal isOpen={isCacheModalOpen} onClose={() => setIsCacheModalOpen(false)} onSelect={handleCacheSelect} />
         <ConnectionSettingsModal isOpen={isConnectionModalOpen} onClose={() => setIsConnectionModalOpen(false)} currentLabel={selectedEdgeData?.label} onSave={handleConnectionSave} />
+        
+        {selectedNodeData && selectedNodeData.type === 'boundary' && (
+          <SubFlowEditorModal
+            isOpen={isSubFlowModalOpen}
+            onClose={() => setIsSubFlowModalOpen(false)}
+            parentNodeId={selectedNodeData.id}
+            parentLabel={selectedNodeData.data.label || 'Container'}
+            initialNodes={selectedNodeData.data.subFlow?.nodes || []}
+            initialEdges={selectedNodeData.data.subFlow?.edges || []}
+            onSave={handleSubFlowSave}
+          />
+        )}
 
         <ReactFlow
           nodes={nodes}

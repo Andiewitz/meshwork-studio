@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { FlowNodeData } from '../../types';
 
-export const JunctionNode = memo(({ selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const JunctionNode = memo(({ selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   return (
     <div className={`
       relative group w-4 h-4

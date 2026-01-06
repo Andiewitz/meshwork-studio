@@ -1,12 +1,14 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Layers } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const MiddlewareNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
-  const techLogo = data.techLogo as string;
-  const mwType = data.middlewareType || 'Middleware';
+const { Handle, Position } = ReactFlow;
+
+export const MiddlewareNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
+  // Support both generic 'logo' (from library) and specific 'techLogo' (from modal)
+  const logo = (data.logo || data.techLogo) as string;
+  const mwType = (data.middlewareType as string) || 'Middleware';
 
   return (
     <div className={`
@@ -26,8 +28,8 @@ export const MiddlewareNode = memo(({ data, selected }: NodeProps<FlowNodeData>)
 
       <div className="flex items-center h-full px-3 gap-3">
         <div className="w-8 h-8 flex items-center justify-center rounded bg-fuchsia-500/10">
-             {techLogo ? (
-                 <img src={techLogo} alt="" className="w-5 h-5 object-contain" />
+             {logo ? (
+                 <img src={logo} alt="" className="w-5 h-5 object-contain" />
              ) : (
                  <Layers size={16} className="text-fuchsia-500" />
              )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Node, Edge } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 
 export interface UserProfile {
   uid: string;
@@ -17,6 +17,11 @@ export interface FlowNodeData extends Record<string, unknown> {
   config?: Record<string, unknown>;
   layer?: 'backend' | 'devops';
   subType?: 'vpc' | 'subnet' | 'internet'; // Specific styling for boundaries
+  // Nested Flow Data
+  subFlow?: {
+    nodes: ReactFlow.Node[];
+    edges: ReactFlow.Edge[];
+  };
 }
 
 export type CanvasLayer = 'backend' | 'devops';
@@ -28,11 +33,11 @@ export interface FlowData {
   title: string;
   icon?: string;
   // Primary (Backend) Layer
-  nodes: Node<FlowNodeData>[];
-  edges: Edge[];
+  nodes: ReactFlow.Node<FlowNodeData>[];
+  edges: ReactFlow.Edge[];
   // DevOps Layer
-  devopsNodes?: Node<FlowNodeData>[];
-  devopsEdges?: Edge[];
+  devopsNodes?: ReactFlow.Node<FlowNodeData>[];
+  devopsEdges?: ReactFlow.Edge[];
   createdAt: number;
   updatedAt: number;
   isPublic?: boolean;

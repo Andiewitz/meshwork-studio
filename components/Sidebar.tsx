@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -13,6 +13,8 @@ import {
 import { NavigationItem } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { Tooltip, Zoom } from '@mui/material';
+
+const { NavLink } = ReactRouterDOM;
 
 interface SidebarProps {
   isOpen: boolean;

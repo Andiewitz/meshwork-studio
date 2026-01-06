@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { ArrowLeft, Rocket, Star, Wrench, Layers, Palette, PaintBucket, Globe, Box, ShieldCheck, MousePointer2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
+
+const { Link } = ReactRouterDOM;
 
 interface LogEntryProps {
   version: string;

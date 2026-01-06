@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { GitFork, Check, X } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ConditionNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ConditionNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
   return (
     <div className="relative group w-[240px]">
       {/* Custom Diamond Shape Illusion using CSS Rotation or just a styled card */}

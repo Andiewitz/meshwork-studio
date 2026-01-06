@@ -1,8 +1,10 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Navigate, useLocation } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Code2 } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
+
+const { Navigate, useLocation } = ReactRouterDOM;
 
 export const LoginPage: React.FC = () => {
   const { user, signInWithGoogle, loginAsGuest, loading } = useAuth();

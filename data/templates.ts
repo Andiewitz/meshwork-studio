@@ -1,12 +1,12 @@
-import type { Node, Edge, MarkerType } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { FlowNodeData } from '../types';
 
 export interface Template {
   id: string;
   name: string;
   description: string;
-  nodes: Node<FlowNodeData>[];
-  edges: Edge[];
+  nodes: ReactFlow.Node<FlowNodeData>[];
+  edges: ReactFlow.Edge[];
   thumbnailColor: string;
   logo?: string;
 }

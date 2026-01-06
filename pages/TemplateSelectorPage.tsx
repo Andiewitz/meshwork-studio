@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { 
     X, 
     Layout, 
@@ -15,6 +15,8 @@ import { flowService } from '../services/flowService';
 import { useAuth } from '../hooks/useAuth';
 import { PageTransition } from '../components/PageTransition';
 import { PROJECT_ICONS, DEFAULT_ICON } from '../utils/projectIcons';
+
+const { useNavigate } = ReactRouterDOM;
 
 export const TemplateSelectorPage: React.FC = () => {
   const navigate = useNavigate();

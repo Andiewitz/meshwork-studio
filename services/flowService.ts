@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebaseService';
 import { FlowData } from '../types';
-import type { Node, Edge } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { templates } from '../data/templates';
 import { safeStorage } from '../utils/storage';
 
@@ -204,7 +204,7 @@ export const flowService = {
   },
 
   // Save/Update flow content (nodes/edges) for all layers
-  saveFlow: async (flowId: string, nodes: Node[], edges: Edge[], devopsNodes?: Node[], devopsEdges?: Edge[]) => {
+  saveFlow: async (flowId: string, nodes: ReactFlow.Node[], edges: ReactFlow.Edge[], devopsNodes?: ReactFlow.Node[], devopsEdges?: ReactFlow.Edge[]) => {
     if (flowId.startsWith('local-')) {
         const flows = getLocalFlows();
         const index = flows.findIndex(f => f.id === flowId);

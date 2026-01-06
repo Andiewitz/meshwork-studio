@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { FlowData } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -9,6 +9,8 @@ import { RenameFlowModal } from '../components/modals/RenameFlowModal';
 import { PROJECT_ICONS, DEFAULT_ICON } from '../utils/projectIcons';
 import { safeStorage } from '../utils/storage';
 import { Fab, Tooltip } from '@mui/material';
+
+const { useNavigate } = ReactRouterDOM;
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();

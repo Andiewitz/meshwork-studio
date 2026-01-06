@@ -1,11 +1,13 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Database } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const DatabaseNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
-  const dbLogo = data.dbLogo as string;
+const { Handle, Position } = ReactFlow;
+
+export const DatabaseNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
+  // Support both generic 'logo' (from library) and specific 'dbLogo' (from modal)
+  const logo = (data.logo || data.dbLogo) as string;
   const dbName = (data.dbName as string) || data.label;
 
   return (
@@ -28,8 +30,8 @@ export const DatabaseNode = memo(({ data, selected }: NodeProps<FlowNodeData>) =
             w-12 h-12 mb-3 rounded-xl border flex items-center justify-center bg-emerald-500/5
             ${selected ? 'border-emerald-500/50' : 'border-emerald-500/20'}
         `}>
-            {dbLogo ? (
-                <img src={dbLogo} alt="" className="w-8 h-8 object-contain" />
+            {logo ? (
+                <img src={logo} alt="" className="w-8 h-8 object-contain" />
             ) : (
                 <Database size={24} className={selected ? 'text-emerald-400' : 'text-emerald-600'} />
             )}

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { 
   Search, 
   LayoutDashboard, 
@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, Backdrop } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
+
+const { useNavigate, useLocation } = ReactRouterDOM;
 
 interface CommandOption {
   id: string;

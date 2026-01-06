@@ -1,10 +1,13 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Server } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ServerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ServerNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
+  const logo = data.logo as string;
+  
   return (
     <div className={`
       relative w-56 h-32 rounded-2xl border-2 transition-all duration-300
@@ -24,7 +27,11 @@ export const ServerNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => 
       <div className="p-5 flex flex-col h-full justify-between">
         <div className="flex items-start justify-between">
             <div className={`p-2 rounded-lg border bg-indigo-500/10 ${selected ? 'border-indigo-500/50 text-indigo-400' : 'border-indigo-500/20 text-indigo-500/60'}`}>
-                <Server size={20} />
+                {logo ? (
+                    <img src={logo} alt="" className="w-5 h-5 object-contain" />
+                ) : (
+                    <Server size={20} />
+                )}
             </div>
             <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />

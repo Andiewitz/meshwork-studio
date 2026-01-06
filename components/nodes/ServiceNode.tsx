@@ -1,10 +1,13 @@
 import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import type { NodeProps } from 'reactflow';
+import * as ReactFlow from 'reactflow';
 import { Cpu } from 'lucide-react';
 import { FlowNodeData } from '../../types';
 
-export const ServiceNode = memo(({ data, selected }: NodeProps<FlowNodeData>) => {
+const { Handle, Position } = ReactFlow;
+
+export const ServiceNode = memo(({ data, selected }: ReactFlow.NodeProps<FlowNodeData>) => {
+  const logo = data.logo as string;
+  
   return (
     <div className={`
       relative w-48 h-28 rounded-2xl border-2 transition-all duration-300
@@ -22,7 +25,11 @@ export const ServiceNode = memo(({ data, selected }: NodeProps<FlowNodeData>) =>
 
       <div className="p-4 h-full flex flex-col justify-center">
         <div className="flex items-center gap-3 mb-2">
-             <Cpu size={18} className="text-violet-500" />
+             {logo ? (
+                 <img src={logo} alt="" className="w-5 h-5 object-contain" />
+             ) : (
+                 <Cpu size={18} className="text-violet-500" />
+             )}
              <div className="text-sm font-bold text-white font-heading truncate">
                 {data.label}
              </div>
