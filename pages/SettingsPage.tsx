@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, 
   User, 
@@ -11,26 +11,16 @@ import {
   Grid3X3,
   ShieldCheck,
   AlertCircle,
-  ExternalLink,
-  FileText,
-  Key,
-  Eye,
-  EyeOff
+  FileText
 } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
 import { useAuth } from '../hooks/useAuth';
 import { safeStorage } from '../utils/storage';
 import { 
   Button, 
-  TextField, 
-  InputAdornment, 
-  IconButton, 
   Paper, 
-  Typography, 
-  Box, 
   Alert, 
   Chip,
-  Divider,
   Switch
 } from '@mui/material';
 
@@ -44,32 +34,8 @@ export const SettingsPage: React.FC = () => {
   const [gridSnap, setGridSnap] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
-  // BYOK State
-  const [localKey, setLocalKey] = useState<string | null>(null);
-  const [keyInput, setKeyInput] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  
   // Check Env Key
   const isEnvKeyPresent = !!process.env.API_KEY;
-
-  useEffect(() => {
-    const stored = safeStorage.getItem('meshwork_api_key');
-    if (stored) setLocalKey(stored);
-  }, []);
-
-  const handleSaveKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (keyInput.trim()) {
-        safeStorage.setItem('meshwork_api_key', keyInput.trim());
-        setLocalKey(keyInput.trim());
-        setKeyInput('');
-    }
-  };
-
-  const handleRemoveKey = () => {
-      safeStorage.removeItem('meshwork_api_key');
-      setLocalKey(null);
-  };
 
   const clearData = () => {
     if (confirm('Are you sure? This will delete all local flows and settings.')) {
@@ -147,111 +113,15 @@ export const SettingsPage: React.FC = () => {
                         </p>
                     </Alert>
                   ) : (
-                    <div className="mb-8">
-                         <div className="flex items-center justify-between mb-4">
-                            <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">
-                                Bring Your Own Key (BYOK)
-                            </label>
-                            {localKey && (
-                                <Chip 
-                                    label="Key Saved Locally" 
-                                    color="success" 
-                                    size="small" 
-                                    variant="outlined" 
-                                    sx={{ fontWeight: 'bold' }} 
-                                />
-                            )}
-                         </div>
-                         
-                         {!localKey ? (
-                            <Paper elevation={0} sx={{ p: 4, bgcolor: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '16px' }}>
-                                <p className="text-sm text-slate-500 mb-6">
-                                    To enable AI features, please provide your Google Gemini API key. It will be stored securely in your browser's local storage and never sent to our servers.
-                                </p>
-                                <form onSubmit={handleSaveKey} className="flex gap-2 items-start">
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        placeholder="Paste your Gemini API Key..."
-                                        type={showKey ? 'text' : 'password'}
-                                        value={keyInput}
-                                        onChange={(e) => setKeyInput(e.target.value)}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <Key size={18} className="text-slate-400" />
-                                                </InputAdornment>
-                                            ),
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                                        onClick={() => setShowKey(!showKey)}
-                                                        edge="end"
-                                                    >
-                                                        {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                            sx: { 
-                                                borderRadius: '12px', 
-                                                backgroundColor: 'white',
-                                                fontFamily: 'monospace',
-                                                fontWeight: 'bold'
-                                            }
-                                        }}
-                                    />
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        disabled={!keyInput.trim()}
-                                        sx={{ 
-                                            py: 1.8, 
-                                            px: 4, 
-                                            borderRadius: '12px', 
-                                            fontWeight: 'bold', 
-                                            backgroundColor: '#0f172a',
-                                            boxShadow: 'none',
-                                            '&:hover': { backgroundColor: '#1e293b', boxShadow: 'none' }
-                                        }}
-                                    >
-                                        Save
-                                    </Button>
-                                </form>
-                                <div className="mt-4 flex items-center gap-1 text-xs text-slate-400">
-                                    <AlertCircle size={12} />
-                                    <span>Don't have a key?</span>
-                                    <a href="https://ai.google.dev/" target="_blank" rel="noreferrer" className="text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                                        Get one from Google AI Studio <ExternalLink size={10} />
-                                    </a>
-                                </div>
-                            </Paper>
-                         ) : (
-                             <Paper elevation={0} sx={{ p: 3, border: '2px solid #e2e8f0', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                 <div className="flex items-center gap-4">
-                                     <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                         <Key size={20} />
-                                     </div>
-                                     <div>
-                                         <div className="text-sm font-bold text-slate-900 font-mono">
-                                             ••••••••••••••••••••••••••
-                                         </div>
-                                         <div className="text-xs text-slate-500">
-                                             Stored locally
-                                         </div>
-                                     </div>
-                                 </div>
-                                 <Button 
-                                    onClick={handleRemoveKey}
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<Trash2 size={16} />}
-                                    sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 'bold' }}
-                                 >
-                                     Remove
-                                 </Button>
-                             </Paper>
-                         )}
-                    </div>
+                    <Paper elevation={0} sx={{ p: 4, bgcolor: '#fff1f2', border: '2px solid #fecaca', borderRadius: '16px' }}>
+                        <div className="flex items-center gap-3 text-rose-600 mb-2">
+                            <AlertCircle size={20} />
+                            <h4 className="font-bold">API Key Missing</h4>
+                        </div>
+                        <p className="text-sm text-slate-600">
+                            AI features are currently unavailable. Please ensure the `API_KEY` environment variable is configured in your project settings.
+                        </p>
+                    </Paper>
                   )}
 
                   <div className="mt-8 space-y-4">
@@ -262,8 +132,8 @@ export const SettingsPage: React.FC = () => {
                            <span className="text-sm font-bold text-slate-700">AI Docs (ASCII Art)</span>
                         </div>
                         <Chip 
-                            label={isEnvKeyPresent || localKey ? 'ENABLED' : 'DISABLED'} 
-                            color={isEnvKeyPresent || localKey ? 'success' : 'default'}
+                            label={isEnvKeyPresent ? 'ENABLED' : 'DISABLED'} 
+                            color={isEnvKeyPresent ? 'success' : 'default'}
                             size="small"
                             sx={{ fontWeight: 'bold' }}
                         />

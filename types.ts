@@ -15,7 +15,10 @@ export interface FlowNodeData extends Record<string, unknown> {
   icon?: string;
   status?: 'idle' | 'running' | 'success' | 'error';
   config?: Record<string, unknown>;
+  layer?: 'backend' | 'devops';
 }
+
+export type CanvasLayer = 'backend' | 'devops';
 
 // Represents a Flow document in Firestore 'flows' collection
 export interface FlowData {
@@ -23,8 +26,12 @@ export interface FlowData {
   ownerId: string;
   title: string;
   icon?: string;
+  // Primary (Backend) Layer
   nodes: Node<FlowNodeData>[];
   edges: Edge[];
+  // DevOps Layer
+  devopsNodes?: Node<FlowNodeData>[];
+  devopsEdges?: Edge[];
   createdAt: number;
   updatedAt: number;
   isPublic?: boolean;

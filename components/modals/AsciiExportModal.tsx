@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Sparkles, Loader2, FileText, Terminal, RefreshCw, Download, AlertCircle } from 'lucide-react';
+import { X, Copy, Check, Sparkles, Loader2, RefreshCw, Download, AlertCircle } from 'lucide-react';
+// Correct import from @google/genai
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import type { Node, Edge } from 'reactflow';
 import { Tooltip, Button, IconButton } from '@mui/material';
-import { safeStorage } from '../../utils/storage';
 
 interface AsciiExportModalProps {
   isOpen: boolean;
@@ -20,19 +20,20 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
   const [error, setError] = useState<string | null>(null);
 
   const generateAscii = async () => {
-    // Check Env Key OR Local Key
-    const apiKey = process.env.API_KEY || safeStorage.getItem('meshwork_api_key');
+    // API key must be obtained exclusively from the environment variable process.env.API_KEY.
+    const apiKey = process.env.API_KEY;
 
     if (!apiKey) {
-      setError("AI Key missing. Please add API_KEY to your environment or configure it in Settings > AI Features.");
+      setError("AI Key missing. The API_KEY environment variable is not configured.");
       return;
     }
 
     setIsGenerating(true);
     setError(null);
-    setOutput(''); // Clear previous output
+    setOutput('');
 
     try {
+      // Correct initialization using named parameter
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         You are a senior systems architect.
@@ -51,11 +52,13 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
         Connections: ${edges.map(e => `${e.source} --(${e.label || ''})--> ${e.target}`).join(', ')}
       `;
 
+      // Using gemini-3-pro-preview for complex reasoning and rendering tasks
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview',
         contents: prompt,
       });
 
+      // Extracting text from response property (not method)
       let text = response.text || 'No output generated.';
       // Clean up markdown code blocks if the model ignores the instruction
       text = text.replace(/^```\w*\n?/, '').replace(/\n?```$/, '');
@@ -63,7 +66,7 @@ export const AsciiExportModal: React.FC<AsciiExportModalProps> = ({ isOpen, onCl
       setOutput(text);
     } catch (err) {
       console.error(err);
-      setError("Failed to connect to AI service. Please check your API key and network.");
+      setError("Failed to connect to AI service. Please check your connection.");
     } finally {
       setIsGenerating(false);
     }

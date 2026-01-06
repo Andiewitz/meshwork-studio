@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import ReactFlow, {
   Background,
   addEdge,
@@ -19,15 +19,15 @@ import type {
   NodeTypes,
   ReactFlowInstance,
 } from 'reactflow';
-import { ChevronLeft, Save, Sparkles, Share2, Download } from 'lucide-react';
+import { ChevronLeft, Save, Download, Cpu, Infinity as InfinityIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { flowService } from '../services/flowService';
 import { CanvasNav, CanvasTool } from './CanvasNav';
 import { NodeLibrary } from './NodeLibrary';
 import { LoadingScreen } from './LoadingScreen';
 import { ContextMenu } from './ContextMenu';
-import { Button, Tooltip, IconButton, AppBar, Toolbar, Typography, Box } from '@mui/material';
-import { safeStorage } from '../utils/storage';
+import { Button, Tooltip, IconButton, AppBar, Toolbar, Typography, Box, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { CanvasLayer } from '../types';
 
 // Modals
 import { AsciiExportModal } from './modals/AsciiExportModal';
@@ -72,8 +72,19 @@ const FlowEditorContent: React.FC = () => {
   const { flowId } = useParams();
   const { zoomIn, zoomOut } = useReactFlow();
   
+  // Layer State
+  const [activeLayer, setActiveLayer] = useState<CanvasLayer>('backend');
+  
+  // Storage for both canvases
+  const [backendNodes, setBackendNodes] = useState<Node[]>([]);
+  const [backendEdges, setBackendEdges] = useState<Edge[]>([]);
+  const [devopsNodes, setDevopsNodes] = useState<Node[]>([]);
+  const [devopsEdges, setDevopsEdges] = useState<Edge[]>([]);
+
+  // Current Active State for React Flow hooks
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   
@@ -99,8 +110,8 @@ const FlowEditorContent: React.FC = () => {
   // Context Menu State
   const [menu, setMenu] = useState<MenuState | null>(null);
 
-  // Check for API Key (Env OR Local)
-  const isAiEnabled = !!process.env.API_KEY || !!safeStorage.getItem('meshwork_api_key');
+  // AI is enabled strictly via the environment variable
+  const isAiEnabled = !!process.env.API_KEY;
 
   // Load Flow Data
   useEffect(() => {
@@ -109,8 +120,15 @@ const FlowEditorContent: React.FC = () => {
       try {
         const data = await flowService.getFlow(flowId);
         if (data) {
+          setBackendNodes(data.nodes || []);
+          setBackendEdges(data.edges || []);
+          setDevopsNodes(data.devopsNodes || []);
+          setDevopsEdges(data.devopsEdges || []);
+          
+          // Set initial view
           setNodes(data.nodes || []);
           setEdges(data.edges || []);
+          
           setFlowTitle(data.title);
           setSaveStatus('saved');
         }
@@ -121,29 +139,57 @@ const FlowEditorContent: React.FC = () => {
       }
     };
     loadData();
-  }, [flowId, setNodes, setEdges]);
+  }, [flowId]);
+
+  // Sync current hook state to specific layer buffers when they change
+  useEffect(() => {
+    if (activeLayer === 'backend') {
+      setBackendNodes(nodes);
+      setBackendEdges(edges);
+    } else {
+      setDevopsNodes(nodes);
+      setDevopsEdges(edges);
+    }
+  }, [nodes, edges, activeLayer]);
+
+  // Handle layer switching
+  const handleLayerChange = (event: React.MouseEvent<HTMLElement>, newLayer: CanvasLayer | null) => {
+    if (newLayer !== null && newLayer !== activeLayer) {
+      // 1. Store current layer state explicitly
+      if (activeLayer === 'backend') {
+        setBackendNodes(nodes);
+        setBackendEdges(edges);
+      } else {
+        setDevopsNodes(nodes);
+        setDevopsEdges(edges);
+      }
+
+      // 2. Switch
+      setActiveLayer(newLayer);
+      
+      // 3. Update React Flow state with the new layer's content
+      if (newLayer === 'backend') {
+        setNodes(backendNodes);
+        setEdges(backendEdges);
+      } else {
+        setNodes(devopsNodes);
+        setEdges(devopsEdges);
+      }
+    }
+  };
 
   // Keyboard Shortcuts
   useEffect(() => {
     const handleDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
-      if (e.code === 'Space') {
-        e.preventDefault();
-        setIsSpacePressed(true);
-      }
-      
+      if (e.code === 'Space') { e.preventDefault(); setIsSpacePressed(true); }
       switch (e.key.toLowerCase()) {
         case 'v': setActiveTool('select'); break;
         case 'h': setActiveTool('pan'); break;
         case 'c': setActiveTool('connect'); break;
       }
     };
-
-    const handleUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') setIsSpacePressed(false);
-    };
-
+    const handleUp = (e: KeyboardEvent) => { if (e.code === 'Space') setIsSpacePressed(false); };
     window.addEventListener('keydown', handleDown);
     window.addEventListener('keyup', handleUp);
     return () => {
@@ -152,10 +198,8 @@ const FlowEditorContent: React.FC = () => {
     };
   }, []);
 
-  // Strict Interaction Mapping
   const interactionProps = useMemo(() => {
     const isPanning = isSpacePressed || activeTool === 'pan';
-
     return {
       nodesDraggable: isPanning,
       panOnDrag: isPanning ? true : [1, 2],
@@ -175,17 +219,10 @@ const FlowEditorContent: React.FC = () => {
   // --- Double Click Handlers ---
   const onNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNodeData({ id: node.id, data: node.data });
-    
-    // Route to appropriate modal based on node type
-    if (node.type === 'database') {
-      setIsDbModalOpen(true);
-    } else if (node.type === 'client') {
-      setIsClientModalOpen(true);
-    } else if (node.type === 'middleware' && node.data.middlewareType === 'cache') {
-      setIsCacheModalOpen(true);
-    } else {
-      setIsEditModalOpen(true);
-    }
+    if (node.type === 'database') setIsDbModalOpen(true);
+    else if (node.type === 'client') setIsClientModalOpen(true);
+    else if (node.type === 'middleware' && node.data.middlewareType === 'cache') setIsCacheModalOpen(true);
+    else setIsEditModalOpen(true);
     setMenu(null);
   }, []);
 
@@ -195,54 +232,27 @@ const FlowEditorContent: React.FC = () => {
     setMenu(null);
   }, []);
 
-
   // --- Context Menu Handlers ---
-  const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      event.preventDefault();
-      setMenu({
-        x: event.clientX,
-        y: event.clientY,
-        type: 'node',
-        id: node.id,
-      });
-    },
-    [setMenu]
-  );
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+    setMenu({ x: event.clientX, y: event.clientY, type: 'node', id: node.id });
+  }, [setMenu]);
 
-  const onEdgeContextMenu = useCallback(
-    (event: React.MouseEvent, edge: Edge) => {
-      event.preventDefault();
-      setMenu({
-        x: event.clientX,
-        y: event.clientY,
-        type: 'edge',
-        id: edge.id,
-      });
-    },
-    [setMenu]
-  );
+  const onEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
+    event.preventDefault();
+    setMenu({ x: event.clientX, y: event.clientY, type: 'edge', id: edge.id });
+  }, [setMenu]);
 
-  const onSelectionContextMenu = useCallback(
-    (event: React.MouseEvent, selectedNodes: Node[]) => {
-      event.preventDefault();
-      // Ensure we only show if we actually have a selection
-      if (nodes.some(n => n.selected) || edges.some(e => e.selected)) {
-          setMenu({
-            x: event.clientX,
-            y: event.clientY,
-            type: 'selection',
-          });
-      }
-    },
-    [setMenu, nodes, edges]
-  );
+  const onSelectionContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    if (nodes.some(n => n.selected) || edges.some(e => e.selected)) {
+      setMenu({ x: event.clientX, y: event.clientY, type: 'selection' });
+    }
+  }, [setMenu, nodes, edges]);
 
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
   // --- Actions ---
-
-  // 1. Delete
   const deleteSelected = useCallback(() => {
     if (menu?.type === 'node' && menu.id) {
       setNodes((nds) => nds.filter((n) => n.id !== menu.id));
@@ -258,177 +268,111 @@ const FlowEditorContent: React.FC = () => {
     setSaveStatus('unsaved');
   }, [menu, nodes, edges, setNodes, setEdges]);
 
-  // 2. Duplicate
   const duplicateSelected = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected || n.id === menu?.id);
     if (selectedNodes.length === 0) return;
-
     const newNodes = selectedNodes.map((node) => ({
       ...node,
       id: `${node.type}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       position: { x: node.position.x + 40, y: node.position.y + 40 },
       selected: false,
     }));
-
     setNodes((nds) => nds.concat(newNodes));
     setMenu(null);
     setSaveStatus('unsaved');
   }, [menu, nodes, setNodes]);
 
-  // 3. Align
   const alignToGrid = useCallback(() => {
     const snapSize = 20;
-    setNodes((nds) =>
-      nds.map((node) => {
-        if (node.selected || node.id === menu?.id) {
-          return {
-            ...node,
-            position: {
-              x: Math.round(node.position.x / snapSize) * snapSize,
-              y: Math.round(node.position.y / snapSize) * snapSize,
-            },
-          };
-        }
-        return node;
-      })
-    );
+    setNodes((nds) => nds.map((node) => {
+      if (node.selected || node.id === menu?.id) {
+        return { ...node, position: { x: Math.round(node.position.x / snapSize) * snapSize, y: Math.round(node.position.y / snapSize) * snapSize } };
+      }
+      return node;
+    }));
     setMenu(null);
     setSaveStatus('unsaved');
   }, [menu, setNodes]);
 
-  // 4. Sever Connections (Node Action)
   const severConnections = useCallback(() => {
-      if (menu?.type === 'node' && menu.id) {
-          setEdges((eds) => eds.filter(e => e.source !== menu.id && e.target !== menu.id));
-          setMenu(null);
-          setSaveStatus('unsaved');
-      }
+    if (menu?.type === 'node' && menu.id) {
+      setEdges((eds) => eds.filter(e => e.source !== menu.id && e.target !== menu.id));
+      setMenu(null);
+      setSaveStatus('unsaved');
+    }
   }, [menu, setEdges]);
 
-  // 5. Split Edge / Insert Junction (Edge Action)
   const splitEdge = useCallback(() => {
-      if (menu?.type === 'edge' && menu.id) {
-          const edge = edges.find(e => e.id === menu.id);
-          if (edge) {
-            const source = nodes.find(n => n.id === edge.source);
-            const target = nodes.find(n => n.id === edge.target);
-            
-            if (source && target) {
-                const midX = (source.position.x + target.position.x) / 2;
-                const midY = (source.position.y + target.position.y) / 2;
-                const junctionId = `junction-${Date.now()}`;
-
-                const junctionNode: Node = {
-                    id: junctionId,
-                    type: 'junction',
-                    position: { x: midX, y: midY },
-                    data: { label: '' }
-                };
-
-                const edge1 = { ...edge, id: `${edge.source}-${junctionId}`, target: junctionId };
-                const edge2 = { ...edge, id: `${junctionId}-${edge.target}`, source: junctionId, sourceHandle: undefined, targetHandle: edge.targetHandle };
-
-                setNodes(nds => nds.concat(junctionNode));
-                setEdges(eds => eds.filter(e => e.id !== menu.id).concat([edge1, edge2]));
-                setSaveStatus('unsaved');
-            }
-          }
-          setMenu(null);
+    if (menu?.type === 'edge' && menu.id) {
+      const edge = edges.find(e => e.id === menu.id);
+      if (edge) {
+        const source = nodes.find(n => n.id === edge.source);
+        const target = nodes.find(n => n.id === edge.target);
+        if (source && target) {
+          const midX = (source.position.x + target.position.x) / 2;
+          const midY = (source.position.y + target.position.y) / 2;
+          const junctionId = `junction-${Date.now()}`;
+          const junctionNode: Node = { id: junctionId, type: 'junction', position: { x: midX, y: midY }, data: { label: '' } };
+          const edge1 = { ...edge, id: `${edge.source}-${junctionId}`, target: junctionId };
+          const edge2 = { ...edge, id: `${junctionId}-${edge.target}`, source: junctionId, sourceHandle: undefined, targetHandle: edge.targetHandle };
+          setNodes(nds => nds.concat(junctionNode));
+          setEdges(eds => eds.filter(e => e.id !== menu.id).concat([edge1, edge2]));
+          setSaveStatus('unsaved');
+        }
       }
+      setMenu(null);
+    }
   }, [menu, edges, nodes, setNodes, setEdges]);
 
-  // 6. Edit Trigger (Context Menu)
   const handleEditTrigger = useCallback(() => {
-      if (menu?.type === 'node' && menu.id) {
-          const node = nodes.find(n => n.id === menu.id);
-          if (node) {
-              // Reuse logic from double click
-              onNodeDoubleClick({} as any, node);
-          }
-      }
+    if (menu?.type === 'node' && menu.id) {
+      const node = nodes.find(n => n.id === menu.id);
+      if (node) onNodeDoubleClick({} as any, node);
+    }
   }, [menu, nodes, onNodeDoubleClick]);
-
 
   // --- Modal Saves ---
   const handleNodeSave = (newLabel: string) => {
     if (selectedNodeData) {
-      setNodes((nds) =>
-        nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: newLabel } } : n))
-      );
+      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: newLabel } } : n)));
       setSaveStatus('unsaved');
     }
   };
 
   const handleDbSelect = (db: DatabaseOption) => {
     if (selectedNodeData) {
-        setNodes((nds) =>
-          nds.map((n) => (n.id === selectedNodeData.id ? { 
-              ...n, 
-              data: { 
-                  ...n.data, 
-                  label: db.name, // Auto-update label
-                  dbType: db.id,
-                  dbName: db.name,
-                  dbCategory: db.category,
-                  dbLogo: db.logo
-              } 
-          } : n))
-        );
-        setSaveStatus('unsaved');
+      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: db.name, dbType: db.id, dbName: db.name, dbCategory: db.category, dbLogo: db.logo } } : n)));
+      setSaveStatus('unsaved');
     }
   };
 
   const handleClientSave = (label: string, type: string) => {
-      if (selectedNodeData) {
-          setNodes((nds) =>
-            nds.map((n) => (n.id === selectedNodeData.id ? { 
-                ...n, 
-                data: { ...n.data, label, clientType: type } 
-            } : n))
-          );
-          setSaveStatus('unsaved');
-      }
+    if (selectedNodeData) {
+      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label, clientType: type } } : n)));
+      setSaveStatus('unsaved');
+    }
   };
 
   const handleCacheSelect = (tech: CacheOption) => {
-      if (selectedNodeData) {
-          setNodes((nds) =>
-            nds.map((n) => (n.id === selectedNodeData.id ? { 
-                ...n, 
-                data: { ...n.data, label: tech.name, techName: tech.name, techLogo: tech.logo } 
-            } : n))
-          );
-          setSaveStatus('unsaved');
-      }
+    if (selectedNodeData) {
+      setNodes((nds) => nds.map((n) => (n.id === selectedNodeData.id ? { ...n, data: { ...n.data, label: tech.name, techName: tech.name, techLogo: tech.logo } } : n)));
+      setSaveStatus('unsaved');
+    }
   };
 
   const handleConnectionSave = (proto: ConnectionOption) => {
-      if (selectedEdgeData) {
-          setEdges((eds) => 
-            eds.map((e) => (e.id === selectedEdgeData.id ? {
-                ...e,
-                label: proto.label,
-                style: { stroke: proto.color, strokeWidth: 2 },
-                animated: proto.id !== 'JDBC', // Don't animate static connections like JDBC
-                data: { ...e.data, protocol: proto.id }
-            } : e))
-          );
-          setSaveStatus('unsaved');
-      }
+    if (selectedEdgeData) {
+      setEdges((eds) => eds.map((e) => (e.id === selectedEdgeData.id ? { ...e, label: proto.label, style: { stroke: proto.color, strokeWidth: 2 }, animated: proto.id !== 'JDBC', data: { ...e.data, protocol: proto.id } } : e)));
+      setSaveStatus('unsaved');
+    }
   };
-
 
   // Drag & Drop
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
     if (!type || !rfInstance) return;
-
-    const position = rfInstance.screenToFlowPosition({
-      x: event.clientX,
-      y: event.clientY,
-    });
-
+    const position = rfInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     const newNode: Node = {
       id: `${type}-${Date.now()}`,
       type,
@@ -437,24 +381,27 @@ const FlowEditorContent: React.FC = () => {
         label: event.dataTransfer.getData('application/label') || `New ${type}`,
         logo: event.dataTransfer.getData('application/logo'),
         middlewareType: event.dataTransfer.getData('application/middlewareType'),
-        clientType: event.dataTransfer.getData('application/clientType')
+        clientType: event.dataTransfer.getData('application/clientType'),
+        layer: activeLayer
       },
     };
-
     setNodes((nds) => nds.concat(newNode));
     setSaveStatus('unsaved');
-  }, [rfInstance, setNodes]);
+  }, [rfInstance, setNodes, activeLayer]);
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
+  const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }, []);
 
   const handleSave = async () => {
     if (!flowId) return;
     setSaveStatus('saving');
     try {
-      await flowService.saveFlow(flowId, nodes, edges);
+      // Ensure we have current layer data up to date
+      const finalBackendNodes = activeLayer === 'backend' ? nodes : backendNodes;
+      const finalBackendEdges = activeLayer === 'backend' ? edges : backendEdges;
+      const finalDevopsNodes = activeLayer === 'devops' ? nodes : devopsNodes;
+      const finalDevopsEdges = activeLayer === 'devops' ? edges : devopsEdges;
+
+      await flowService.saveFlow(flowId, finalBackendNodes, finalBackendEdges, finalDevopsNodes, finalDevopsEdges);
       setSaveStatus('saved');
     } catch {
       setSaveStatus('unsaved');
@@ -466,31 +413,12 @@ const FlowEditorContent: React.FC = () => {
   if (isLoading) return <LoadingScreen message="Unlocking Secure Workspace..." />;
 
   return (
-    <div 
-      className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden"
-      style={{ cursor: interactionProps.cursor }}
-    >
-      <AppBar 
-        position="static" 
-        elevation={0}
-        sx={{ 
-          bgcolor: 'white', 
-          borderBottom: '2px solid #0f172a',
-          zIndex: 50
-        }}
-      >
+    <div className="w-full h-screen bg-zinc-900 flex flex-col overflow-hidden" style={{ cursor: interactionProps.cursor }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'white', borderBottom: '2px solid #0f172a', zIndex: 50 }}>
         <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Tooltip title="Exit to Dashboard">
-              <IconButton 
-                onClick={() => navigate('/')} 
-                sx={{ 
-                  color: 'slate.900', 
-                  bgcolor: 'transparent',
-                  '&:hover': { bgcolor: 'slate.50' },
-                  border: '2px solid transparent'
-                }}
-              >
+              <IconButton onClick={() => navigate('/')} sx={{ color: 'slate.900', bgcolor: 'transparent', '&:hover': { bgcolor: 'slate.50' }, border: '2px solid transparent' }}>
                 <ChevronLeft size={24} strokeWidth={3} />
               </IconButton>
             </Tooltip>
@@ -502,6 +430,50 @@ const FlowEditorContent: React.FC = () => {
                 {saveStatus === 'saved' ? 'Project Synced' : saveStatus === 'unsaved' ? 'Unsaved Edits' : 'Persisting...'}
               </Typography>
             </Box>
+          </Box>
+
+          {/* Layer Switcher - Center Header */}
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <ToggleButtonGroup
+              value={activeLayer}
+              exclusive
+              onChange={handleLayerChange}
+              aria-label="canvas layer"
+              sx={{
+                bgcolor: '#f1f5f9',
+                p: 0.5,
+                borderRadius: '12px',
+                border: '2px solid #0f172a',
+                '& .MuiToggleButton-root': {
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  color: '#64748b',
+                  '&.Mui-selected': {
+                    bgcolor: '#0f172a',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#1e293b' }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="backend" aria-label="backend logic">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Cpu size={14} />
+                  Backend Logic
+                </Box>
+              </ToggleButton>
+              <ToggleButton value="devops" aria-label="devops orchestration">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <InfinityIcon size={14} />
+                  DevOps
+                </Box>
+              </ToggleButton>
+            </ToggleButtonGroup>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -520,16 +492,8 @@ const FlowEditorContent: React.FC = () => {
                     px: { xs: 1.5, sm: 2.5 },
                     py: 1,
                     boxShadow: isAiEnabled ? '3px 3px 0 0 #0f172a' : 'none',
-                    '&:hover': {
-                      border: '2px solid #0f172a',
-                      backgroundColor: 'slate.50',
-                      boxShadow: '1px 1px 0 0 #0f172a',
-                      transform: 'translate(2px, 2px)'
-                    },
-                    '&.Mui-disabled': {
-                      border: '2px solid #e2e8f0',
-                      color: '#94a3b8'
-                    }
+                    '&:hover': { border: '2px solid #0f172a', backgroundColor: 'slate.50', boxShadow: '1px 1px 0 0 #0f172a', transform: 'translate(2px, 2px)' },
+                    '&.Mui-disabled': { border: '2px solid #e2e8f0', color: '#94a3b8' }
                   }}
                 >
                   <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>AI Docs</Box>
@@ -551,11 +515,7 @@ const FlowEditorContent: React.FC = () => {
                 fontWeight: 800,
                 px: { xs: 2, sm: 3 },
                 py: 1,
-                '&:hover': {
-                  backgroundColor: '#4338ca',
-                  boxShadow: '2px 2px 0_0 #000',
-                  transform: 'translate(2px, 2px)'
-                }
+                '&:hover': { backgroundColor: '#4338ca', boxShadow: '2px 2px 0_0 #000', transform: 'translate(2px, 2px)' }
               }}
             >
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Save Mesh</Box>
@@ -566,74 +526,31 @@ const FlowEditorContent: React.FC = () => {
       </AppBar>
 
       <div className="flex-1 relative overflow-hidden">
-        <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
+        <NodeLibrary isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} activeLayer={activeLayer} />
         
         {/* --- Modals --- */}
-        <AsciiExportModal 
-          isOpen={isAsciiModalOpen} 
-          onClose={() => setIsAsciiModalOpen(false)} 
-          nodes={nodes} 
-          edges={edges} 
-        />
-
-        <EditNodeModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            initialLabel={selectedNodeData?.data?.label || ''}
-            onSave={handleNodeSave}
-        />
-
-        <DatabaseSelectorModal
-            isOpen={isDbModalOpen}
-            onClose={() => setIsDbModalOpen(false)}
-            onSelect={handleDbSelect}
-        />
-
-        <ClientConfigModal
-            isOpen={isClientModalOpen}
-            onClose={() => setIsClientModalOpen(false)}
-            initialLabel={selectedNodeData?.data?.label || ''}
-            initialType={selectedNodeData?.data?.clientType || 'desktop'}
-            onSave={handleClientSave}
-        />
-
-        <CacheSelectorModal
-            isOpen={isCacheModalOpen}
-            onClose={() => setIsCacheModalOpen(false)}
-            onSelect={handleCacheSelect}
-        />
-
-        <ConnectionSettingsModal
-            isOpen={isConnectionModalOpen}
-            onClose={() => setIsConnectionModalOpen(false)}
-            currentLabel={selectedEdgeData?.label}
-            onSave={handleConnectionSave}
-        />
+        <AsciiExportModal isOpen={isAsciiModalOpen} onClose={() => setIsAsciiModalOpen(false)} nodes={nodes} edges={edges} />
+        <EditNodeModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} onSave={handleNodeSave} />
+        <DatabaseSelectorModal isOpen={isDbModalOpen} onClose={() => setIsDbModalOpen(false)} onSelect={handleDbSelect} />
+        <ClientConfigModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} initialLabel={selectedNodeData?.data?.label || ''} initialType={selectedNodeData?.data?.clientType || 'desktop'} onSave={handleClientSave} />
+        <CacheSelectorModal isOpen={isCacheModalOpen} onClose={() => setIsCacheModalOpen(false)} onSelect={handleCacheSelect} />
+        <ConnectionSettingsModal isOpen={isConnectionModalOpen} onClose={() => setIsConnectionModalOpen(false)} currentLabel={selectedEdgeData?.label} onSave={handleConnectionSave} />
 
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={(changes) => {
-             onNodesChange(changes);
-             setSaveStatus('unsaved');
-          }}
-          onEdgesChange={(changes) => {
-             onEdgesChange(changes);
-             setSaveStatus('unsaved');
-          }}
+          onNodesChange={(changes) => { onNodesChange(changes); setSaveStatus('unsaved'); }}
+          onEdgesChange={(changes) => { onEdgesChange(changes); setSaveStatus('unsaved'); }}
           onConnect={onConnect}
           onInit={setRfInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          
-          // Interactions
           onNodeContextMenu={onNodeContextMenu}
           onEdgeContextMenu={onEdgeContextMenu}
           onSelectionContextMenu={onSelectionContextMenu}
           onNodeDoubleClick={onNodeDoubleClick}
           onEdgeDoubleClick={onEdgeDoubleClick}
           onPaneClick={onPaneClick}
-          
           nodeTypes={nodeTypes}
           connectionMode={ConnectionMode.Loose}
           selectionMode={SelectionMode.Partial}
@@ -641,38 +558,22 @@ const FlowEditorContent: React.FC = () => {
           fitView
         >
           <Background variant={BackgroundVariant.Dots} gap={20} color="#3f3f46" />
-          
           {menu && (
             <ContextMenu
               top={menu.y}
               left={menu.x}
               nodeType={menu.type || undefined}
               selectionCount={selectionCount}
-              
-              // Actions
               onDelete={deleteSelected}
               onDuplicate={duplicateSelected}
               onAlign={alignToGrid}
-              
-              // Node Actions
               onEdit={handleEditTrigger}
               onSeverConnections={severConnections}
-              
-              // Edge Actions
               onSplitConnection={splitEdge}
-
               onClose={() => setMenu(null)}
             />
           )}
-
-          <CanvasNav 
-            zoomIn={zoomIn} 
-            zoomOut={zoomOut}
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
-            isLibraryOpen={isLibraryOpen}
-          />
+          <CanvasNav zoomIn={zoomIn} zoomOut={zoomOut} activeTool={activeTool} setActiveTool={setActiveTool} onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)} isLibraryOpen={isLibraryOpen} />
         </ReactFlow>
       </div>
     </div>

@@ -19,12 +19,20 @@ import {
     LayoutGrid,
     Clock,
     HardDrive,
-    Anchor
+    Anchor,
+    Workflow,
+    Activity,
+    Cloud,
+    Container,
+    Layers,
+    Binary
 } from 'lucide-react';
+import { CanvasLayer } from '../types';
 
 interface NodeLibraryProps {
   isOpen: boolean;
   onClose: () => void;
+  activeLayer: CanvasLayer;
 }
 
 type Variant = 'blue' | 'emerald' | 'rose' | 'amber' | 'violet' | 'slate' | 'pink' | 'cyan' | 'orange' | 'lime' | 'indigo' | 'teal';
@@ -56,9 +64,6 @@ const VARIANTS: Record<Variant, { bg: string, border: string, text: string, shad
 
 const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clientType }: NodeItemProps) => {
   const styles = VARIANTS[variant];
-  // Calculate logo filter based on background brightness
-  // if background is light, we want black icon (brightness-0)
-  // if background is dark, we want white icon (brightness-0 invert)
   const imgFilterClass = styles.isLight ? 'brightness-0' : 'brightness-0 invert';
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -85,24 +90,17 @@ const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clie
       onDragStart={(event) => onDragStart(event, type)}
       draggable
     >
-      {/* Icon Container */}
       <div className={`
         w-10 h-10 flex items-center justify-center rounded-lg border-2 border-black
         ${styles.bg} ${styles.text}
         transition-transform group-hover:scale-110
       `}>
         {logo ? (
-            <img 
-                src={logo} 
-                alt={label} 
-                className={`w-6 h-6 object-contain drop-shadow-sm filter ${imgFilterClass}`} 
-            />
+            <img src={logo} alt={label} className={`w-6 h-6 object-contain drop-shadow-sm filter ${imgFilterClass}`} />
         ) : (
             Icon && <Icon size={20} strokeWidth={2.5} />
         )}
       </div>
-      
-      {/* Label */}
       <span className="text-[10px] font-bold text-black text-center leading-tight uppercase tracking-tight">
         {label}
       </span>
@@ -110,7 +108,7 @@ const NodeItem = ({ type, label, icon: Icon, logo, variant, middlewareType, clie
   );
 };
 
-export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose }) => {
+export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose, activeLayer }) => {
   return (
     <div 
       className={`
@@ -123,12 +121,14 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose }) => 
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b-2 border-black bg-white rounded-t-2xl">
         <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-violet-500 border-2 border-black rounded-lg flex items-center justify-center text-white">
-                 <LayoutGrid size={18} />
+             <div className="w-8 h-8 bg-indigo-600 border-2 border-black rounded-lg flex items-center justify-center text-white">
+                 {activeLayer === 'backend' ? <Cpu size={18} /> : <Workflow size={18} />}
              </div>
              <div>
-                <h2 className="text-xl font-bold font-heading text-black leading-none">Library</h2>
-                <p className="text-xs font-bold text-slate-500 mt-1">Drag & drop to canvas</p>
+                <h2 className="text-xl font-bold font-heading text-black leading-none">
+                    {activeLayer === 'backend' ? 'Backend Logic' : 'DevOps Orchestration'}
+                </h2>
+                <p className="text-xs font-bold text-slate-500 mt-1">Drag components to your mesh</p>
              </div>
         </div>
         <button 
@@ -141,95 +141,92 @@ export const NodeLibrary: React.FC<NodeLibraryProps> = ({ isOpen, onClose }) => 
 
       <div className="flex-1 overflow-y-auto p-5 space-y-8 scroll-smooth no-scrollbar">
         
-        {/* Core Infrastructure */}
-        <div>
-            <div className="flex items-center gap-2 mb-4">
-                <span className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black"></span>
-                <h3 className="text-sm font-black text-black uppercase tracking-wider">Compute & Host</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-                <NodeItem type="client" label="User / Client" icon={Monitor} variant="cyan" />
-                <NodeItem type="client" label="Mobile" icon={Smartphone} variant="cyan" clientType="phone" />
-                <NodeItem type="loadBalancer" label="Load Balancer" icon={Split} variant="pink" />
-                <NodeItem type="server" label="App Server" icon={Server} variant="indigo" />
-                <NodeItem type="service" label="Microservice" icon={Cpu} variant="emerald" />
-                <NodeItem type="server" label="Bare Metal" icon={Box} variant="slate" />
-                <NodeItem type="external" label="Function" icon={Zap} variant="orange" />
-            </div>
-        </div>
-
-        {/* Data & Storage */}
-        <div>
-            <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                <span className="w-3 h-3 bg-amber-400 rounded-full border-2 border-black"></span>
-                <h3 className="text-sm font-black text-black uppercase tracking-wider">Data & Storage</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-                <NodeItem type="database" label="Database" icon={Database} variant="blue" />
-                <NodeItem type="database" label="Cache" icon={Zap} variant="amber" />
-                <NodeItem type="queue" label="Queue" icon={ScrollText} variant="violet" />
-                <NodeItem type="database" label="Search" icon={Search} variant="blue" />
-                <NodeItem type="database" label="Time Series" icon={Clock} variant="blue" />
-                <NodeItem type="external" label="Storage" icon={HardDrive} variant="slate" />
-            </div>
-        </div>
-
-        {/* Networking & Security */}
-        <div>
-            <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                <span className="w-3 h-3 bg-rose-500 rounded-full border-2 border-black"></span>
-                <h3 className="text-sm font-black text-black uppercase tracking-wider">Net & Security</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-                <NodeItem type="middleware" middlewareType="gateway" label="API Gateway" icon={Globe} variant="orange" />
-                <NodeItem type="middleware" middlewareType="proxy" label="Rev. Proxy" icon={Router} variant="violet" />
-                <NodeItem type="middleware" middlewareType="auth" label="Auth Guard" icon={Shield} variant="rose" />
-                <NodeItem type="middleware" middlewareType="security" label="WAF" icon={Lock} variant="rose" />
-                <NodeItem type="middleware" middlewareType="mesh" label="Service Mesh" icon={Network} variant="teal" />
-                <NodeItem type="middleware" middlewareType="ratelimit" label="Rate Limit" icon={Anchor} variant="slate" />
-            </div>
-        </div>
-
-        {/* Cloud Providers */}
-        <div>
-             <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
-                <span className="w-3 h-3 bg-slate-800 rounded-full border-2 border-black"></span>
-                <h3 className="text-sm font-black text-black uppercase tracking-wider">Cloud & SaaS</h3>
-            </div>
-             
-             {/* AWS */}
-             <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Providers</h4>
-                <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="AWS" logo="https://cdn.simpleicons.org/amazonwebservices" variant="slate" />
-                    <NodeItem type="external" label="Google" logo="https://cdn.simpleicons.org/googlecloud" variant="slate" />
-                    <NodeItem type="external" label="Azure" logo="https://cdn.simpleicons.org/microsoftazure" variant="slate" />
-                    <NodeItem type="external" label="DigitalOcean" logo="https://cdn.simpleicons.org/digitalocean" variant="slate" />
+        {activeLayer === 'backend' ? (
+          <>
+            {/* Backend Logic Canvas Nodes */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Compute & Services</h3>
                 </div>
-             </div>
-
-             {/* Containers */}
-             <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Containers</h4>
-                <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Docker" logo="https://cdn.simpleicons.org/docker" variant="blue" />
-                    <NodeItem type="external" label="K8s" logo="https://cdn.simpleicons.org/kubernetes" variant="blue" />
-                    <NodeItem type="external" label="Helm" logo="https://cdn.simpleicons.org/helm" variant="slate" />
-                    <NodeItem type="external" label="Argo" logo="https://cdn.simpleicons.org/argo" variant="slate" />
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="client" label="User Client" icon={Monitor} variant="cyan" />
+                    <NodeItem type="loadBalancer" label="Load Balancer" icon={Split} variant="pink" />
+                    <NodeItem type="server" label="App Server" icon={Server} variant="indigo" />
+                    <NodeItem type="service" label="Microservice" icon={Cpu} variant="emerald" />
+                    <NodeItem type="external" label="SaaS API" icon={Globe} variant="orange" />
                 </div>
-             </div>
+            </div>
 
-             {/* SaaS */}
-             <div className="mb-4">
-                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Services</h4>
-                <div className="grid grid-cols-4 gap-2">
-                    <NodeItem type="external" label="Stripe" logo="https://cdn.simpleicons.org/stripe" variant="indigo" />
-                    <NodeItem type="external" label="Auth0" logo="https://cdn.simpleicons.org/auth0" variant="slate" />
-                    <NodeItem type="external" label="Twilio" logo="https://cdn.simpleicons.org/twilio" variant="rose" />
-                    <NodeItem type="external" label="OpenAI" logo="https://cdn.simpleicons.org/openai" variant="emerald" />
+            <div>
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                    <span className="w-3 h-3 bg-amber-400 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Data & Storage</h3>
                 </div>
-             </div>
-        </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="database" label="Database" icon={Database} variant="blue" />
+                    <NodeItem type="database" label="Cache" icon={Zap} variant="amber" />
+                    <NodeItem type="queue" label="Queue" icon={ScrollText} variant="violet" />
+                    <NodeItem type="database" label="Search Index" icon={Search} variant="blue" />
+                </div>
+            </div>
+
+            <div>
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                    <span className="w-3 h-3 bg-rose-500 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Logic & Routing</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="middleware" middlewareType="gateway" label="Gateway" icon={Globe} variant="orange" />
+                    <NodeItem type="middleware" middlewareType="auth" label="Auth Guard" icon={Shield} variant="rose" />
+                    <NodeItem type="middleware" middlewareType="mesh" label="Service Mesh" icon={Network} variant="teal" />
+                    <NodeItem type="junction" label="Router" icon={Split} variant="slate" />
+                </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* DevOps Canvas Nodes */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="w-3 h-3 bg-violet-500 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Infrastructure</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="external" label="Cloud Provider" icon={Cloud} variant="slate" />
+                    <NodeItem type="external" label="Region / VPC" icon={Globe} variant="indigo" />
+                    <NodeItem type="external" label="Availability Zone" icon={Layers} variant="cyan" />
+                    <NodeItem type="server" label="K8s Node" icon={Server} variant="violet" />
+                </div>
+            </div>
+
+            <div>
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                    <span className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Orchestration</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="external" label="Cluster" logo="https://cdn.simpleicons.org/kubernetes" variant="blue" />
+                    <NodeItem type="external" label="Namespace" icon={Box} variant="emerald" />
+                    <NodeItem type="external" label="Container / Pod" logo="https://cdn.simpleicons.org/docker" variant="blue" />
+                    <NodeItem type="queue" label="Message Bus" icon={Network} variant="amber" />
+                </div>
+            </div>
+
+            <div>
+                <div className="flex items-center gap-2 mb-4 pt-2 border-t-2 border-dashed border-slate-300">
+                    <span className="w-3 h-3 bg-orange-500 rounded-full border-2 border-black"></span>
+                    <h3 className="text-sm font-black text-black uppercase tracking-wider">Pipeline & Logs</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <NodeItem type="external" label="CI/CD Pipeline" icon={Binary} variant="orange" />
+                    <NodeItem type="service" label="Log Aggregator" icon={Activity} variant="rose" />
+                    <NodeItem type="service" label="Monitor / Alert" icon={Activity} variant="rose" />
+                    <NodeItem type="database" label="Secrets / Vault" icon={Lock} variant="slate" />
+                </div>
+            </div>
+          </>
+        )}
 
       </div>
     </div>

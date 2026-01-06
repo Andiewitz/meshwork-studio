@@ -51,6 +51,8 @@ export const flowService = {
       icon,
       nodes: [],
       edges: [],
+      devopsNodes: [],
+      devopsEdges: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isPublic: false
@@ -95,6 +97,8 @@ export const flowService = {
         icon,
         nodes: template.nodes,
         edges: template.edges,
+        devopsNodes: [],
+        devopsEdges: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
         isPublic: false
@@ -199,14 +203,16 @@ export const flowService = {
     }
   },
 
-  // Save/Update flow content (nodes/edges)
-  saveFlow: async (flowId: string, nodes: Node[], edges: Edge[]) => {
+  // Save/Update flow content (nodes/edges) for all layers
+  saveFlow: async (flowId: string, nodes: Node[], edges: Edge[], devopsNodes?: Node[], devopsEdges?: Edge[]) => {
     if (flowId.startsWith('local-')) {
         const flows = getLocalFlows();
         const index = flows.findIndex(f => f.id === flowId);
         if (index !== -1) {
             flows[index].nodes = nodes;
             flows[index].edges = edges;
+            if (devopsNodes) flows[index].devopsNodes = devopsNodes;
+            if (devopsEdges) flows[index].devopsEdges = devopsEdges;
             flows[index].updatedAt = Date.now();
             saveLocalFlows(flows);
         }
@@ -218,6 +224,8 @@ export const flowService = {
         await updateDoc(docRef, {
             nodes,
             edges,
+            devopsNodes: devopsNodes || [],
+            devopsEdges: devopsEdges || [],
             updatedAt: serverTimestamp()
         });
     } catch (error) {
